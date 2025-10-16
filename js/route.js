@@ -1,7 +1,7 @@
 const routes=[
 	{
 		path: '/',
-		component: () => loadModule('./page/baby.vue', options),
+		component: () => loadModule('./page/store.vue', options),
 	},
 	{
 		path: '/acc',

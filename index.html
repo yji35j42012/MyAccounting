@@ -13,9 +13,9 @@
 <body>
 	<div id="app" class="wrap">
 		<div class="header">
-			<router-link to="/">寶寶</router-link>
-			<!-- <router-link to="/acc">記帳</router-link> -->
-			<!-- <router-link to="/news">新聞</router-link> -->
+			<router-link to="/">store</router-link>
+			<router-link to="/acc">記帳</router-link>
+			<router-link to="/news">新聞</router-link>
 		</div>
 		<div :class="['content',nowPage]">
 			<router-view></router-view>
@@ -33,27 +33,27 @@
 	<script src="./js/route.js"></script>
 	<script src="https://unpkg.com/xml2js/dist/xml2js.min.js"></script>
 	<script>
-		const options={
+		const options = {
 			moduleCache: {
 				vue: Vue
 			},
 			async getFile(url) {
-				const res=await fetch(url);
+				const res = await fetch(url);
 				if (!res.ok)
-					throw Object.assign(new Error(res.statusText+' '+url), { res });
+					throw Object.assign(new Error(res.statusText + ' ' + url), { res });
 				return {
-					getContentData: asBinary => asBinary? res.arrayBuffer():res.text(),
+					getContentData: asBinary => asBinary ? res.arrayBuffer() : res.text(),
 				}
 			},
 			addStyle(textContent) {
-				const style=Object.assign(document.createElement('style'), { textContent });
-				const ref=document.head.getElementsByTagName('style')[0]||null;
+				const style = Object.assign(document.createElement('style'), { textContent });
+				const ref = document.head.getElementsByTagName('style')[0] || null;
 				document.head.insertBefore(style, ref);
 			},
 		}
-		const { loadModule }=window['vue3-sfc-loader'];
+		const { loadModule } = window['vue3-sfc-loader'];
 
-		const app=Vue.createApp({
+		const app = Vue.createApp({
 			// mixins: [url],
 			data() {
 				return {
@@ -66,11 +66,11 @@
 			watch: {
 				$route(to, from) {
 					store.dispatch("SET_LOADING_ACTION", true);
-					var now=this.$route.path;
-					if (now=="/"||now=='home') {
-						this.nowPage="home";
+					var now = this.$route.path;
+					if (now == "/" || now == 'home') {
+						this.nowPage = "home";
 					} else {
-						this.nowPage=now.split("/")[1];
+						this.nowPage = now.split("/")[1];
 					}
 				},
 			},
