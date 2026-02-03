@@ -50,7 +50,7 @@
 
 
 <script>
-module.exports={
+module.exports = {
 	data() {
 		return {
 			accounting_data: [],
@@ -68,7 +68,7 @@ module.exports={
 	mixins: [],
 	components: {},
 	mounted() {
-		var get_url=url+"?func=getAccounting";
+		var get_url = url + "?func=getAccounting";
 		axios.get(get_url).then(res => {
 			this.resetAccountingData(res.data);
 			store.dispatch("SET_LOADING_ACTION", false);
@@ -77,7 +77,7 @@ module.exports={
 	computed: {
 		showAccounting() {
 			console.log('this.accounting_data', this.accounting_data);
-			var rShow=this.accounting_data
+			var rShow = this.accounting_data
 			if (!rShow) return
 			return rShow
 		}
@@ -86,13 +86,13 @@ module.exports={
 		accountingChange() {
 			console.log('hihi', this.accounting_edit);
 			store.dispatch("SET_LOADING_ACTION", true);
-			this.accounting_edit.isShow=false;
-			var get_url=url+
-				"?func=updateAccounting&id="+this.accounting_edit.edit_id+
-				"&date="+this.accounting_edit.edit_date+
-				"&product="+this.accounting_edit.edit_product+
-				"&amount="+this.accounting_edit.edit_amount+
-				"&mode="+this.accounting_edit.edit_mode;
+			this.accounting_edit.isShow = false;
+			var get_url = url +
+				"?func=updateAccounting&id=" + this.accounting_edit.edit_id +
+				"&date=" + this.accounting_edit.edit_date +
+				"&product=" + this.accounting_edit.edit_product +
+				"&amount=" + this.accounting_edit.edit_amount +
+				"&mode=" + this.accounting_edit.edit_mode;
 			axios.get(get_url).then(res => {
 				this.resetAccountingData(res.data);
 				setTimeout(() => {
@@ -103,26 +103,29 @@ module.exports={
 		},
 		accountingList(obj) {
 			console.log('accountingList', obj);
-			this.accounting_edit.edit_state='showEdit';
-			this.accounting_edit.edit_id=obj.accounting_id;
-			this.accounting_edit.edit_date=obj.accounting_date;
-			this.accounting_edit.edit_product=obj.accounting_product;
-			this.accounting_edit.edit_amount=obj.accounting_amount;
-			this.accounting_edit.edit_mode=obj.accounting_mode;
-			this.accounting_edit.isShow=true;
+			this.accounting_edit.edit_state = 'showEdit';
+			this.accounting_edit.edit_id = obj.accounting_id;
+			this.accounting_edit.edit_date = obj.accounting_date;
+			this.accounting_edit.edit_product = obj.accounting_product;
+			this.accounting_edit.edit_amount = obj.accounting_amount;
+			this.accounting_edit.edit_mode = obj.accounting_mode;
+			this.accounting_edit.isShow = true;
 			// accounting_id
 		},
 		resetAccountingData(data) {
-			let objData={
+			let objData = {
 				dateItem: [],
 				objList: {},
 			}
+			// console.log('data', data);
 			data.forEach((element, index) => {
-				if (element[0]!=='') {
-					let dateTitle=element[1].split('/')[0]+"/"+element[1].split('/')[1]
-					if (objData.dateItem.indexOf(dateTitle)==-1) {
+
+				if (element[0] !== '') {
+					console.log('element[1]', element[1]);
+					let dateTitle = element[1].split('.')[0] + "/" + element[1].split('.')[1]
+					if (objData.dateItem.indexOf(dateTitle) == -1) {
 						objData.dateItem.push(dateTitle)
-						objData.objList[dateTitle]={
+						objData.objList[dateTitle] = {
 							id: index,
 							totalAmount: element[3],
 							lists: [{
@@ -134,7 +137,7 @@ module.exports={
 							}]
 						}
 					} else {
-						objData.objList[dateTitle].totalAmount=objData.objList[dateTitle].totalAmount+element[3]
+						objData.objList[dateTitle].totalAmount = objData.objList[dateTitle].totalAmount + element[3]
 						objData.objList[dateTitle].lists.push({
 							accounting_id: element[0],
 							accounting_date: element[1],
@@ -145,28 +148,29 @@ module.exports={
 					}
 				}
 			});
-			this.accounting_data=objData
+			this.accounting_data = objData
+			console.log('objData', objData);
 		},
 		accountingTitle(index) {
-			if (this.$refs['title_'+index][0].classList.contains('on')) {
-				this.$refs['title_'+index][0].classList.remove("on");
+			if (this.$refs['title_' + index][0].classList.contains('on')) {
+				this.$refs['title_' + index][0].classList.remove("on");
 			} else {
-				this.$refs['title_'+index][0].classList.add("on");
+				this.$refs['title_' + index][0].classList.add("on");
 			}
 		},
 		accountingEdit() {
-			this.accounting_edit.edit_date=this.getDate();
-			this.accounting_edit.edit_state='showAdd';
-			this.accounting_edit.isShow=true;
+			this.accounting_edit.edit_date = this.getDate();
+			this.accounting_edit.edit_state = 'showAdd';
+			this.accounting_edit.isShow = true;
 		},
 		accountingSave() {
 			store.dispatch("SET_LOADING_ACTION", true);
-			this.accounting_edit.isShow=false;
-			var get_url=url+
-				"?func=setAccounting&date="+this.accounting_edit.edit_date+
-				"&product="+this.accounting_edit.edit_product+
-				"&amount="+this.accounting_edit.edit_amount+
-				"&mode="+this.accounting_edit.edit_mode;
+			this.accounting_edit.isShow = false;
+			var get_url = url +
+				"?func=setAccounting&date=" + this.accounting_edit.edit_date +
+				"&product=" + this.accounting_edit.edit_product +
+				"&amount=" + this.accounting_edit.edit_amount +
+				"&mode=" + this.accounting_edit.edit_mode;
 			axios.get(get_url).then(res => {
 				this.resetAccountingData(res.data);
 				setTimeout(() => {
@@ -176,25 +180,25 @@ module.exports={
 			});
 		},
 		clearEdit() {
-			this.accounting_edit.edit_state="";
-			this.accounting_edit.edit_date="";
-			this.accounting_edit.edit_product="";
-			this.accounting_edit.edit_amount="";
-			this.accounting_edit.edit_mode="";
+			this.accounting_edit.edit_state = "";
+			this.accounting_edit.edit_date = "";
+			this.accounting_edit.edit_product = "";
+			this.accounting_edit.edit_amount = "";
+			this.accounting_edit.edit_mode = "";
 		},
 		alertClose(s) {
 			switch (s) {
 				case 'accounting':
-					this.accounting_edit.isShow=false;
+					this.accounting_edit.isShow = false;
 					break;
 			}
 		},
 		getDate() {
-			let objectDate=new Date();
-			let day=objectDate.getDate();
-			let month=objectDate.getMonth()+1;
-			let year=objectDate.getFullYear();
-			return year+"/"+month+"/"+day;
+			let objectDate = new Date();
+			let day = objectDate.getDate();
+			let month = objectDate.getMonth() + 1;
+			let year = objectDate.getFullYear();
+			return year + "/" + month + "/" + day;
 		}
 	}
 };
