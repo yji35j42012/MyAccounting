@@ -198,7 +198,7 @@ module.exports = {
 			let day = objectDate.getDate();
 			let month = objectDate.getMonth() + 1;
 			let year = objectDate.getFullYear();
-			return year + "/" + month + "/" + day;
+			return year + "." + month + "." + day;
 		}
 	}
 };
