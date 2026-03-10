@@ -1,10 +1,10 @@
 const routes=[
 	{
-		path: '/',
+		path: '/store',
 		component: () => loadModule('./page/store.vue', options),
 	},
 	{
-		path: '/acc',
+		path: '/',
 		component: () => loadModule('./page/accounting.vue', options),
 	},
 	{

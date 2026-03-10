@@ -62,7 +62,14 @@
 					title: 'alex',
 				}
 			},
-			mounted() { },
+			mounted() {
+				document.addEventListener("visibilitychange", function () {
+					if (!document.hidden) {
+						// 當頁面重新被顯示時，重新整理
+						location.reload();
+					}
+				});
+			},
 			watch: {
 				$route(to, from) {
 					store.dispatch("SET_LOADING_ACTION", true);
