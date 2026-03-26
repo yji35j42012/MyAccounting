@@ -15,8 +15,6 @@
 				<div class="accounting_item_date">2026.03.02</div>
 			</div>
 		</div>
-
-
 	</div>
 	<!-- <div class="content acc"> -->
 	<!-- <div class="accounting">
