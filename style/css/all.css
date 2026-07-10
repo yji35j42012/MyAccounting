@@ -91,14 +91,23 @@ select {
   align-items: center;
   justify-content: none;
   width: 100%;
-  height: 50px;
-  padding: 4px 15px;
+  height: 75px;
+  padding: 16px 24px;
   background-color: #fff;
-  box-shadow: rgba(0, 51, 102, 0.1) 0px 2px 8px;
+  --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+  box-shadow: 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), var(--tw-shadow);
   color: #333;
 }
 .header a + a {
   margin-left: 20px;
+}
+.header_title_icon {
+  display: block;
+  width: 40px;
+  height: 40px;
+  --tw-gradient-to: var(--color-blue-600);
+  background-image: linear-gradient(to bottom right in oklab, oklch(20.8% 0.042 265.755deg) 0%, oklch(54.6% 0.245 262.881deg) 100%);
+  border-radius: 12px;
 }
 
 .funcBox {

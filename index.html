@@ -13,9 +13,12 @@
 <body>
 	<div id="app" class="wrap">
 		<div class="header">
-			<router-link to="/">store</router-link>
+			<div class="header_title">
+				<div class="header_title_icon"></div>
+			</div>
+			<!-- <router-link to="/">store</router-link>
 			<router-link to="/acc">記帳</router-link>
-			<router-link to="/news">新聞</router-link>
+			<router-link to="/news">新聞</router-link> -->
 		</div>
 		<div :class="['content',nowPage]">
 			<router-view></router-view>
@@ -82,12 +85,12 @@
 				},
 			},
 			computed: {
-				showLoading() {
-					return this.$store.state.showLoading;
-				}
+				// showLoading() {
+				// 	return this.$store.state.showLoading;
+				// }
 			},
 			components: {
-				'loading': Vue.defineAsyncComponent(() => loadModule('./components/Loading.vue', options)),
+				// 'loading': Vue.defineAsyncComponent(() => loadModule('./components/Loading.vue', options)),
 				// 'header-component': Vue.defineAsyncComponent(() => loadModule('./components/HeaderComponent.vue', options)),
 				// 'right-panel': Vue.defineAsyncComponent(() => loadModule('./components/RightPanel.vue', options)),
 			},

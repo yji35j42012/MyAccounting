@@ -9,16 +9,47 @@
 	flex: none;
 	@include d_f(flex, none, center);
 	width: 100%;
-	height: 50px;
-	padding: 4px 15px;
+	height: 75px;
+	padding: 16px 24px;
 	background-color: #fff;
-	box-shadow: rgba(0, 51, 102, 0.1) 0px 2px 8px;
+	// background-color: map-get($dark_color , home_title_bd);
+	// box-shadow: rgba(0, 51, 102, 0.1) 0px 2px 8px;
+	--tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+	box-shadow: 0 0 #0000, 0 0 #0000, 0 0 #0000, 0 0 #0000, var(--tw-shadow);
 	color: #333;
 
 	a+a {
 		margin-left: 20px;
 	}
+
+	// .header_title
+	&_title {
+
+		// .header_title_icon
+		&_icon {
+			display: block;
+			width: 40px;
+			height: 40px;
+			--tw-gradient-to: var(--color-blue-600);
+			// background-image: linear-gradient(to bottom right in oklab, #000 0%, #0000 100%);
+			background-image: linear-gradient(to bottom right in oklab,
+					oklch(20.8% .042 265.755) 0%,
+					oklch(54.6% .245 262.881) 100%);
+
+			// 		to bottom right in oklab,
+			//   oklch(20.8% .042 265.755) 0%, 
+			//  oklch(54.6% .245 262.881) 100%
+
+			// to bottom right in oklab,
+			// oklch(20.8% .042 265.755)
+			// 0%, 
+			// #000 100%;
+			border-radius: 12px;
+		}
+	}
 }
+
+
 
 .funcBox {
 	padding: 4px;
