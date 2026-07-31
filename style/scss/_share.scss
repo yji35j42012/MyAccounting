@@ -19,35 +19,267 @@
 	color: #333;
 
 	a+a {
-		margin-left: 20px;
+		margin-left: 4px;
 	}
 
 	// .header_title
 	&_title {
+		@include d_f(flex, center, center);
 
 		// .header_title_icon
 		&_icon {
-			display: block;
+			flex: none;
+			@include d_f(flex, center, center);
 			width: 40px;
 			height: 40px;
+			margin-right: 10px;
 			--tw-gradient-to: var(--color-blue-600);
 			// background-image: linear-gradient(to bottom right in oklab, #000 0%, #0000 100%);
 			background-image: linear-gradient(to bottom right in oklab,
 					oklch(20.8% .042 265.755) 0%,
 					oklch(54.6% .245 262.881) 100%);
-
-			// 		to bottom right in oklab,
-			//   oklch(20.8% .042 265.755) 0%, 
-			//  oklch(54.6% .245 262.881) 100%
-
-			// to bottom right in oklab,
-			// oklch(20.8% .042 265.755)
-			// 0%, 
-			// #000 100%;
 			border-radius: 12px;
+
+			svg {
+				color: #fff;
+			}
+		}
+
+		// .header_title_h1
+		&_h1 {
+			color: #0f172b;
+			font-size: 18px;
+
+			&:after {
+				display: block;
+				content: attr(data-en);
+				color: #62748e;
+				font-size: 12px;
+			}
 		}
 	}
 }
+
+
+.nav {
+	@include d_f(flex, none, center);
+	margin-left: auto;
+
+	// .nav_link
+	&_link {
+		@include d_f(flex, none, center);
+		padding: 11px 16px;
+		font-size: 14px;
+		line-height: 14px;
+		color: #45556c;
+		border-radius: 12px;
+
+		&.router-link-active,
+		&.router-link-exact-active {
+			background-color: #0f172b;
+			color: #fff;
+		}
+
+		svg {
+			display: block;
+			margin-right: 4px;
+			width: 16px;
+			height: 16px;
+			vertical-align: middle;
+
+		}
+	}
+}
+
+.content {
+	padding: 24px;
+
+	// .content_h1
+	&_h1 {
+		display: block;
+		font-size: 36px;
+
+		&::after {
+			display: block;
+			content: attr(data-txt);
+			font-size: 16px;
+			color: #45556c;
+		}
+	}
+}
+
+.filter {
+	margin-top: 32px;
+
+	// .filter_title
+	&_title {
+		margin-bottom: 20px;
+		font-size: 18px;
+	}
+
+	// .filter_box
+	&_box {
+		@include d_f(flex);
+	}
+}
+
+.acc {
+
+	// .acc_lists
+	// .acc_lists_title
+	&_title {
+		content: "共" +attr(data-txt)+"筆交易";
+	}
+}
+
+.normal_shadow {
+	padding: 24px;
+	box-shadow: 0 0 #0000, 0 0 #0000, 0 0 #0000, 0 0 #0000, 0 1px 3px 0 #0000001a, 0 1px 2px -1px #0000001a;
+	border-radius: 12px;
+	background-color: #fff;
+
+	&+.normal_shadow {
+		margin-top: 20px;
+	}
+}
+
+.normal_inp {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 36px;
+	padding: 4px 12px 4px 40px;
+	box-shadow:
+		0 0 #0000,
+		0 0 #0000,
+		0 0 #0000,
+		0 0 #0000,
+		0 1px 3px 0 #0000001a,
+		0 1px 2px 0 #0000000d;
+	border-radius: 12px;
+	border: 1px solid #f0f2f5;
+
+	svg {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 20px;
+		display: block;
+		width: 16px;
+		height: 16px;
+		margin: auto;
+		color: #90a1b9;
+		transform: translateX(-50%);
+	}
+
+	input {
+		width: 100%;
+		height: 100%;
+
+	}
+}
+
+.normal_sel {
+	flex: none;
+	width: 160px;
+	height: 36px;
+	margin-left: 15px;
+	padding: 8px 12px;
+	box-shadow:
+		0 0 #0000,
+		0 0 #0000,
+		0 0 #0000,
+		0 0 #0000,
+		0 1px 3px 0 #0000001a,
+		0 1px 2px 0 #0000000d;
+	border-radius: 12px;
+	border: 1px solid #f0f2f5;
+
+	// .normal_sel_ul
+	&_ul {
+		display: none;
+	}
+
+	// .normal_sel_txt
+	&_txt {
+		font-size: 14px;
+		color: #030b1c;
+	}
+}
+
+.normal_tb {
+	width: 100%;
+	margin-top: 20px;
+	color: #030b1c;
+	text-align: left;
+	font-size: 14px;
+	border-collapse: collapse;
+	border-spacing: 0;
+
+	th {
+		height: 40px;
+		padding: 0 8px;
+	}
+
+	td {
+		padding: 8px;
+		border-top: 1px solid #e2e8f0;
+		font-weight: 500;
+	}
+
+	// .normal_tb_edit
+	&_edit {
+		@include d_f(flex, center, center);
+		width: 32px;
+		height: 32px;
+		border-radius: 12px;
+
+		svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		&:hover {
+			background-color: rgb(72, 168, 48);
+		}
+	}
+
+	tbody tr:hover {
+		background-color: #f8fafc;
+		;
+	}
+
+
+	.type {
+		display: inline-block;
+		padding: 2px 8px;
+		font-size: 12px;
+		color: oklch(32% .12 260);
+		background-color: #ebeff5;
+		border-radius: 12px;
+
+		&                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                .in {
+			color: #fcfcfc;
+			background-color: #062e6e;
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -263,16 +495,6 @@
 	}
 }
 
-.normal_tb {
-	width: 100%;
-	table-layout: fixed;
-	color: #ffffff;
-}
-
-th,
-td {
-	padding: 5px;
-}
 
 .accounting_product {
 	text-align: left;

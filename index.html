@@ -14,11 +14,35 @@
 	<div id="app" class="wrap">
 		<div class="header">
 			<div class="header_title">
-				<div class="header_title_icon"></div>
+				<div class="header_title_icon">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+						data-loc="client/src/components/Navigation.tsx:25">
+						<path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+						<path d="M18 17V9"></path>
+						<path d="M13 17V5"></path>
+						<path d="M8 17v-3"></path>
+					</svg>
+				</div>
+				<h1 class="header_title_h1" data-en="CashFlow Manager">現金流管理</h1>
 			</div>
-			<!-- <router-link to="/">store</router-link>
-			<router-link to="/acc">記帳</router-link>
-			<router-link to="/news">新聞</router-link> -->
+			<div class="nav">
+				<router-link class="nav_link" to="/">儀錶板</router-link>
+				<router-link class="nav_link" to="/acc">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+							class="lucide lucide-list w-4 h-4" data-loc="client/src/components/Navigation.tsx:49">
+							<path d="M3 12h.01"></path>
+							<path d="M3 18h.01"></path>
+							<path d="M3 6h.01"></path>
+							<path d="M8 12h13"></path>
+							<path d="M8 18h13"></path>
+							<path d="M8 6h13"></path>
+						</svg>
+					交易列表
+				</router-link>
+			</div>
+			<!-- <router-link to="/news">新聞</router-link> -->
 		</div>
 		<div :class="['content',nowPage]">
 			<router-view></router-view>

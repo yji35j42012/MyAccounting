@@ -5,11 +5,11 @@ const routes=[
 	},
 	{
 		path: '/',
-		component: () => loadModule('./page/accounting.vue', options),
+		component: () => loadModule('./page/report_m.vue', options),
 	},
 	{
-		path: '/news',
-		component: () => loadModule('./page/news.vue', options),
+		path: '/acc',
+		component: () => loadModule('./page/accounting.vue', options),
 	},
 ];
 const router=VueRouter.createRouter({

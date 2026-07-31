@@ -1,65 +1,98 @@
 <style scoped></style>
 
 <template>
-	<!-- <div class="funcBox">
-		<button class="normal_btn" @click="accountingEdit()">新增</button>
-	</div> -->
-	<div class="accounting">
-		<div class="accounting_group">
-			<div class="accounting_item _total">
-				<div class="accounting_item_title">2026 年 3 月</div>
-				<div class="accounting_item_total" data-left="總花費：">7000</div>
+	<div class="acc">
+		<div class="content_h1" data-txt="管理您的所有交易">交易紀錄</div>
+		<div class="filter normal_shadow">
+			<div class="filter_title">篩選</div>
+			<div class="filter_box ">
+				<label class="normal_inp">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+						class="lucide lucide-search absolute left-3 top-3 w-4 h-4 text-slate-400"
+						data-loc="client/src/pages/Transactions.tsx:140">
+						<circle cx="11" cy="11" r="8"></circle>
+						<path d="m21 21-4.3-4.3"></path>
+					</svg>
+					<input type="text" placeholder="搜尋分類、備註或金額..." />
+				</label>
+				<div class="normal_sel">
+					<span class="normal_sel_txt">全部</span>
+					<ul class="normal_sel_ul">
+						<li class="normal_sel_li">全部</li>
+						<li class="normal_sel_li">收入</li>
+						<li class="normal_sel_li">支出</li>
+					</ul>
+				</div>
 			</div>
-			<div class="accounting_item">
-				<div class="accounting_item_name" data-money="777">atm存</div>
-				<div class="accounting_item_date">2026.03.02</div>
-			</div>
+		</div>
+
+		<div class="acc_lists normal_shadow">
+			<div class="acc_lists_title" data-txt="5">交易列表 (5)</div>
+
+			<table class="normal_tb">
+				<thead>
+					<tr>
+						<th>日期</th>
+						<th>類型</th>
+						<th>分類</th>
+						<th>帳戶</th>
+						<th>金額</th>
+						<th>備註</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>2026/7/5</td>
+						<td>
+							<span class="type">支出</span>
+						</td>
+						<td>餐飲</td>
+						<td>信用卡</td>
+						<td>-$320</td>
+						<td>晚餐</td>
+						<td>
+							<button class="normal_tb_edit">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+									fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+									stroke-linejoin="round" class="lucide lucide-pen w-4 h-4"
+									data-loc="client/src/pages/Transactions.tsx:215">
+									<path
+										d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z">
+									</path>
+								</svg>
+							</button>
+						</td>
+					</tr>
+					<tr>
+						<td>2026/7/5</td>
+						<td>
+							<span class="type in">收入</span>
+						</td>
+						<td>餐飲</td>
+						<td>信用卡</td>
+						<td>-$320</td>
+						<td>晚餐</td>
+						<td>
+							<button class="normal_tb_edit">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+									fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+									stroke-linejoin="round" class="lucide lucide-pen w-4 h-4"
+									data-loc="client/src/pages/Transactions.tsx:215">
+									<path
+										d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z">
+									</path>
+								</svg>
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
 		</div>
 	</div>
-	<!-- <div class="content acc"> -->
-	<!-- <div class="accounting">
-			<template v-for="(outsideItem, index) in showAccounting.objList" :key="index">
-				<div class="accounting_title on" @click="accountingTitle(outsideItem.id)"
-					:ref="'title_' + outsideItem.id">
-					{{ index }}
-					<span class="accounting_title_total">{{ outsideItem.totalAmount }}</span>
-				</div>
-				<div class="accounting_group">
-					<div class="accounting_group_title">
-						<div class="accounting_span1">消費日期</div>
-						<div class="accounting_span2">消費項目</div>
-						<div class="accounting_span3">消費金額</div>
-					</div>
-					<template v-for="(insideItem, index) in outsideItem.lists" :key="index">
-						<div class="accounting_group_list" @click="accountingList(insideItem)">
-							<div class="accounting_span1">{{ insideItem.accounting_date }}</div>
-							<div class="accounting_span2">{{ insideItem.accounting_product }}</div>
-							<div class="accounting_span3">{{ insideItem.accounting_amount }}</div>
-						</div>
-					</template>
-</div>
 </template>
-</div> -->
-	<!-- </div> -->
-	<!-- <div :class="['alert', accounting_edit.edit_state]" v-if="accounting_edit.isShow">
-		<div class="alert_box">
-			<div class="alert_head">訊息</div>
-			<div class="alert_body">
-				<input type="text" class="alert_inp" placeholder="消費日期" v-model="accounting_edit.edit_date">
-				<input type="text" class="alert_inp" placeholder="消費項目" v-model="accounting_edit.edit_product">
-				<input type="text" class="alert_inp" placeholder="消費金額" v-model="accounting_edit.edit_amount">
-				<input type="text" class="alert_inp" placeholder="消費方式" v-model="accounting_edit.edit_mode">
-
-				<div class="alert_funcbox">
-					<button class="normal_btn" @click="alertClose('accounting')">取消</button>
-					<button class="normal_btn _add" @click="accountingSave">儲存</button>
-					<button class="normal_btn _edit" @click="accountingChange()">修改</button>
-				</div>
-			</div>
-		</div>
-	</div> -->
-</template>
-
 
 <script>
 module.exports = {
@@ -68,13 +101,13 @@ module.exports = {
 			accounting_data: [],
 			accounting_edit: {
 				isShow: false,
-				edit_state: '',
+				edit_state: "",
 				edit_id: "",
 				edit_date: "",
 				edit_product: "",
 				edit_amount: "",
 				edit_mode: "",
-			}
+			},
 		};
 	},
 	mixins: [],
@@ -132,7 +165,6 @@ module.exports = {
 		// 	}
 		// 	// console.log('data', data);
 		// 	data.forEach((element, index) => {
-
 		// 		if (element[0] !== '') {
 		// 			console.log('element[1]', element[1]);
 		// 			let dateTitle = element[1].split('.')[0] + "/" + element[1].split('.')[1]
@@ -213,6 +245,6 @@ module.exports = {
 		// 	let year = objectDate.getFullYear();
 		// 	return year + "." + month + "." + day;
 		// }
-	}
+	},
 };
 </script>
