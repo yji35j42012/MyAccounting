@@ -126,10 +126,15 @@
 .acc {
 
 	// .acc_lists
-	// .acc_lists_title
-	&_title {
-		content: "共" +attr(data-txt)+"筆交易";
+	&_lists {
+
+		// .acc_lists_title
+		&_title {
+			@include d_f(flex, space-between, center);
+			margin-bottom: 20px;
+		}
 	}
+
 }
 
 .normal_shadow {
@@ -181,9 +186,9 @@
 
 .normal_sel {
 	flex: none;
+	@include d_f(flex, space-between, center);
 	width: 160px;
 	height: 36px;
-	margin-left: 15px;
 	padding: 8px 12px;
 	box-shadow:
 		0 0 #0000,
@@ -195,6 +200,10 @@
 	border-radius: 12px;
 	border: 1px solid #f0f2f5;
 
+	.normal_inp+& {
+		margin-left: 15px;
+	}
+
 	// .normal_sel_ul
 	&_ul {
 		display: none;
@@ -204,6 +213,69 @@
 	&_txt {
 		font-size: 14px;
 		color: #030b1c;
+	}
+
+	svg {
+		width: 16px;
+		height: 16px;
+		color: rgb(163, 163, 196);
+	}
+}
+
+.normal_textarea {
+	width: 100%;
+	height: 75px;
+	padding: 8px 12px;
+	box-shadow:
+		0 0 #0000,
+		0 0 #0000,
+		0 0 #0000,
+		0 0 #0000,
+		0 1px 3px 0 #0000001a,
+		0 1px 2px 0 #0000000d;
+	border-radius: 12px;
+	border: 1px solid #f0f2f5;
+	// 
+}
+
+::placeholder {
+	color: #486391;
+	/* 改成你要的色碼 */
+}
+
+.normal_btn {
+	min-width: 60px;
+	height: 36px;
+	padding: 8px 16px;
+	font-size: 14px;
+	border-radius: 12px;
+
+	&._primary {
+		background-color: rgba(9, 46, 111, 1);
+		color: #fff;
+
+		@include hoverHandler {
+			background-color: rgba(9, 46, 111, .9);
+		}
+	}
+
+	&._secondary {
+		box-shadow:
+			0 0 #0000,
+			0 0 #0000,
+			0 0 #0000,
+			0 0 #0000,
+			0 1px 3px 0 #0000001a,
+			0 1px 2px 0 #0000000d;
+		background-color: #fff;
+
+		@include hoverHandler {
+			background-color: #48a830;
+		}
+	}
+
+	&+.normal_btn {
+		margin-left: 15px;
 	}
 }
 
@@ -219,12 +291,21 @@
 	th {
 		height: 40px;
 		padding: 0 8px;
+		white-space: nowrap;
 	}
 
 	td {
 		padding: 8px;
 		border-top: 1px solid #e2e8f0;
 		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	// .normal_tb_box
+	&_box {
+		width: 100%;
+		padding-bottom: 20px;
+		overflow-x: auto;
 	}
 
 	// .normal_tb_edit
@@ -257,19 +338,141 @@
 		color: oklch(32% .12 260);
 		background-color: #ebeff5;
 		border-radius: 12px;
+	}
 
-		&                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                .in {
-			color: #fcfcfc;
-			background-color: #062e6e;
+	.income .type {
+		color: #fcfcfc;
+		background-color: rgb(6, 46, 110);
+	}
+
+	.amont {
+		color: rgb(231, 0, 15);
+		font-weight: bold;
+
+		&::before {
+			content: "-$";
 		}
+	}
+
+	.income .amont {
+		color: rgb(0, 151, 114);
+
+		&::before {
+			content: "+$";
+		}
+	}
+
+	.acc {
+		color: rgb(81, 102, 118);
+	}
+}
+
+.add_list {
+	@include d_f(flex, center, center);
+	width: 112px;
+	height: 40px;
+	background-color: rgb(9, 46, 111, 1);
+	color: #fff;
+	border-radius: 12px;
+
+	@include hoverHandler {
+		background-color: rgb(9, 46, 111, .9);
+	}
+
+	svg {
+		width: 16px;
+		height: 16px;
+		margin-right: 8px;
 	}
 }
 
 
 
+.alert {
+	position: absolute;
+	top: 0;
+	left: 0;
+	@include d_f(flex, center, center);
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, .5);
+
+	// .alert_box
+	&_box {
+		position: relative;
+		width: 100%;
+		max-width: 512px;
+		padding: 24px;
+		background-color: #fff;
+		border-radius: 12px;
 
 
+	}
 
+	// .alert_title
+	&_title {
+		margin-bottom: 10px;
+		font-weight: bold;
+		color: rgb(17, 30, 42);
+	}
+
+	// .alert_content
+	&_content {
+
+		// .alert_content_item
+		&_item {
+			font-size: 14px;
+
+			&::before {
+				content: attr(data-txt);
+				display: block;
+				margin-bottom: 8px;
+			}
+
+			&+.alert_content_item {
+				margin-top: 15px;
+			}
+		}
+	}
+
+	// .alert_close
+	&_close {
+		position: absolute;
+		top: 20px;
+		right: 20px;
+		opacity: 0.7;
+
+		@include hoverHandler {
+			opacity: 1;
+		}
+
+		svg {
+			width: 16px;
+			height: 16px;
+		}
+	}
+
+	// .alert_inp
+	&_inp {
+		width: 100%;
+		height: 36px;
+		padding: 4px 12px;
+		box-shadow: 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 1px 3px 0 rgba(0, 0, 0, 0.1019607843), 0 1px 2px 0 rgba(0, 0, 0, 0.0509803922);
+		border-radius: 12px;
+		border: 1px solid #f0f2f5;
+
+		&:focus {
+
+			box-shadow: 0 0 #0000, 0 0 #0000, 0 0 #0000, 0 0 0 3px currentColor, 0 0 #0000;
+		}
+	}
+
+	// .alert_funcbox
+	&_funcbox {
+		text-align: right;
+		margin-top: 15px;
+	}
+}
 
 
 
@@ -296,14 +499,7 @@
 	}
 }
 
-.normal_btn {
-	min-width: 50px;
-	height: 40px;
-	padding: 4px 12px;
-	background-color: #6700f4;
-	color: #fff;
-	border-radius: 4px;
-}
+
 
 .showAdd {
 	._edit {
@@ -317,71 +513,6 @@
 	}
 }
 
-.alert {
-	position: fixed;
-	top: 0;
-	left: 0;
-	@include d_f(flex, center, center);
-	width: 100%;
-	height: 100%;
-	padding: 12px;
-	background-color: rgba(0, 0, 0, .7);
-
-	// .alert_box
-	&_box {
-		@include d_f(flex);
-		flex-direction: column;
-		width: 100%;
-	}
-
-	// .alert_head
-	&_head {
-		@include d_f(flex, none, center);
-		width: 100%;
-		height: 50px;
-		padding: 4px 12px;
-		background-color: #1e2841;
-		color: #fff;
-		font-size: 20px;
-		border-top-right-radius: 8px;
-		border-top-left-radius: 8px;
-	}
-
-	// .alert_body
-	&_body {
-		padding: 12px;
-		background-color: #34446e;
-		border-bottom-right-radius: 8px;
-		border-bottom-left-radius: 8px;
-	}
-
-	// .alert_inp
-	&_inp {
-		width: 100%;
-		height: 40px;
-		padding: 4px 12px;
-		background-color: #fff;
-		color: #75829b;
-		font-size: 16px;
-		border: 1px solid rgba(0, 0, 0, .32);
-
-		&+& {
-			margin-top: 12px;
-		}
-	}
-
-	// .alert_funcbox
-	&_funcbox {
-		@include d_f(flex, center, center);
-		width: 100%;
-		height: 50px;
-		margin-top: 12px;
-
-		.normal_btn+.normal_btn {
-			margin-left: 12px;
-		}
-	}
-}
 
 .content {
 	overflow-x: hidden;
