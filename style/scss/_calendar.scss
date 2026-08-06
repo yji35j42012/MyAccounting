@@ -1,0 +1,127 @@
+@font-face {
+    font-family: "Material Icons";
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/materialicons/v111/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2) format("woff2");
+}
+
+.material-icons {
+    font-family: "Material Icons";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+}
+
+.calendar {
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 320px;
+    height: 350px;
+    margin: auto;
+    background-color: #ffffff;
+    box-shadow:
+        0 0 #0000,
+        0 0 #0000,
+        0 0 #0000,
+        0 0 #0000,
+        0 1px 3px 0 #0000001a,
+        0 1px 2px 0 #0000000d;
+    border-radius: 12px;
+    border: 1px solid #f0f2f5;
+}
+
+.calendar_head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.calendar_head_info {
+    color: #69c249;
+    text-align: center;
+    line-height: 1;
+}
+
+.calendar_head_info .month {
+    font-size: 28px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.calendar_head_info .year {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.calendar_head_prev,
+.calendar_head_next {
+    color: #bbbbbb;
+}
+
+.calendar_body {
+    width: 100%;
+    padding: 0 15px;
+    box-sizing: border-box;
+    /* height: 100%; */
+}
+
+.calendar_body table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    text-align: center;
+    /* height: 100%; */
+}
+
+.calendar_body th {
+    width: calc(100% / 7);
+    padding: 6px 0;
+    color: #a8a8a8;
+}
+
+.calendar_body td {
+    padding: 6px 0;
+    border: 1px;
+}
+
+.lightgrey {
+    color: #a8a8a8;
+    /*浅灰色*/
+}
+
+.darkgrey {
+    color: #565656;
+    cursor: pointer;
+    /*深灰色*/
+}
+
+.calendar_body .today {
+    border: 1px solid #6ac13c;
+    background: #e9f8df;
+    cursor: pointer;
+}
+
+.search {
+    background-color: #c3bef7;
+    border: 1px solid #3f2e56;
+}
+
+.chose {
+    background-color: rgb(105, 194, 73);
+}

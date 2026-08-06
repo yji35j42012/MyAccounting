@@ -48,6 +48,7 @@
 			<router-view></router-view>
 		</div>
 		<loading v-if="showLoading"></loading>
+		<!-- <loading ></loading> -->
 	</div>
 
 	<script src="./js/libs/axios.js"></script>
@@ -85,7 +86,7 @@
 			data() {
 				return {
 					nowPage: "",
-					// loadingShow: true,
+					loadingShow: true,
 					title: 'alex',
 				}
 			},
@@ -109,12 +110,12 @@
 				},
 			},
 			computed: {
-				// showLoading() {
-				// 	return this.$store.state.showLoading;
-				// }
+				showLoading() {
+					return this.$store.state.showLoading;
+				}
 			},
 			components: {
-				// 'loading': Vue.defineAsyncComponent(() => loadModule('./components/Loading.vue', options)),
+				'loading': Vue.defineAsyncComponent(() => loadModule('./components/Loading.vue', options)),
 				// 'header-component': Vue.defineAsyncComponent(() => loadModule('./components/HeaderComponent.vue', options)),
 				// 'right-panel': Vue.defineAsyncComponent(() => loadModule('./components/RightPanel.vue', options)),
 			},

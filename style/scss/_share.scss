@@ -153,7 +153,7 @@
 	display: block;
 	width: 100%;
 	height: 36px;
-	padding: 4px 12px 4px 40px;
+	padding: 4px 12px;
 	box-shadow:
 		0 0 #0000,
 		0 0 #0000,
@@ -163,6 +163,10 @@
 		0 1px 2px 0 #0000000d;
 	border-radius: 12px;
 	border: 1px solid #f0f2f5;
+
+	.filter_box & {
+		padding: 4px 12px 4px 40px;
+	}
 
 	svg {
 		position: absolute;
@@ -185,6 +189,7 @@
 }
 
 .normal_sel {
+	position: relative;
 	flex: none;
 	@include d_f(flex, space-between, center);
 	width: 160px;
@@ -206,7 +211,48 @@
 
 	// .normal_sel_ul
 	&_ul {
+		position: absolute;
+		z-index: 1;
+		top: calc(100% + 5px);
+		left: 0;
 		display: none;
+		width: 100%;
+		padding: 4px;
+		background-color: #fff;
+		box-shadow:
+			0 0 #0000,
+			0 0 #0000,
+			0 0 #0000,
+			0 0 #0000,
+			0 1px 3px 0 #0000001a,
+			0 1px 2px 0 #0000000d;
+		border-radius: 12px;
+		border: 1px solid #f0f2f5;
+
+		.on & {
+			display: block;
+		}
+	}
+
+	// .normal_sel_li
+	&_li {
+		@include d_f(flex, none, center);
+		width: 100%;
+		height: 30px;
+		padding: 0 8px;
+		font-size: 14px;
+		border-radius: 8px;
+		background-color: #fff;
+
+		@include hoverHandler {
+			background-color: #48a830;
+			color: #fff;
+		}
+
+		&.on {
+			background-color: #48a830;
+			color: #fff;
+		}
 	}
 
 	// .normal_sel_txt
@@ -392,7 +438,7 @@
 	position: absolute;
 	top: 0;
 	left: 0;
-	@include d_f(flex, center, center);
+	display: none;
 	width: 100%;
 	height: 100%;
 	background-color: rgba(0, 0, 0, .5);
@@ -414,6 +460,15 @@
 		margin-bottom: 10px;
 		font-weight: bold;
 		color: rgb(17, 30, 42);
+	}
+
+	.acc_edit {
+		display: none;
+	}
+
+	&.showAdd ._new,
+	&.showEdit ._edit {
+		display: block;
 	}
 
 	// .alert_content
@@ -462,8 +517,7 @@
 		border: 1px solid #f0f2f5;
 
 		&:focus {
-
-			box-shadow: 0 0 #0000, 0 0 #0000, 0 0 #0000, 0 0 0 3px currentColor, 0 0 #0000;
+			box-shadow: 0px 0px 0px 3px rgba(2, 82, 140, 1);
 		}
 	}
 
@@ -471,6 +525,12 @@
 	&_funcbox {
 		text-align: right;
 		margin-top: 15px;
+
+	}
+
+	&.showAdd,
+	&.showEdit{
+		@include d_f(flex,center,center);
 	}
 }
 
@@ -496,20 +556,6 @@
 	&:before {
 		content: attr(data-msg);
 		// width: 75px;
-	}
-}
-
-
-
-.showAdd {
-	._edit {
-		display: none;
-	}
-}
-
-.showEdit {
-	._add {
-		display: none;
 	}
 }
 

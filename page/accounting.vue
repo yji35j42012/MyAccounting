@@ -16,28 +16,14 @@
 					</svg>
 					<input type="text" placeholder="搜尋分類、備註或金額..." />
 				</label>
-				<div class="normal_sel">
-					<span class="normal_sel_txt">全部</span>
-					<ul class="normal_sel_ul">
-						<li class="normal_sel_li">全部</li>
-						<li class="normal_sel_li">收入</li>
-						<li class="normal_sel_li">支出</li>
-					</ul>
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-						class="lucide lucide-chevron-down size-4 opacity-50"
-						data-loc="client/src/components/ui/select.tsx:45" aria-hidden="true">
-						<path d="m6 9 6 6 6-6"></path>
-					</svg>
-				</div>
+				<sel-component :selType="this.sel_type_child" @sel-return="selTypeChild"></sel-component>
 			</div>
 		</div>
 
 		<div class="acc_lists normal_shadow">
 			<div class="acc_lists_title" data-txt="5">
-				交易列表 ({{this.accounting_data.length}})
-
-				<button class="add_list">
+				交易列表 ({{ this.accounting_data.length }})
+				<button class="add_list" @click="isShowAlert('add')">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
 						class="lucide lucide-plus w-5 h-5" data-loc="client/src/pages/Transactions.tsx:118">
@@ -70,7 +56,7 @@
 							<td><span class="amont">{{ item.accounting_amount }}</span></td>
 							<td>{{ item.accounting_remark }}</td>
 							<td>
-								<button class="normal_tb_edit">
+								<button class="normal_tb_edit" @click="isShowAlert('edit', item)">
 									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
 										fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
 										stroke-linejoin="round" class="lucide lucide-pen w-4 h-4"
@@ -85,13 +71,11 @@
 					</tbody>
 				</table>
 			</div>
-
-
 		</div>
 
-		<div class="alert" style="display: none;">
+		<div id="alert" :class="['alert', this.alertData.class]">
 			<div class="alert_box">
-				<button class="alert_close">
+				<button class="alert_close" @click="(isShowAlert(''))">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
 						class="lucide lucide-x" data-loc="client/src/components/ui/dialog.tsx:139">
@@ -99,72 +83,41 @@
 						<path d="m6 6 12 12"></path>
 					</svg>
 				</button>
-				<div class="alert_title">新增交易</div>
+				<div class="alert_title" @click="">
+					<span class="acc_edit _new" v-if="this.alertData.class == 'showAdd'">新增交易</span>
+					<span class="acc_edit _edit" v-if="this.alertData.class == 'showEdit'">編輯交易</span>
+				</div>
 				<div class="alert_content">
 					<div class="alert_content_item" data-txt="日期">
-						<input type="date" class="alert_inp">
+						<input type="text" class="normal_inp" @click="showCalendar"
+							v-model="this.accounting_edit.edit_date">
+						<calendar-component v-if="calendar_data.isShow" :calendarDate="this.calendar_data.date"
+							@calendar-return="calendarHandler"></calendar-component>
 					</div>
 
 					<div class="alert_content_item" data-txt="交易類型">
-						<div class="normal_sel">
-							<span class="normal_sel_txt">支出</span>
-							<ul class="normal_sel_ul">
-								<li class="normal_sel_li">收入</li>
-								<li class="normal_sel_li">支出</li>
-							</ul>
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-								fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-								stroke-linejoin="round" class="lucide lucide-chevron-down size-4 opacity-50"
-								data-loc="client/src/components/ui/select.tsx:45" aria-hidden="true">
-								<path d="m6 9 6 6 6-6"></path>
-							</svg>
-						</div>
+						<sel-component :selType="this.sel_alert_type" @sel-return="selAlertType"></sel-component>
 					</div>
 					<div class="alert_content_item" data-txt="分類">
-						<div class="normal_sel">
-							<span class="normal_sel_txt">選擇分類</span>
-							<ul class="normal_sel_ul">
-								<li class="normal_sel_li">薪資</li>
-								<li class="normal_sel_li">租金</li>
-								<li class="normal_sel_li">餐飲</li>
-								<li class="normal_sel_li">交通</li>
-								<li class="normal_sel_li">娛樂</li>
-							</ul>
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-								fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-								stroke-linejoin="round" class="lucide lucide-chevron-down size-4 opacity-50"
-								data-loc="client/src/components/ui/select.tsx:45" aria-hidden="true">
-								<path d="m6 9 6 6 6-6"></path>
-							</svg>
-						</div>
+						<sel-component :selType="this.sel_alert_sort" @sel-return="selAlertSort"></sel-component>
 					</div>
 					<div class="alert_content_item" data-txt="金額">
-						<input type="number" class="alert_inp" placeholder="0">
+						<input type="number" class="alert_inp" placeholder="0" v-model="accounting_edit.edit_amount">
 					</div>
 					<div class="alert_content_item" data-txt="帳戶">
-						<div class="normal_sel">
-							<span class="normal_sel_txt">選擇帳戶</span>
-							<ul class="normal_sel_ul">
-								<li class="normal_sel_li">銀行(國泰)</li>
-								<li class="normal_sel_li">信用卡(國泰)</li>
-								<li class="normal_sel_li">信用卡(永豐)</li>
-								<li class="normal_sel_li">銀行(永豐)</li>
-							</ul>
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-								fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-								stroke-linejoin="round" class="lucide lucide-chevron-down size-4 opacity-50"
-								data-loc="client/src/components/ui/select.tsx:45" aria-hidden="true">
-								<path d="m6 9 6 6 6-6"></path>
-							</svg>
-						</div>
+						<sel-component :selType="this.sel_alert_acc" @sel-return="selAlertAcc"></sel-component>
 					</div>
 					<div class="alert_content_item" data-txt="備註(選填)">
-						<textarea class="normal_textarea" placeholder="輸入備註..."></textarea>
+						<textarea class="normal_textarea" placeholder="輸入備註..."
+							v-model="accounting_edit.edit_remark"></textarea>
 					</div>
 
 					<div class="alert_funcbox">
-						<button class="normal_btn _secondary">取消</button>
-						<button class="normal_btn _primary">新增</button>
+						<button class="normal_btn _secondary" @click="(isShowAlert(''))">取消</button>
+						<button class="normal_btn _primary" @click="accountingChange"
+							v-if="this.alertData.class == 'showEdit'">更新</button>
+						<button class="normal_btn _primary" @click="accountingSave"
+							v-if="this.alertData.class == 'showAdd'">新增</button>
 					</div>
 				</div>
 			</div>
@@ -176,27 +129,53 @@
 module.exports = {
 	data() {
 		return {
+			calendar_data: {
+				isShow: false,
+				date: "",
+			},
 			accounting_data: [],
 			accounting_edit: {
-				isShow: false,
-				edit_state: "",
-				edit_id: "",
+				edit_id: 0,
 				edit_date: "",
-				edit_product: "",
-				edit_amount: "",
-				edit_mode: "",
+				edit_type: "支出",
+				edit_sort: "選擇分類",
+				edit_amount: 0,
+				edit_acc: "選擇帳戶",
+				edit_remark: ""
 			},
+			sel_type_child: {
+				selText: "全部",
+				lists: ["全部", "收入", "支出"]
+			},
+			sel_alert_type: {
+				selText: "支出",
+				lists: ["收入", "支出"]
+			},
+			sel_alert_sort: {
+				selText: "薪資",
+				lists: ["薪資", "租金", "餐飲", "貸款", "投資", "生活雜費", "小孩雜費", "交通", "娛樂", "獎金"],
+			},
+			sel_alert_acc: {
+				selText: "信用卡(永豐)",
+				lists: ["信用卡(永豐)", "信用卡(國泰)", "銀行(國泰)", "銀行(永豐)"],
+			},
+			alertData: {
+				class: "",
+			}
 		};
 	},
 	mixins: [],
-	components: {},
+	components: {
+		'sel-component': Vue.defineAsyncComponent(() => loadModule('./components/SelComponent.vue', options)),
+		'calendar-component': Vue.defineAsyncComponent(() => loadModule('./components/CalendarComponent.vue', options)),
+	},
 	mounted() {
-		store.dispatch("SET_LOADING_ACTION", false);
 		var get_url = url + "?func=getAccounting";
 		axios.get(get_url).then(res => {
 			this.resetAccountingData(res.data);
 			store.dispatch("SET_LOADING_ACTION", false);
 		});
+
 	},
 	computed: {
 		// showAccounting() {
@@ -206,6 +185,29 @@ module.exports = {
 		// }
 	},
 	methods: {
+		calendarHandler(data) {
+			this.calendar_data.isShow = false;
+			this.accounting_edit.edit_date = data.y + "." + data.m + "." + data.d;
+		},
+		showCalendar() {
+			this.calendar_data.isShow = !this.calendar_data.isShow;
+			this.calendar_data.date = this.accounting_edit.edit_date
+		},
+		selTypeChild(data) {
+			this.sel_type_child.selText = data;
+		},
+		selAlertType(data) {
+			this.sel_alert_type.selText = data;
+			this.accounting_edit.edit_type = data;
+		},
+		selAlertSort(data) {
+			this.sel_alert_sort.selText = data;
+			this.accounting_edit.edit_sort = data;
+		},
+		selAlertAcc(data) {
+			this.sel_alert_acc.selText = data;
+			this.accounting_edit.edit_acc = data;
+		},
 		resetAccountingData(data) {
 			let objData = []
 			data.forEach((element, index) => {
@@ -219,68 +221,84 @@ module.exports = {
 						accounting_amount: element[5],
 						accounting_remark: element[6],
 					});
-					// let dateTitle = element[1].split('.')[0] + "/" + element[1].split('.')[1]
-					// if (objData.dateItem.indexOf(dateTitle) == -1) {
-					// 	objData.dateItem.push(dateTitle)
-					// 	objData.objList[dateTitle] = {
-					// 		id: index,
-					// 		// totalAmount: element[3],
-					// 		lists: [{
-					// 			accounting_id: element[0],
-					// 			accounting_date: element[1],
-					// 			accounting_type: element[2],
-					// 			accounting_sort: element[3],
-					// 			accounting_acc: element[4],
-					// 			accounting_amount: element[5],
-					// 			accounting_remark: element[6],
-					// 		}]
-					// 	}
-					// } else {
-					// 	objData.objList[dateTitle].totalAmount = objData.objList[dateTitle].totalAmount + element[3]
-					// 	objData.objList[dateTitle].lists.push({
-					// 		accounting_id: element[0],
-					// 		accounting_date: element[1],
-					// 		accounting_type: element[2],
-					// 		accounting_sort: element[3],
-					// 		accounting_acc: element[4],
-					// 		accounting_amount: element[5],
-					// 		accounting_remark: element[6],
-					// 	});
-					// }
 				}
 			});
-			const reversed = [...data].reverse(); 
+			const reversed = [...data].reverse();
 			this.accounting_data = [...objData].reverse()
-			console.log('objData', objData);
 		},
-		// accountingChange() {
-		// 	store.dispatch("SET_LOADING_ACTION", true);
-		// 	this.accounting_edit.isShow = false;
-		// 	var get_url = url +
-		// 		"?func=updateAccounting&id=" + this.accounting_edit.edit_id +
-		// 		"&date=" + this.accounting_edit.edit_date +
-		// 		"&product=" + this.accounting_edit.edit_product +
-		// 		"&amount=" + this.accounting_edit.edit_amount +
-		// 		"&mode=" + this.accounting_edit.edit_mode;
-		// 	axios.get(get_url).then(res => {
-		// 		this.resetAccountingData(res.data);
-		// 		setTimeout(() => {
-		// 			this.clearEdit();
-		// 			store.dispatch("SET_LOADING_ACTION", false);
-		// 		}, 500);
-		// 	});
-		// },
-		// accountingList(obj) {
-		// 	console.log('accountingList', obj);
-		// 	this.accounting_edit.edit_state = 'showEdit';
-		// 	this.accounting_edit.edit_id = obj.accounting_id;
-		// 	this.accounting_edit.edit_date = obj.accounting_date;
-		// 	this.accounting_edit.edit_product = obj.accounting_product;
-		// 	this.accounting_edit.edit_amount = obj.accounting_amount;
-		// 	this.accounting_edit.edit_mode = obj.accounting_mode;
-		// 	this.accounting_edit.isShow = true;
-		// 	// accounting_id
-		// },
+		isShowAlert(s, item) {
+			if (s == "") {
+				this.alertData.class = "";
+				return;
+			}
+			this.calendar_data.isShow = false
+			if (s == "add") {
+				this.alertData.class = "showAdd";
+				this.accounting_edit.edit_date = this.getDate();
+				this.calendar_data.date = this.getDate();
+			} else if (s == "edit") {
+				this.sel_alert_acc.selText = item.accounting_acc;
+				this.sel_alert_type.selText = item.accounting_type;
+				this.sel_alert_sort.selText = item.accounting_sort;
+				this.alertData.class = "showEdit";
+				this.calendar_data.date = this.accounting_edit.edit_date;
+				this.accounting_edit.edit_id = item.accounting_id;
+				this.accounting_edit.edit_date = item.accounting_date;
+				this.accounting_edit.edit_type = item.accounting_type;
+				this.accounting_edit.edit_sort = item.accounting_sort;
+				this.accounting_edit.edit_amount = item.accounting_amount;
+				this.accounting_edit.edit_acc = item.accounting_acc;
+				this.accounting_edit.edit_remark = item.accounting_remark;
+			}
+		},
+		accountingSave() {
+			store.dispatch("SET_LOADING_ACTION", true);
+			this.accounting_edit.isShow = false;
+			var get_url = url +
+				"?func=setAccounting&date=" + this.accounting_edit.edit_date +
+				"&type=" + this.accounting_edit.edit_type +
+				"&sort=" + this.accounting_edit.edit_sort +
+				"&amount=" + this.accounting_edit.edit_amount +
+				"&acc=" + this.accounting_edit.edit_acc +
+				"&remark=" + this.accounting_edit.edit_remark;
+			this.alertData.class = "";
+			axios.get(get_url).then(res => {
+				this.resetAccountingData(res.data);
+				setTimeout(() => {
+					this.clearEdit();
+					store.dispatch("SET_LOADING_ACTION", false);
+				}, 500);
+			});
+		},
+		accountingChange() {
+			store.dispatch("SET_LOADING_ACTION", true);
+			var get_url = url +
+				"?func=updateAccounting&id=" + this.accounting_edit.edit_id +
+				"&date=" + this.accounting_edit.edit_date +
+				"&type=" + this.accounting_edit.edit_type +
+				"&sort=" + this.accounting_edit.edit_sort +
+				"&amount=" + this.accounting_edit.edit_amount +
+				"&acc=" + this.accounting_edit.edit_acc +
+				"&remark=" + this.accounting_edit.edit_remark;
+			this.alertData.class = "";
+			axios.get(get_url).then(res => {
+				this.resetAccountingData(res.data);
+				setTimeout(() => {
+					this.clearEdit();
+					store.dispatch("SET_LOADING_ACTION", false);
+				}, 500);
+			});
+		},
+		accountingList(obj) {
+			this.accounting_edit.edit_state = 'showEdit';
+			this.accounting_edit.edit_id = obj.accounting_id;
+			this.accounting_edit.edit_date = obj.accounting_date;
+			this.accounting_edit.edit_product = obj.accounting_product;
+			this.accounting_edit.edit_amount = obj.accounting_amount;
+			this.accounting_edit.edit_mode = obj.accounting_mode;
+			this.accounting_edit.isShow = true;
+			// accounting_id
+		},
 
 		// accountingTitle(index) {
 		// 	if (this.$refs['title_' + index][0].classList.contains('on')) {
@@ -294,43 +312,30 @@ module.exports = {
 		// 	this.accounting_edit.edit_state = 'showAdd';
 		// 	this.accounting_edit.isShow = true;
 		// },
-		// accountingSave() {
-		// 	store.dispatch("SET_LOADING_ACTION", true);
-		// 	this.accounting_edit.isShow = false;
-		// 	var get_url = url +
-		// 		"?func=setAccounting&date=" + this.accounting_edit.edit_date +
-		// 		"&product=" + this.accounting_edit.edit_product +
-		// 		"&amount=" + this.accounting_edit.edit_amount +
-		// 		"&mode=" + this.accounting_edit.edit_mode;
-		// 	axios.get(get_url).then(res => {
-		// 		this.resetAccountingData(res.data);
-		// 		setTimeout(() => {
-		// 			this.clearEdit();
-		// 			store.dispatch("SET_LOADING_ACTION", false);
-		// 		}, 500);
-		// 	});
-		// },
-		// clearEdit() {
-		// 	this.accounting_edit.edit_state = "";
-		// 	this.accounting_edit.edit_date = "";
-		// 	this.accounting_edit.edit_product = "";
-		// 	this.accounting_edit.edit_amount = "";
-		// 	this.accounting_edit.edit_mode = "";
-		// },
-		// alertClose(s) {
-		// 	switch (s) {
-		// 		case 'accounting':
-		// 			this.accounting_edit.isShow = false;
-		// 			break;
-		// 	}
-		// },
-		// getDate() {
-		// 	let objectDate = new Date();
-		// 	let day = objectDate.getDate();
-		// 	let month = objectDate.getMonth() + 1;
-		// 	let year = objectDate.getFullYear();
-		// 	return year + "." + month + "." + day;
-		// }
+
+		clearEdit() {
+			this.accounting_edit.edit_id = "";
+			this.accounting_edit.edit_date = "";
+			this.accounting_edit.edit_type = "支出";
+			this.accounting_edit.edit_sort = "選擇分類";
+			this.accounting_edit.edit_amount = 0;
+			this.accounting_edit.edit_acc = "選擇帳戶";
+			this.accounting_edit.edit_remark = "";
+		},
+		alertClose(s) {
+			switch (s) {
+				case 'accounting':
+					this.accounting_edit.isShow = false;
+					break;
+			}
+		},
+		getDate() {
+			let objectDate = new Date();
+			let day = objectDate.getDate();
+			let month = objectDate.getMonth() + 1;
+			let year = objectDate.getFullYear();
+			return year + "." + month + "." + day;
+		}
 	},
 };
 </script>
