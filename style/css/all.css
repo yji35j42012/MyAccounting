@@ -292,6 +292,9 @@ select {
   background-color: #48a830;
   color: #fff;
 }
+.normal_sel_li + .normal_sel_li {
+  margin-top: 8px;
+}
 .normal_sel_txt {
   font-size: 14px;
   color: #030b1c;
@@ -639,6 +642,83 @@ select {
 }
 .news_pic img {
   border-radius: 8px;
+}
+
+.report_title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+}
+.report_title span {
+  font-size: 24px;
+  font-weight: bold;
+}
+.report_title button {
+  padding: 8px 16px;
+  font-size: 14px;
+  box-shadow: 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 1px 3px 0 rgba(0, 0, 0, 0.1019607843), 0 1px 2px 0 rgba(0, 0, 0, 0.0509803922);
+  border-radius: 12px;
+  border: 1px solid #f0f2f5;
+}
+@media (pointer: fine) and (max-resolution: 2dppx), (-moz-touch-enabled: 0) {
+  .report_title button:hover {
+    background-color: #48a830;
+  }
+}
+.report_title button:active {
+  background-color: #48a830;
+}
+.report_group {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  margin-top: 32px;
+  gap: 20px;
+}
+.report_item {
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-direction: column;
+  width: 100%;
+  height: 168px;
+  padding: 24px;
+  box-shadow: 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 1px 3px 0 rgba(0, 0, 0, 0.1019607843), 0 1px 2px 0 rgba(0, 0, 0, 0.0509803922);
+  border-radius: 12px;
+  border: 1px solid #f0f2f5;
+}
+.report_item_title {
+  display: flex;
+  justify-content: none;
+  align-items: center;
+  font-size: 14px;
+}
+.report_item_title svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+.report_item_amount {
+  margin-top: auto;
+  font-size: 30px;
+  font-weight: bold;
+}
+.report_item_amount::before {
+  content: "";
+  font-size: 30px;
+}
+.report_item_amount:after {
+  content: attr(data-btxt);
+  display: block;
+  font-size: 12px;
+  color: rgb(100, 116, 139);
+}
+.report_item._good svg, .report_item._good ._total {
+  color: rgb(16, 185, 129);
+}
+.report_item._bad svg, .report_item._bad ._total {
+  color: rgb(239, 68, 68);
 }
 
 :root {

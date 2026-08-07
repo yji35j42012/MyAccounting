@@ -6,6 +6,7 @@
 		<div class="filter normal_shadow">
 			<div class="filter_title">篩選</div>
 			<div class="filter_box ">
+				<sel-component :selType="this.sel_type_child" @sel-return="selTypeChild"></sel-component>
 				<label class="normal_inp">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -14,9 +15,8 @@
 						<circle cx="11" cy="11" r="8"></circle>
 						<path d="m21 21-4.3-4.3"></path>
 					</svg>
-					<input type="text" placeholder="搜尋分類、備註或金額..." />
+					<input type="text" placeholder="搜尋分類、備註或金額..." v-model="this.sel_type_child.filter_inp" />
 				</label>
-				<sel-component :selType="this.sel_type_child" @sel-return="selTypeChild"></sel-component>
 			</div>
 		</div>
 
@@ -47,7 +47,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="(item, index) in this.accounting_data"
+						<tr v-for="(item, index) in this.showAccounting"
 							:class="[item.accounting_type == '收入' ? 'income' : '']">
 							<td>{{ item.accounting_date }}</td>
 							<td><span class="type">{{ item.accounting_type }}</span></td>
@@ -145,7 +145,9 @@ module.exports = {
 			},
 			sel_type_child: {
 				selText: "全部",
-				lists: ["全部", "收入", "支出"]
+				lists: ["全部", "收入", "支出"],
+				filter: "全部",
+				filter_inp: "",
 			},
 			sel_alert_type: {
 				selText: "支出",
@@ -173,16 +175,42 @@ module.exports = {
 		var get_url = url + "?func=getAccounting";
 		axios.get(get_url).then(res => {
 			this.resetAccountingData(res.data);
+			store.dispatch("SET_ACCDATA_ACTION", res.data);
 			store.dispatch("SET_LOADING_ACTION", false);
 		});
 
 	},
 	computed: {
-		// showAccounting() {
-		// 	var rShow = this.accounting_data
-		// 	if (!rShow) return
-		// 	return rShow
-		// }
+		showAccounting() {
+			var rShow = [];
+			if (this.sel_type_child.selText == "全部") {
+				rShow = this.accounting_data;
+			} else {
+				this.accounting_data.forEach(item => {
+					if (item.accounting_type == this.sel_type_child.selText) {
+						rShow.push(item);
+					}
+				});
+			}
+			if (this.sel_type_child.filter_inp !== "") {
+				var filter = [];
+				// sort amount acc remark
+				rShow.forEach(item => {
+					if (item.accounting_sort.indexOf(this.sel_type_child.filter_inp) !== -1 ||
+						item.accounting_acc.indexOf(this.sel_type_child.filter_inp) !== -1 ||
+						item.accounting_remark.indexOf(this.sel_type_child.filter_inp) !== -1 ||
+						item.accounting_amount.toString().indexOf(this.sel_type_child.filter_inp) !== -1
+					) {
+						filter.push(item);
+						return filter;
+					}
+				});
+				rShow = filter;
+			}
+			if (!rShow) return;
+			return rShow;
+
+		}
 	},
 	methods: {
 		calendarHandler(data) {
@@ -224,7 +252,7 @@ module.exports = {
 				}
 			});
 			const reversed = [...data].reverse();
-			this.accounting_data = [...objData].reverse()
+			this.accounting_data = [...objData].reverse();
 		},
 		isShowAlert(s, item) {
 			if (s == "") {
@@ -299,20 +327,6 @@ module.exports = {
 			this.accounting_edit.isShow = true;
 			// accounting_id
 		},
-
-		// accountingTitle(index) {
-		// 	if (this.$refs['title_' + index][0].classList.contains('on')) {
-		// 		this.$refs['title_' + index][0].classList.remove("on");
-		// 	} else {
-		// 		this.$refs['title_' + index][0].classList.add("on");
-		// 	}
-		// },
-		// accountingEdit() {
-		// 	this.accounting_edit.edit_date = this.getDate();
-		// 	this.accounting_edit.edit_state = 'showAdd';
-		// 	this.accounting_edit.isShow = true;
-		// },
-
 		clearEdit() {
 			this.accounting_edit.edit_id = "";
 			this.accounting_edit.edit_date = "";

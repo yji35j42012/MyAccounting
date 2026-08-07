@@ -1,11 +1,15 @@
-const store=new Vuex.Store({
+const store = new Vuex.Store({
 	state: {
 		showLoading: true,
+		AccData: null,
 	},
 	getters: {},
 	mutations: {
 		SET_LOADING(state, boo) {
-			state.showLoading=boo;
+			state.showLoading = boo;
+		},
+		SET_ACCDATA(state, data) {
+			state.AccData = data;
 		},
 	},
 	actions: {
@@ -19,5 +23,8 @@ const store=new Vuex.Store({
 			}
 
 		},
+		SET_ACCDATA_ACTION({ commit }, data) {
+			commit("SET_ACCDATA", data);
+		}
 	}
 });
