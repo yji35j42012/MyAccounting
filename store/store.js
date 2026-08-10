@@ -21,7 +21,6 @@ const store = new Vuex.Store({
 					commit("SET_LOADING", boo);
 				}, 500);
 			}
-
 		},
 		SET_ACCDATA_ACTION({ commit }, data) {
 			commit("SET_ACCDATA", data);
