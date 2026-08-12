@@ -93,7 +93,7 @@
 		</section>
 
 		<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
-			<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示；¹ 個股價格會在進入本頁、盤中每五分鐘，以及按下「更新股價」時，經本網站伺服端代理自 Yahoo 股市讀取 regularMarketPrice；² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
+			<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示；¹ 個股價格會在進入本頁、盤中每五分鐘，以及按下「更新股價」時，經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice；本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
 	</div>
 </template>
 
@@ -135,10 +135,21 @@ module.exports = {
 	methods: {
 		formatDate(date) { return date.slice(5).replace('-', ' / '); },
 		formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
-		formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
-		getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
-		formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
-		selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => this.refreshYahooQuotes()); },
+			formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
+			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
+			formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
+			getQuoteRequest(fundKey) {
+				const workerBaseUrl = typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : '';
+				if (workerBaseUrl) {
+					const endpoint = new URL(`${workerBaseUrl}/quotes`);
+					endpoint.searchParams.set('fund', fundKey);
+					return { url: endpoint.toString(), isExternalProxy: true };
+				}
+				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 報價端點');
+				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
+				return { url: `/api/trpc/market.yahooQuotes?input=${input}`, isExternalProxy: false };
+			},
+			selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => this.refreshYahooQuotes()); },
 		async refreshYahooQuotes() {
 			const fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
@@ -148,11 +159,12 @@ module.exports = {
 			try {
 				const abortController = new AbortController();
 				const requestTimeout = window.setTimeout(() => abortController.abort(), 12 * 1000);
-				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
-				let response;
-				try { response = await fetch(`/api/trpc/market.yahooQuotes?input=${input}`, { cache: 'no-store', credentials: 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); }
-				if (!response.ok) throw new Error(`報價服務回應 ${response.status}`);
-				const snapshot = (await response.json())?.result?.data?.json;
+					const quoteRequest = this.getQuoteRequest(fundKey);
+					let response;
+					try { response = await fetch(quoteRequest.url, { cache: 'no-store', credentials: quoteRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); }
+					if (!response.ok) throw new Error(`報價服務回應 ${response.status}`);
+					const payload = await response.json();
+					const snapshot = quoteRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 				const successfulQuotes = snapshot?.quotes;
 				if (!Array.isArray(successfulQuotes) || !successfulQuotes.length || snapshot.fundKey !== fundKey) throw new Error('Yahoo 股市暫時無法提供報價');
 				const quoteBySymbol = new Map(successfulQuotes.map(quote => [quote.symbol, quote]));
@@ -160,8 +172,8 @@ module.exports = {
 				targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, changePct: ((quote.price - quote.previousClose) / quote.previousClose) * 100 } : holding; });
 				quoteState.quoteUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
 				if (snapshot.failedSymbols?.length) quoteState.quoteError = `部分報價更新失敗，已保留前次資料（${successfulQuotes.length}/${targetFund.holdings.length}）`;
-			} catch (error) {
-				quoteState.quoteError = 'Yahoo 更新失敗，已保留前次成功取得的報價';
+				} catch (error) {
+					quoteState.quoteError = error?.message === 'GitHub Pages 尚未設定 Cloudflare Worker 報價端點' ? error.message : 'Yahoo 更新失敗，已保留前次成功取得的報價';
 			} finally {
 				quoteState.isRefreshing = false;
 			}
