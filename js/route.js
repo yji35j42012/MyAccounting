@@ -15,6 +15,10 @@ const routes = [
 		path: '/report',
 		component: () => loadModule('./page/report_m.vue', options),
 	},
+	{
+		path: '/fund',
+		component: () => loadModule('./page/fund_analysis.vue', options),
+	},
 ];
 const router = VueRouter.createRouter({
 	history: VueRouter.createWebHistory('#'),
