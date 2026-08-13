@@ -30,6 +30,7 @@
 					<span class="fund_meta_label">最新公開淨值</span>
 					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
 					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
+					<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
 					<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
 					<small class="fund_cache_status">{{ navTimingStatus }}</small>
 					<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
@@ -95,7 +96,7 @@
 		</section>
 
 		<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
-			<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示；¹ 個股價格會在進入本頁、盤中每五分鐘，以及按下「更新股價」時，經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice；本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
+				<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示。最新淨值單日漲跌幅按「(最新官方淨值 − 前一公開營業日淨值) ÷ 前一公開營業日淨值」計算；若公開歷史表尚未列出最新官方日期，系統會以該官方淨值補入最近五筆資料。¹ 個股價格會在進入本頁、盤中每五分鐘，以及按下「更新股價」時，經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice；本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
 	</div>
 </template>
 
@@ -176,12 +177,12 @@ module.exports = {
 				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
 				return { url: `/api/trpc/market.yahooQuotes?input=${input}`, isExternalProxy: false };
 			},
-			getNavRequest(fundKey) {
+				getNavRequest(fundKey) {
 				const workerBaseUrl = this.getWorkerBaseUrl();
 				if (workerBaseUrl) {
 					const endpoint = new URL(`${workerBaseUrl}/nav`);
 					endpoint.searchParams.set('fund', fundKey);
-					endpoint.searchParams.set('cacheVersion', '2');
+						endpoint.searchParams.set('cacheVersion', '4');
 					return { url: endpoint.toString(), isExternalProxy: true };
 				}
 				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 淨值端點');
@@ -193,7 +194,7 @@ module.exports = {
 				if (workerBaseUrl) {
 					const endpoint = new URL(`${workerBaseUrl}/history`);
 					endpoint.searchParams.set('fund', fundKey);
-						endpoint.searchParams.set('cacheVersion', '1');
+						endpoint.searchParams.set('cacheVersion', '3');
 						if (force) endpoint.searchParams.set('force', '1');
 					return { url: endpoint.toString(), isExternalProxy: true };
 				}
@@ -247,8 +248,10 @@ module.exports = {
 					const snapshot = navRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 					if (snapshot?.fundKey !== fundKey || !Number.isFinite(snapshot?.nav) || !snapshot?.navDate) throw new Error('官方淨值資料不完整');
 					const targetFund = this.funds.find(fund => fund.key === fundKey);
-					targetFund.nav = Number(snapshot.nav);
-					targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / ');
+						targetFund.nav = Number(snapshot.nav);
+						targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / ');
+						targetFund.navChangePct = typeof snapshot.changePct === 'number' && Number.isFinite(snapshot.changePct) ? Number(snapshot.changePct) : null;
+						this.syncNavChangePct(targetFund);
 						if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl;
 						navState.navUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
 						navState.fetchedAt = Number(snapshot.fetchedAt) || Date.now();
@@ -278,7 +281,8 @@ module.exports = {
 					const rows = snapshot.rows.map(item => ({ date: String(item.date).replace(/\//g, '-'), value: Number(item.value), changePct: Number(item.changePct) }));
 					if (rows.some(item => !item.date || !Number.isFinite(item.value) || !Number.isFinite(item.changePct))) throw new Error('最近五筆歷史淨值資料格式不正確');
 					const targetFund = this.funds.find(fund => fund.key === fundKey);
-					targetFund.historyNav = rows;
+						targetFund.historyNav = rows;
+						this.syncNavChangePct(targetFund);
 					targetFund.historyRange = targetFund.historyRange.replace(/— .*/, `— ${String(snapshot.rows[4].date).replace(/\//g, ' / ')}`);
 					if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl;
 						historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
@@ -289,8 +293,10 @@ module.exports = {
 				} finally {
 					historyState.isRefreshing = false;
 				}
-			}
-		},
+				},
+				normalizeFundDate(value) { const match = String(value).replace(/\s/g, '').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/); return match ? `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}` : ''; },
+				syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
+			},
 		mounted() { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.refreshRecentHistoryNav(); this.quoteTimer = window.setInterval(this.refreshYahooQuotes, 5 * 60 * 1000); this.navTimer = window.setInterval(this.refreshOfficialNav, 30 * 60 * 1000); this.historyTimer = window.setInterval(this.refreshRecentHistoryNav, 30 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
 		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); }
 };

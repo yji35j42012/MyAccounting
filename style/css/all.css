@@ -1239,6 +1239,22 @@ select {
   font-size: 12px;
   font-weight: 600;
 }
+.fund_nav_change {
+  display: flex;
+  justify-content: none;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 5px;
+}
+.fund_nav_change strong {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1.2;
+}
+.fund_nav_change small {
+  color: #71839a;
+  font-size: 10px;
+}
 .fund_nav_refresh_status {
   display: block;
   margin-top: 4px;
