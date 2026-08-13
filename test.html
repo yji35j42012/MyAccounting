@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .highlight-text {
+            color: transparent;
+            background: linear-gradient(105deg,
+                    #1c1b19 28%, #1c1b19 41%,
+                    #ffffff 46%, #fff9e9 50%,
+                    #f5eeed 54%, #1c1b19 61%);
+            background-size: 240% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            animation: highlight-sweep 3s linear infinite;
+            animation-iteration-count: 1;
+        }
+
+        @keyframes highlight-sweep {
+            to {
+                background-position: 220% 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="text" class="highlight-text" style="font-size: 14px;">AAAAAAAAAAAAAAAAAA</div>
+    <button id="aaa">click</button>
+</body>
+<script>
+
+    var btn = document.getElementById("aaa");
+    var text = document.getElementById("text");
+
+    btn.onclick = function (params) {
+        console.log('aaa');
+        text.classList.remove("highlight-text")
+        setTimeout(() => {
+            text.classList.add("highlight-text")
+        }, 10);
+    }
+</script>
+
+</html>

@@ -284,10 +284,6 @@ select {
     color: #fff;
   }
 }
-.normal_sel_li:active {
-  background-color: #48a830;
-  color: #fff;
-}
 .normal_sel_li.on {
   background-color: #48a830;
   color: #fff;
@@ -340,9 +336,6 @@ select {
     background-color: rgba(9, 46, 111, 0.9);
   }
 }
-.normal_btn._primary:active {
-  background-color: rgba(9, 46, 111, 0.9);
-}
 .normal_btn._secondary {
   box-shadow: 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 0 rgba(0, 0, 0, 0), 0 1px 3px 0 rgba(0, 0, 0, 0.1019607843), 0 1px 2px 0 rgba(0, 0, 0, 0.0509803922);
   background-color: #fff;
@@ -351,9 +344,6 @@ select {
   .normal_btn._secondary:hover {
     background-color: #48a830;
   }
-}
-.normal_btn._secondary:active {
-  background-color: #48a830;
 }
 .normal_btn + .normal_btn {
   margin-left: 15px;
@@ -446,9 +436,6 @@ select {
     background-color: rgba(9, 46, 111, 0.9);
   }
 }
-.add_list:active {
-  background-color: rgba(9, 46, 111, 0.9);
-}
 .add_list svg {
   width: 16px;
   height: 16px;
@@ -504,9 +491,6 @@ select {
   .alert_close:hover {
     opacity: 1;
   }
-}
-.alert_close:active {
-  opacity: 1;
 }
 .alert_close svg {
   width: 16px;
@@ -665,9 +649,6 @@ select {
   .report_title button:hover {
     background-color: #48a830;
   }
-}
-.report_title button:active {
-  background-color: #48a830;
 }
 .report_group {
   display: flex;
