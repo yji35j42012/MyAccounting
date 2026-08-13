@@ -27,12 +27,12 @@
 				</div>
 			</div>
 				<div class="fund_hero_meta">
-					<span class="fund_meta_label">最新官方淨值</span>
+					<span class="fund_meta_label">最新公開淨值</span>
 					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
 					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
 					<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
 					<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
-				<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看官方資料</a>
+				<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看淨值來源</a>
 			</div>
 		</section>
 
@@ -220,6 +220,7 @@ module.exports = {
 					const targetFund = this.funds.find(fund => fund.key === fundKey);
 					targetFund.nav = Number(snapshot.nav);
 					targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / ');
+					if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl;
 					navState.navUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
 				} catch {
 					navState.navError = '官方淨值更新失敗，已保留前次資料';
