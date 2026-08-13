@@ -1249,6 +1249,13 @@ select {
 .fund_nav_refresh_status.is-error {
   color: #c2410c;
 }
+.fund_cache_status {
+  display: block;
+  margin-top: 3px;
+  color: #71839a;
+  font-size: 10px;
+  line-height: 1.45;
+}
 .fund_holdings_asof {
   width: 100%;
   margin-top: 13px;
@@ -1305,6 +1312,10 @@ select {
   display: grid;
   gap: 4px;
   justify-items: end;
+}
+.fund_history_refresh_button {
+  justify-self: end;
+  margin-top: 4px;
 }
 .fund_history_refresh_status {
   color: #71839a;
@@ -1727,6 +1738,15 @@ select {
   }
   .fund_history_list {
     padding-top: 2px;
+  }
+  .fund_history_meta {
+    justify-items: start;
+  }
+  .fund_history_refresh_status {
+    text-align: left;
+  }
+  .fund_history_refresh_button {
+    justify-self: start;
   }
   .fund_holdings {
     margin-top: 14px;

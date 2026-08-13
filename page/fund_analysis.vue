@@ -31,6 +31,7 @@
 					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
 					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
 					<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
+					<small class="fund_cache_status">{{ navTimingStatus }}</small>
 					<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
 				<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看淨值來源</a>
 			</div>
@@ -50,7 +51,7 @@
 					<p class="fund_kicker">歷史淨值</p>
 					<h3>近 30 日淨值走勢</h3>
 				</div>
-				<div class="fund_history_meta"><span class="fund_asof">區間：{{ activeFund.historyRange }}</span><small :class="['fund_history_refresh_status', activeHistory.historyError ? 'is-error' : '']">{{ historyStatus }}</small></div>
+				<div class="fund_history_meta"><span class="fund_asof">區間：{{ activeFund.historyRange }}</span><small :class="['fund_history_refresh_status', activeHistory.historyError ? 'is-error' : '']">{{ historyStatus }}</small><small class="fund_cache_status">{{ historyTimingStatus }}</small><button type="button" class="fund_refresh_button fund_history_refresh_button" :disabled="activeHistory.isRefreshing" @click="refreshRecentHistoryNav(true)" aria-label="更新歷史淨值"><svg :class="['fund_refresh_icon', activeHistory.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg><span>{{ activeHistory.isRefreshing ? '更新中' : '更新歷史淨值' }}</span></button></div>
 			</div>
 			<div class="fund_history_metrics">
 				<div><span>區間最高</span><strong>{{ activeFund.historyHigh.value.toFixed(2) }}</strong><small>{{ activeFund.historyHigh.date }}</small></div>
@@ -106,6 +107,8 @@ module.exports = {
 					quoteTimer: null,
 					navTimer: null,
 					historyTimer: null,
+					countdownTimer: null,
+					countdownNow: Date.now(),
 			quotesByFund: {
 				taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', isRefreshing: false, quoteError: '' },
 					taiwanDaba: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
@@ -113,16 +116,16 @@ module.exports = {
 					fuhwaOmni: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' }
 				},
 					navsByFund: {
-						taiwanTechnology: { navUpdatedAt: '', isRefreshing: false, navError: '' },
-						taiwanDaba: { navUpdatedAt: '', isRefreshing: false, navError: '' },
-						taiwanIntelligence: { navUpdatedAt: '', isRefreshing: false, navError: '' },
-						fuhwaOmni: { navUpdatedAt: '', isRefreshing: false, navError: '' }
+						taiwanTechnology: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' },
+						taiwanDaba: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' },
+						taiwanIntelligence: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' },
+						fuhwaOmni: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' }
 					},
 					historiesByFund: {
-						taiwanTechnology: { historyUpdatedAt: '', isRefreshing: false, historyError: '' },
-						taiwanDaba: { historyUpdatedAt: '', isRefreshing: false, historyError: '' },
-						taiwanIntelligence: { historyUpdatedAt: '', isRefreshing: false, historyError: '' },
-						fuhwaOmni: { historyUpdatedAt: '', isRefreshing: false, historyError: '' }
+						taiwanTechnology: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' },
+						taiwanDaba: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' },
+						taiwanIntelligence: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' },
+						fuhwaOmni: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' }
 					},
 			funds: [
 				{
@@ -149,14 +152,18 @@ module.exports = {
 		recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
 				quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return '開啟頁面即更新，盤中每 5 分鐘自動更新'; },
 				navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '進入頁面時自動取得最新官方淨值'; },
-				historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '進入頁面時自動更新最近五筆'; }
+					historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '進入頁面時自動更新最近五筆'; },
+					navTimingStatus() { return this.getRefreshTimingText(this.activeNav); },
+					historyTimingStatus() { return this.getRefreshTimingText(this.activeHistory); }
 	},
 		methods: {
 			formatDate(date) { return date.slice(5).replace('-', ' / '); },
 		formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
 			formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
 			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
-			formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
+				formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
+				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
+				getRefreshTimingText(state) { if (!Number.isFinite(state.fetchedAt) || state.fetchedAt <= 0) return '取得後顯示快取與自動更新倒數'; const cacheRemaining = this.formatCountdown(Math.max(0, state.cacheExpiresAt - this.countdownNow)); const autoRemaining = this.formatCountdown(Math.max(0, state.fetchedAt + 30 * 60 * 1000 - this.countdownNow)); return `快取剩餘 ${cacheRemaining} · 下次自動更新 ${autoRemaining}`; },
 			getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 			getQuoteRequest(fundKey) {
 				const workerBaseUrl = this.getWorkerBaseUrl();
@@ -181,16 +188,17 @@ module.exports = {
 				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
 				return { url: `/api/trpc/market.officialNav?input=${input}`, isExternalProxy: false };
 			},
-			getHistoryRequest(fundKey) {
+				getHistoryRequest(fundKey, force = false) {
 				const workerBaseUrl = this.getWorkerBaseUrl();
 				if (workerBaseUrl) {
 					const endpoint = new URL(`${workerBaseUrl}/history`);
 					endpoint.searchParams.set('fund', fundKey);
-					endpoint.searchParams.set('cacheVersion', '1');
+						endpoint.searchParams.set('cacheVersion', '1');
+						if (force) endpoint.searchParams.set('force', '1');
 					return { url: endpoint.toString(), isExternalProxy: true };
 				}
 				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 歷史淨值端點');
-				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
+					const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
 				return { url: `/api/trpc/market.recentHistoryNav?input=${input}`, isExternalProxy: false };
 			},
 			selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.refreshRecentHistoryNav(); }); },
@@ -241,15 +249,17 @@ module.exports = {
 					const targetFund = this.funds.find(fund => fund.key === fundKey);
 					targetFund.nav = Number(snapshot.nav);
 					targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / ');
-					if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl;
-					navState.navUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
+						if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl;
+						navState.navUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
+						navState.fetchedAt = Number(snapshot.fetchedAt) || Date.now();
+						navState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || navState.fetchedAt + 10 * 60 * 1000;
 				} catch {
 					navState.navError = '官方淨值更新失敗，已保留前次資料';
 				} finally {
 					navState.isRefreshing = false;
 				}
 			},
-			async refreshRecentHistoryNav() {
+			async refreshRecentHistoryNav(force = false) {
 				const fundKey = this.activeFundKey;
 				const historyState = this.historiesByFund[fundKey];
 				if (historyState.isRefreshing) return;
@@ -258,7 +268,7 @@ module.exports = {
 				try {
 					const abortController = new AbortController();
 					const requestTimeout = window.setTimeout(() => abortController.abort(), 12 * 1000);
-					const historyRequest = this.getHistoryRequest(fundKey);
+					const historyRequest = this.getHistoryRequest(fundKey, force);
 					let response;
 					try { response = await fetch(historyRequest.url, { cache: 'no-store', credentials: historyRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); }
 					if (!response.ok) throw new Error(`歷史淨值服務回應 ${response.status}`);
@@ -271,7 +281,9 @@ module.exports = {
 					targetFund.historyNav = rows;
 					targetFund.historyRange = targetFund.historyRange.replace(/— .*/, `— ${String(snapshot.rows[4].date).replace(/\//g, ' / ')}`);
 					if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl;
-					historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
+						historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
+						historyState.fetchedAt = Number(snapshot.fetchedAt) || Date.now();
+						historyState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || historyState.fetchedAt + 10 * 60 * 1000;
 				} catch {
 					historyState.historyError = '最近五筆歷史淨值更新失敗，已保留前次資料';
 				} finally {
@@ -279,7 +291,7 @@ module.exports = {
 				}
 			}
 		},
-		mounted() { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.refreshRecentHistoryNav(); this.quoteTimer = window.setInterval(this.refreshYahooQuotes, 5 * 60 * 1000); this.navTimer = window.setInterval(this.refreshOfficialNav, 30 * 60 * 1000); this.historyTimer = window.setInterval(this.refreshRecentHistoryNav, 30 * 60 * 1000); store.dispatch('SET_LOADING_ACTION', false); },
-		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); }
+		mounted() { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.refreshRecentHistoryNav(); this.quoteTimer = window.setInterval(this.refreshYahooQuotes, 5 * 60 * 1000); this.navTimer = window.setInterval(this.refreshOfficialNav, 30 * 60 * 1000); this.historyTimer = window.setInterval(this.refreshRecentHistoryNav, 30 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
+		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); }
 };
 </script>
