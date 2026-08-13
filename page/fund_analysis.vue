@@ -165,6 +165,7 @@ module.exports = {
 				if (workerBaseUrl) {
 					const endpoint = new URL(`${workerBaseUrl}/nav`);
 					endpoint.searchParams.set('fund', fundKey);
+					endpoint.searchParams.set('cacheVersion', '2');
 					return { url: endpoint.toString(), isExternalProxy: true };
 				}
 				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 淨值端點');
