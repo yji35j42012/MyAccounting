@@ -261,9 +261,24 @@
 		margin-top: 20px;
 	}
 
-	&_history_head {
-		margin-bottom: 16px;
-	}
+		&_history_head {
+			margin-bottom: 16px;
+		}
+
+		&_history_meta {
+			display: grid;
+			gap: 4px;
+			justify-items: end;
+		}
+
+		&_history_refresh_status {
+			color: #71839a;
+			font-size: 10px;
+			line-height: 1.45;
+			text-align: right;
+
+			&.is-error { color: #a55b16; }
+		}
 
 	&_history_metrics {
 		display: grid;
@@ -690,11 +705,14 @@
 			small { font-size: 11px; line-height: 1.35; }
 		}
 
-		&_history {
-			margin-top: 14px;
-			padding: 20px;
+			&_history {
+				margin-top: 14px;
+				padding: 20px;
 
-			&_metrics {
+				&_meta { justify-items: start; }
+				&_refresh_status { text-align: left; }
+
+				&_metrics {
 				margin-bottom: 16px;
 
 				> div { min-height: 82px; padding: 13px; }
