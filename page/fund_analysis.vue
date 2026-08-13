@@ -26,11 +26,12 @@
 					<span v-for="tag in activeFund.tags" :key="tag">{{ tag }}</span>
 				</div>
 			</div>
-			<div class="fund_hero_meta">
-				<span class="fund_meta_label">最新官方淨值</span>
-				<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
-				<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
-				<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
+				<div class="fund_hero_meta">
+					<span class="fund_meta_label">最新官方淨值</span>
+					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
+					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
+					<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
+					<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
 				<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看官方資料</a>
 			</div>
 		</section>
@@ -100,15 +101,22 @@
 <script>
 module.exports = {
 	data() {
-		return {
-			activeFundKey: 'taiwanTechnology',
-			quoteTimer: null,
+			return {
+				activeFundKey: 'taiwanTechnology',
+				quoteTimer: null,
+				navTimer: null,
 			quotesByFund: {
 				taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', isRefreshing: false, quoteError: '' },
 					taiwanDaba: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
 					taiwanIntelligence: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
 					fuhwaOmni: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' }
-			},
+				},
+				navsByFund: {
+					taiwanTechnology: { navUpdatedAt: '', isRefreshing: false, navError: '' },
+					taiwanDaba: { navUpdatedAt: '', isRefreshing: false, navError: '' },
+					taiwanIntelligence: { navUpdatedAt: '', isRefreshing: false, navError: '' },
+					fuhwaOmni: { navUpdatedAt: '', isRefreshing: false, navError: '' }
+				},
 			funds: [
 				{
 					key: 'taiwanTechnology', shortName: '安聯台灣科技', name: '安聯台灣科技基金', englishName: 'Allianz Global Investors Taiwan Technology Fund', riskLevel: 'RR5', tags: ['單一國家股票型', '新臺幣計價', 'RR5'], nav: 760.91, navDate: '2026 / 08 / 11', holdingsDate: '2026 / 06 / 30', sourceUrl: 'https://tw.allianzgi.com/zh-tw/products-solutions/taiwan-onshore/allianz-global-investors-taiwan-technology-fund', historySourceUrl: 'https://fund.hncb.com.tw/w/wr/wr02_ACDD04-005003.djhtm', historyRange: '2026 / 06 / 30 — 2026 / 08 / 11', historyHigh: { value: 865.26, date: '2026 / 07 / 03' }, historyLow: { value: 597.91, date: '2026 / 07 / 30' }, summaryCards: [{ label: '前十大列示比重', value: '53.80%', detail: '依官方逐檔權重加總' }, { label: '半導體業比重', value: '29.86%', detail: '僅以前十大官方產業分類計算' }], historyNav: [{ date: '2026-07-03', value: 865.26, changePct: 0.94 }, { date: '2026-07-06', value: 828.00, changePct: -4.31 }, { date: '2026-07-09', value: 789.20, changePct: 0.73 }, { date: '2026-07-13', value: 768.38, changePct: -2.64 }, { date: '2026-07-16', value: 751.18, changePct: -2.13 }, { date: '2026-07-20', value: 667.70, changePct: -2.90 }, { date: '2026-07-23', value: 741.53, changePct: 0.19 }, { date: '2026-07-27', value: 703.03, changePct: -0.13 }, { date: '2026-07-30', value: 597.91, changePct: -0.73 }, { date: '2026-08-03', value: 690.54, changePct: 5.91 }, { date: '2026-08-06', value: 751.72, changePct: 1.70 }, { date: '2026-08-11', value: 760.91, changePct: 1.42 }], holdings: [{ rank: 1, name: '華邦電子', symbol: '2344.TW', weight: 7.44, price: 177.00, changePct: -0.56, market: 'Yahoo · TWSE' }, { rank: 2, name: '旺矽', symbol: '6223.TWO', weight: 7.32, price: 6600.00, changePct: 4.51, market: 'Yahoo · TPEX' }, { rank: 3, name: '台積電', symbol: '2330.TW', weight: 6.37, price: 2415.00, changePct: 0.84, market: 'Yahoo · TWSE' }, { rank: 4, name: '國巨', symbol: '2327.TW', weight: 5.65, price: 602.00, changePct: -2.43, market: 'Yahoo · TWSE' }, { rank: 5, name: '台燿', symbol: '6274.TWO', weight: 5.38, price: 1600.00, changePct: -0.31, market: 'Yahoo · TPEX' }, { rank: 6, name: '台光電子', symbol: '2383.TW', weight: 5.34, price: 5730.00, changePct: 3.52, market: 'Yahoo · TWSE' }, { rank: 7, name: '穎崴', symbol: '6515.TW', weight: 4.49, price: 7170.00, changePct: 3.61, market: 'Yahoo · TWSE' }, { rank: 8, name: '創意電子', symbol: '3443.TW', weight: 4.48, price: 5130.00, changePct: 3.53, market: 'Yahoo · TWSE' }, { rank: 9, name: '聯電', symbol: '2303.TW', weight: 4.24, price: 123.00, changePct: 0.00, market: 'Yahoo · TWSE' }, { rank: 10, name: '奇鋐', symbol: '3017.TW', weight: 3.09, price: 2910.00, changePct: 5.43, market: 'Yahoo · TWSE' }], insights: [{ kicker: '配置觀察', title: '以半導體與電子零組件為主軸', text: '以前十大公開標的的官方產業分類計算，半導體業合計 29.86%，電子零組件業合計 16.37%。其餘配置包含科技與電腦週邊，反映基金對台灣科技供應鏈的集中布局。' }, { kicker: '投資目標', title: '鎖定台灣科技產業', text: '官方資料說明，經理團隊以品質、成長與價值作為篩選基礎，並以台灣科技產業的成長前景為主要投資方向。' }]
@@ -126,11 +134,13 @@ module.exports = {
 		};
 	},
 	computed: {
-		activeFund() { return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0]; },
-		activeQuote() { return this.quotesByFund[this.activeFundKey]; },
+			activeFund() { return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0]; },
+			activeQuote() { return this.quotesByFund[this.activeFundKey]; },
+			activeNav() { return this.navsByFund[this.activeFundKey]; },
 		maxWeight() { return this.activeFund.holdings.reduce((highest, holding) => Math.max(highest, holding.weight), 0); },
 		recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
-		quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return '開啟頁面即更新，盤中每 5 分鐘自動更新'; }
+			quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return '開啟頁面即更新，盤中每 5 分鐘自動更新'; },
+			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navError; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '進入頁面時自動取得最新官方淨值'; }
 	},
 	methods: {
 		formatDate(date) { return date.slice(5).replace('-', ' / '); },
@@ -138,8 +148,9 @@ module.exports = {
 			formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
 			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
 			formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
+			getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 			getQuoteRequest(fundKey) {
-				const workerBaseUrl = typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : '';
+				const workerBaseUrl = this.getWorkerBaseUrl();
 				if (workerBaseUrl) {
 					const endpoint = new URL(`${workerBaseUrl}/quotes`);
 					endpoint.searchParams.set('fund', fundKey);
@@ -149,7 +160,18 @@ module.exports = {
 				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
 				return { url: `/api/trpc/market.yahooQuotes?input=${input}`, isExternalProxy: false };
 			},
-			selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => this.refreshYahooQuotes()); },
+			getNavRequest(fundKey) {
+				const workerBaseUrl = this.getWorkerBaseUrl();
+				if (workerBaseUrl) {
+					const endpoint = new URL(`${workerBaseUrl}/nav`);
+					endpoint.searchParams.set('fund', fundKey);
+					return { url: endpoint.toString(), isExternalProxy: true };
+				}
+				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 淨值端點');
+				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
+				return { url: `/api/trpc/market.officialNav?input=${input}`, isExternalProxy: false };
+			},
+			selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.refreshYahooQuotes(); this.refreshOfficialNav(); }); },
 		async refreshYahooQuotes() {
 			const fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
@@ -174,12 +196,38 @@ module.exports = {
 				if (snapshot.failedSymbols?.length) quoteState.quoteError = `部分報價更新失敗，已保留前次資料（${successfulQuotes.length}/${targetFund.holdings.length}）`;
 				} catch (error) {
 					quoteState.quoteError = error?.message === 'GitHub Pages 尚未設定 Cloudflare Worker 報價端點' ? error.message : 'Yahoo 更新失敗，已保留前次成功取得的報價';
-			} finally {
-				quoteState.isRefreshing = false;
+				} finally {
+					quoteState.isRefreshing = false;
+				}
+			},
+			async refreshOfficialNav() {
+				const fundKey = this.activeFundKey;
+				const navState = this.navsByFund[fundKey];
+				if (navState.isRefreshing) return;
+				navState.isRefreshing = true;
+				navState.navError = '';
+				try {
+					const abortController = new AbortController();
+					const requestTimeout = window.setTimeout(() => abortController.abort(), 12 * 1000);
+					const navRequest = this.getNavRequest(fundKey);
+					let response;
+					try { response = await fetch(navRequest.url, { cache: 'no-store', credentials: navRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); }
+					if (!response.ok) throw new Error(`官方淨值服務回應 ${response.status}`);
+					const payload = await response.json();
+					const snapshot = navRequest.isExternalProxy ? payload : payload?.result?.data?.json;
+					if (snapshot?.fundKey !== fundKey || !Number.isFinite(snapshot?.nav) || !snapshot?.navDate) throw new Error('官方淨值資料不完整');
+					const targetFund = this.funds.find(fund => fund.key === fundKey);
+					targetFund.nav = Number(snapshot.nav);
+					targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / ');
+					navState.navUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
+				} catch {
+					navState.navError = '官方淨值更新失敗，已保留前次資料';
+				} finally {
+					navState.isRefreshing = false;
+				}
 			}
-		}
-	},
-	mounted() { this.refreshYahooQuotes(); this.quoteTimer = window.setInterval(this.refreshYahooQuotes, 5 * 60 * 1000); store.dispatch('SET_LOADING_ACTION', false); },
-	beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); }
+		},
+		mounted() { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.quoteTimer = window.setInterval(this.refreshYahooQuotes, 5 * 60 * 1000); this.navTimer = window.setInterval(this.refreshOfficialNav, 30 * 60 * 1000); store.dispatch('SET_LOADING_ACTION', false); },
+		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); }
 };
 </script>

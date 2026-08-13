@@ -188,6 +188,18 @@
 		font-weight: 600;
 	}
 
+	&_nav_refresh_status {
+		display: block;
+		margin-top: 4px;
+		color: #667085;
+		font-size: 11px;
+		line-height: 1.45;
+
+		&.is-error {
+			color: #c2410c;
+		}
+	}
+
 	&_holdings_asof {
 		width: 100%;
 		margin-top: 13px;
