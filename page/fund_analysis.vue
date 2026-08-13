@@ -140,7 +140,7 @@ module.exports = {
 		maxWeight() { return this.activeFund.holdings.reduce((highest, holding) => Math.max(highest, holding.weight), 0); },
 		recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
 			quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return '開啟頁面即更新，盤中每 5 分鐘自動更新'; },
-			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navError; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '進入頁面時自動取得最新官方淨值'; }
+			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '進入頁面時自動取得最新官方淨值'; }
 	},
 	methods: {
 		formatDate(date) { return date.slice(5).replace('-', ' / '); },
