@@ -30,6 +30,8 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain("localStorage.removeItem(this.getFundStorageKey(type, fund.key))");
 		expect(source).toContain('priceChange: quote.price - quote.previousClose');
 		expect(source).toContain('formatQuoteChange(getQuoteChangeAmount(item))');
+		expect(source).toContain('公開前十大持股加權漲跌');
+		expect(source).toContain('holdingsWeightedChangePct()');
 		expect(source).not.toContain('class="fund_progress"');
   });
 
@@ -61,6 +63,20 @@ describe("fund page manual quote update binding", () => {
     expect(instance.getQuoteChangeAmount({ price: 622, previousClose: 662 })).toBe(-40);
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182, previousClose: 177 }))).toBe("TWD +5.00");
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 622, previousClose: 662 }))).toBe("TWD -40.00");
+    expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 177, changePct: -0.56 }))).toBe("TWD -1.00");
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182 }))).toBe("TWD —");
+  });
+
+  it("calculates public top-ten holdings' weighted change and assessment", async () => {
+    const { component } = await loadFundPageComponent();
+    const instance = {
+      activeFund: { holdings: [{ weight: 50, changePct: 2 }, { weight: 30, changePct: -1 }, { weight: 20, changePct: null }] },
+      ...component.methods,
+    };
+    const weightedChange = component.computed.holdingsWeightedChangePct.call(instance);
+    instance.holdingsWeightedChangePct = weightedChange;
+
+    expect(weightedChange).toBeCloseTo(0.875, 8);
+    expect(component.computed.holdingsChangeAssessment.call(instance)).toBe("列示持股整體偏多");
   });
 });

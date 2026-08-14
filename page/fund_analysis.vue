@@ -84,9 +84,13 @@
 						<svg :class="['fund_refresh_icon', activeQuote.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg>
 						<span>{{ activeQuote.isRefreshing ? '更新中' : '更新股價' }}</span>
 					</button>
+					</div>
 				</div>
-			</div>
-			<div class="fund_table_box">
+				<div class="fund_holdings_signal" aria-live="polite">
+					<div><span>公開前十大持股加權漲跌</span><small>依已取得 Yahoo 報價的公開持股權重計算</small></div>
+					<div class="fund_holdings_signal_value"><strong :class="getChangeClass(holdingsWeightedChangePct)">{{ formatPercent(holdingsWeightedChangePct) }}</strong><small>{{ holdingsChangeAssessment }}</small></div>
+				</div>
+				<div class="fund_table_box">
 					<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌²</th><th>比重</th></tr></thead>
 						<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }}</small></td><td class="fund_change"><strong :class="['fund_today_change', getChangeClass(item.changePct)]">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></td><td class="fund_weight"><strong>{{ item.weight.toFixed(2) }}%</strong></td></tr></tbody>
 				</table>
@@ -97,7 +101,7 @@
 		</section>
 
 		<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
-					<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示。最新淨值單日漲跌幅按「(最新官方淨值 − 前一公開營業日淨值) ÷ 前一公開營業日淨值」計算；若公開歷史表尚未列出最新官方日期，系統會以該官方淨值補入最近五筆資料。基金最新與歷史淨值會依資料日期儲存於此瀏覽器的 localStorage：平日 16:00 前預期使用前一營業日資料，16:00 後才檢查當日資料。¹ 個股價格僅於平日 09:00–14:00 自動每五分鐘更新，並可隨時按下「更新股價」手動取得報價；資料經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice。本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
+					<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示。最新淨值單日漲跌幅按「(最新官方淨值 − 前一公開營業日淨值) ÷ 前一公開營業日淨值」計算；若公開歷史表尚未列出最新官方日期，系統會以該官方淨值補入最近五筆資料。基金最新與歷史淨值會依資料日期儲存於此瀏覽器的 localStorage：平日 16:00 前預期使用前一營業日資料，16:00 後才檢查當日資料。¹ 個股價格僅於平日 09:00–14:00 自動每五分鐘更新，並可隨時按下「更新股價」手動取得報價；資料經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice。本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅及金額分別按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」與「Yahoo 當前報價 − 前一交易日收盤價」計算；初始資料尚未取得前收時，會依既有漲跌幅反推金額供閱讀。公開前十大持股加權漲跌為已取得報價標的的「持股比重 × 個股漲跌幅」加總後，除以該等標的公開持股比重，僅反映列示持股，並不等同基金完整組合或基金淨值報酬。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
 	</div>
 </template>
 
@@ -151,8 +155,10 @@ module.exports = {
 				activeFund() { return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0]; },
 				activeQuote() { return this.quotesByFund[this.activeFundKey]; },
 				activeNav() { return this.navsByFund[this.activeFundKey]; },
-				activeHistory() { return this.historiesByFund[this.activeFundKey]; },
+			activeHistory() { return this.historiesByFund[this.activeFundKey]; },
 			recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
+			holdingsWeightedChangePct() { const quotedHoldings = this.activeFund.holdings.filter(holding => Number.isFinite(holding.weight) && Number.isFinite(holding.changePct)); const totalWeight = quotedHoldings.reduce((total, holding) => total + holding.weight, 0); return totalWeight > 0 ? quotedHoldings.reduce((total, holding) => total + holding.weight * holding.changePct, 0) / totalWeight : null; },
+			holdingsChangeAssessment() { if (!Number.isFinite(this.holdingsWeightedChangePct)) return '等待 Yahoo 報價更新'; if (this.holdingsWeightedChangePct > 0) return '列示持股整體偏多'; if (this.holdingsWeightedChangePct < 0) return '列示持股整體偏空'; return '列示持股大致持平'; },
 			quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
 			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
 			historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
@@ -164,7 +170,7 @@ module.exports = {
 			formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
 			formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
 			formatQuoteChange(value) { return Number.isFinite(value) ? `TWD ${value > 0 ? '+' : ''}${this.formatPrice(value)}` : 'TWD —'; },
-			getQuoteChangeAmount(holding) { if (Number.isFinite(holding?.priceChange)) return holding.priceChange; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose)) return holding.price - holding.previousClose; return null; },
+			getQuoteChangeAmount(holding) { if (Number.isFinite(holding?.priceChange)) return holding.priceChange; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose)) return holding.price - holding.previousClose; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.changePct) && 100 + holding.changePct !== 0) { const derivedPreviousClose = holding.price / (1 + holding.changePct / 100); return holding.price - derivedPreviousClose; } return null; },
 			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
 				formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
