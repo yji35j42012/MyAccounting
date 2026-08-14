@@ -30,10 +30,11 @@
 					<span class="fund_meta_label">最新公開淨值</span>
 					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
 					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
-					<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
-					<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
-					<small class="fund_cache_status">{{ navTimingStatus }}</small>
-					<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
+						<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
+						<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
+						<small class="fund_cache_status">{{ navTimingStatus }}</small>
+						<button type="button" class="fund_cache_clear_button" @click="clearFundNavCache" aria-label="清除本機淨值快取">清除本機淨值快取</button>
+						<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
 				<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看淨值來源</a>
 			</div>
 		</section>
@@ -86,12 +87,12 @@
 				</div>
 			</div>
 			<div class="fund_table_box">
-				<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌幅²</th><th>比重</th></tr></thead>
-					<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }}</small></td><td><span :class="['fund_today_change', getChangeClass(item.changePct)]">{{ formatPercent(item.changePct) }}</span></td><td class="fund_weight"><div class="fund_weight_value"><strong>{{ item.weight.toFixed(2) }}%</strong></div><div class="fund_progress"><span :style="{ width: (item.weight / maxWeight * 100) + '%' }"></span></div></td></tr></tbody>
+					<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌²</th><th>比重</th></tr></thead>
+						<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }}</small></td><td class="fund_change"><strong :class="['fund_today_change', getChangeClass(item.changePct)]">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></td><td class="fund_weight"><strong>{{ item.weight.toFixed(2) }}%</strong></td></tr></tbody>
 				</table>
 			</div>
 			<div class="fund_mobile_holdings" aria-label="官方公開前十大持股">
-				<article class="fund_mobile_holding" v-for="item in activeFund.holdings" :key="'mobile-' + item.name"><div class="fund_mobile_holding_top"><div class="fund_mobile_company_group"><span class="fund_rank">{{ item.rank }}</span><strong>{{ item.name }}</strong></div><div class="fund_mobile_change"><strong :class="getChangeClass(item.changePct)">{{ formatPercent(item.changePct) }}</strong><small>今日漲跌幅</small></div></div><div class="fund_mobile_holding_detail"><div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }} ・ 見上方報價時間</small></div><div class="fund_progress"><span :style="{ width: (item.weight / maxWeight * 100) + '%' }"></span></div></div></article>
+					<article class="fund_mobile_holding" v-for="item in activeFund.holdings" :key="'mobile-' + item.name"><div class="fund_mobile_holding_top"><div class="fund_mobile_company_group"><span class="fund_rank">{{ item.rank }}</span><strong>{{ item.name }}</strong></div><div class="fund_mobile_change"><strong :class="getChangeClass(item.changePct)">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></div></div><div class="fund_mobile_holding_detail"><div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }} ・ 比重 {{ item.weight.toFixed(2) }}%</small></div></div></article>
 			</div>
 		</section>
 
@@ -110,7 +111,8 @@ module.exports = {
 					historyTimer: null,
 					countdownTimer: null,
 					countdownNow: Date.now(),
-					quoteAutoSlotByFund: {},
+						quoteAutoSlotByFund: {},
+						cacheClearNotice: '',
 				quotesByFund: {
 				taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', isRefreshing: false, quoteError: '' },
 					taiwanDaba: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
@@ -150,18 +152,19 @@ module.exports = {
 				activeQuote() { return this.quotesByFund[this.activeFundKey]; },
 				activeNav() { return this.navsByFund[this.activeFundKey]; },
 				activeHistory() { return this.historiesByFund[this.activeFundKey]; },
-		maxWeight() { return this.activeFund.holdings.reduce((highest, holding) => Math.max(highest, holding.weight), 0); },
-		recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
+			recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
 			quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
-			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
-				historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
+			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
+			historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
 				navTimingStatus() { return this.getFundTimingText(this.activeNav); },
 				historyTimingStatus() { return this.getFundTimingText(this.activeHistory); }
 	},
 		methods: {
 			formatDate(date) { return date.slice(5).replace('-', ' / '); },
-		formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
+			formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
 			formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
+			formatQuoteChange(value) { return Number.isFinite(value) ? `TWD ${value > 0 ? '+' : ''}${this.formatPrice(value)}` : 'TWD —'; },
+			getQuoteChangeAmount(holding) { if (Number.isFinite(holding?.priceChange)) return holding.priceChange; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose)) return holding.price - holding.previousClose; return null; },
 			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
 				formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
@@ -189,9 +192,10 @@ module.exports = {
 				getExpectedFundDate() { return this.getTiming()?.getExpectedFundNavDate(Date.now()) || ''; },
 				getQuoteAutoSlot() { return this.getTiming()?.getQuoteAutoSlot(Date.now()) || ''; },
 				isExpectedFundDate(value) { return Boolean(this.getTiming()?.isExpectedFundNavDate(value, Date.now())); },
-				getFundStorageKey(type, fundKey) { return `cashflow-manager:fund-${type}:v1:${fundKey}`; },
-				readFundStorage(type, fundKey) { try { const value = localStorage.getItem(this.getFundStorageKey(type, fundKey)); const snapshot = value ? JSON.parse(value) : null; return snapshot?.fundKey === fundKey ? snapshot : null; } catch { return null; } },
-				writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch {} },
+			getFundStorageKey(type, fundKey) { return `cashflow-manager:fund-${type}:v1:${fundKey}`; },
+			readFundStorage(type, fundKey) { try { const value = localStorage.getItem(this.getFundStorageKey(type, fundKey)); const snapshot = value ? JSON.parse(value) : null; return snapshot?.fundKey === fundKey ? snapshot : null; } catch { return null; } },
+			writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch {} },
+			clearFundNavCache() { this.funds.forEach(fund => { ['nav', 'history'].forEach(type => { try { localStorage.removeItem(this.getFundStorageKey(type, fund.key)); } catch {} }); this.navsByFund[fund.key].cacheMode = 'cleared'; this.historiesByFund[fund.key].cacheMode = 'cleared'; }); this.cacheClearNotice = '已清除本機淨值快取；下次進入時會重新取得資料'; },
 				applyNavSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const navState = this.navsByFund[fundKey]; if (!targetFund || !navState || !Number.isFinite(Number(snapshot?.nav)) || !snapshot?.navDate) return false; targetFund.nav = Number(snapshot.nav); targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / '); targetFund.navChangePct = typeof snapshot.changePct === 'number' && Number.isFinite(snapshot.changePct) ? Number(snapshot.changePct) : null; if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl; navState.navUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); navState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); navState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || navState.fetchedAt + 10 * 60 * 1000; navState.dataDate = this.normalizeFundDate(targetFund.navDate); navState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
 				applyHistorySnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const historyState = this.historiesByFund[fundKey]; const rows = Array.isArray(snapshot?.rows) ? snapshot.rows.map(item => ({ date: String(item.date).replace(/\//g, '-'), value: Number(item.value), changePct: Number(item.changePct) })) : []; if (!targetFund || !historyState || rows.length !== 5 || rows.some(item => !item.date || !Number.isFinite(item.value) || !Number.isFinite(item.changePct))) return false; targetFund.historyNav = rows; targetFund.historyRange = snapshot.historyRange || targetFund.historyRange.replace(/— .*/, `— ${String(rows[rows.length - 1].date).replace(/-/g, ' / ')}`); if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl; historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); historyState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); historyState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || historyState.fetchedAt + 10 * 60 * 1000; historyState.dataDate = this.normalizeFundDate(rows[rows.length - 1].date); historyState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
 				hydrateFundCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); const historySnapshot = this.readFundStorage('history', fundKey); const navLoaded = navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) ? this.applyNavSnapshot(fundKey, navSnapshot, 'local') : false; const historyDate = historySnapshot?.rows?.[historySnapshot.rows.length - 1]?.date; const historyLoaded = historySnapshot && this.isExpectedFundDate(historyDate) ? this.applyHistorySnapshot(fundKey, historySnapshot, 'local') : false; return { navLoaded, historyLoaded }; },
@@ -255,7 +259,7 @@ module.exports = {
 				if (!Array.isArray(successfulQuotes) || !successfulQuotes.length || snapshot.fundKey !== fundKey) throw new Error('Yahoo 股市暫時無法提供報價');
 				const quoteBySymbol = new Map(successfulQuotes.map(quote => [quote.symbol, quote]));
 				const targetFund = this.funds.find(fund => fund.key === fundKey);
-				targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, changePct: ((quote.price - quote.previousClose) / quote.previousClose) * 100 } : holding; });
+				targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, priceChange: quote.price - quote.previousClose, changePct: ((quote.price - quote.previousClose) / quote.previousClose) * 100 } : holding; });
 				quoteState.quoteUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
 				if (snapshot.failedSymbols?.length) quoteState.quoteError = `部分報價更新失敗，已保留前次資料（${successfulQuotes.length}/${targetFund.holdings.length}）`;
 				} catch (error) {

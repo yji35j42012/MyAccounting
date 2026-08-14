@@ -1291,6 +1291,21 @@ select {
   margin-left: 5px;
   content: "↗";
 }
+.fund_cache_clear_button {
+  margin-top: 9px;
+  padding: 0;
+  color: #667f9c;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.fund_cache_clear_button:hover, .fund_cache_clear_button:focus-visible {
+  color: #1a5f9f;
+}
 .fund_summary, .fund_insight_grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1484,29 +1499,12 @@ select {
   font-weight: 700;
 }
 .fund_weight {
-  width: 30%;
-  min-width: 190px;
+  width: 92px;
+  white-space: nowrap;
 }
-.fund_weight_value {
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  margin-bottom: 7px;
+.fund_weight strong {
   color: #0f3d7a;
   font-size: 13px;
-}
-.fund_progress {
-  width: 100%;
-  height: 6px;
-  overflow: hidden;
-  background: #e8eef4;
-  border-radius: 20px;
-}
-.fund_progress span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #164e8e, #3d8ac8);
-  border-radius: inherit;
 }
 .fund_insight_grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1619,6 +1617,19 @@ select {
 }
 .fund_today_change, .fund_holding_change {
   font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.fund_change {
+  min-width: 110px;
+}
+.fund_change strong,
+.fund_change small {
+  display: block;
+}
+.fund_change small {
+  margin-top: 3px;
+  font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -1797,9 +1808,6 @@ select {
   .fund_mobile_holding_detail {
     gap: 12px;
     margin-top: 11px;
-  }
-  .fund_mobile_holding_detail .fund_progress {
-    flex: 1;
   }
   .fund_mobile_holding_detail .fund_mobile_price_inline {
     min-width: 128px;

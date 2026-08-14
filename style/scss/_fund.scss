@@ -234,20 +234,36 @@
 		border-top: 1px solid #dfe8f0;
 	}
 
-	&_source_link {
-		display: inline-block;
-		margin-top: 12px;
-		color: #0f3d7a;
+		&_source_link {
+			display: inline-block;
+			margin-top: 12px;
+			color: #0f3d7a;
 		font-size: 13px;
 		font-weight: 700;
 
 		&::after {
 			margin-left: 5px;
-			content: "↗";
+				content: "↗";
+			}
 		}
-	}
 
-	&_summary,
+		&_cache_clear_button {
+			margin-top: 9px;
+			padding: 0;
+			color: #667f9c;
+			font: inherit;
+			font-size: 11px;
+			font-weight: 700;
+			text-align: left;
+			text-decoration: underline;
+			text-underline-offset: 3px;
+			cursor: pointer;
+
+			&:hover,
+			&:focus-visible { color: #1a5f9f; }
+		}
+
+		&_summary,
 	&_insight_grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -474,32 +490,12 @@
 		font-weight: 700;
 	}
 
-	&_weight {
-		width: 30%;
-		min-width: 190px;
+		&_weight {
+			width: 92px;
+			white-space: nowrap;
 
-		&_value {
-			@include d_f(flex, space-between);
-			margin-bottom: 7px;
-			color: #0f3d7a;
-			font-size: 13px;
+			strong { color: #0f3d7a; font-size: 13px; }
 		}
-	}
-
-	&_progress {
-		width: 100%;
-		height: 6px;
-		overflow: hidden;
-		background: #e8eef4;
-		border-radius: 20px;
-
-		span {
-			display: block;
-			height: 100%;
-			background: linear-gradient(90deg, #164e8e, #3d8ac8);
-			border-radius: inherit;
-		}
-	}
 
 	&_insight_grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -628,12 +624,21 @@
 		}
 	}
 
-	&_today_change,
-	&_holding_change {
-		font-size: 13px;
-		font-weight: 700;
-		white-space: nowrap;
-	}
+		&_today_change,
+		&_holding_change {
+			font-size: 13px;
+			font-weight: 700;
+			white-space: nowrap;
+		}
+
+		&_change {
+			min-width: 110px;
+
+			strong,
+			small { display: block; }
+
+			small { margin-top: 3px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+		}
 
 	&_positive { color: #bd3441 !important; }
 	&_negative { color: #11724d !important; }
@@ -771,13 +776,11 @@
 
 			&_top { justify-content: space-between; gap: 12px; }
 
-			&_detail {
-				gap: 12px;
-				margin-top: 11px;
-
-				.fund_progress { flex: 1; }
-				.fund_mobile_price_inline { min-width: 128px; text-align: left; }
-			}
+				&_detail {
+					gap: 12px;
+					margin-top: 11px;
+					.fund_mobile_price_inline { min-width: 128px; text-align: left; }
+				}
 		}
 
 		&_mobile_company_group {
