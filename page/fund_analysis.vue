@@ -79,7 +79,7 @@
 						<span class="fund_asof fund_price_asof">Yahoo 報價：{{ activeQuote.quoteUpdatedAt }}</span>
 						<small :class="['fund_quote_hint', activeQuote.quoteError ? 'is-error' : '']">{{ quoteStatus }}</small>
 					</div>
-					<button type="button" class="fund_refresh_button" :disabled="activeQuote.isRefreshing" @click="refreshYahooQuotes" aria-label="更新 Yahoo 股價">
+						<button type="button" class="fund_refresh_button" :disabled="activeQuote.isRefreshing" @click="refreshYahooQuotes()" aria-label="更新 Yahoo 股價">
 						<svg :class="['fund_refresh_icon', activeQuote.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg>
 						<span>{{ activeQuote.isRefreshing ? '更新中' : '更新股價' }}</span>
 					</button>
@@ -220,7 +220,8 @@ module.exports = {
 				return { url: `/api/trpc/market.recentHistoryNav?input=${input}`, isExternalProxy: false };
 			},
 				selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
-			async refreshYahooQuotes(fundKey = this.activeFundKey) {
+				async refreshYahooQuotes(fundKey = this.activeFundKey) {
+					if (typeof fundKey !== 'string' || !this.quotesByFund[fundKey]) fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
 			if (quoteState.isRefreshing) return;
 			quoteState.isRefreshing = true;
