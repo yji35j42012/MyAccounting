@@ -167,7 +167,23 @@ module.exports = {
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
 				getRefreshTimingText(state) { if (!Number.isFinite(state.fetchedAt) || state.fetchedAt <= 0) return '取得後顯示快取與自動更新倒數'; const cacheRemaining = this.formatCountdown(Math.max(0, state.cacheExpiresAt - this.countdownNow)); const autoRemaining = this.formatCountdown(Math.max(0, state.fetchedAt + 30 * 60 * 1000 - this.countdownNow)); return `快取剩餘 ${cacheRemaining} · 下次自動更新 ${autoRemaining}`; },
 				getFundTimingText(state) { const expectedDate = this.getExpectedFundDate(); if (!state.dataDate) return `目標資料日期 ${expectedDate}；快取失效時更新`; if (this.isFundPublishWindow()) return state.dataDate === expectedDate ? `資料日期 ${state.dataDate} · 已符合當日淨值` : `資料日期 ${state.dataDate} · 平日 16:00 後持續檢查`; return `資料日期 ${state.dataDate} · 平日 16:00 後再檢查`; },
-				getTiming() { return window.FundUpdateTiming; },
+				getTiming() {
+					if (window.FundUpdateTiming) return window.FundUpdateTiming;
+					const getTaipeiParts = (timestamp = Date.now()) => { const values = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(timestamp)).filter(part => part.type !== 'literal').map(part => [part.type, part.value])); return { year: Number(values.year), month: Number(values.month), day: Number(values.day), hour: Number(values.hour), minute: Number(values.minute) }; };
+					const formatDate = parts => `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+					const normalizeFundDate = value => { const match = String(value || '').replace(/\s/g, '').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/); return match ? `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}` : ''; };
+					const isWeekday = parts => { const day = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay(); return day >= 1 && day <= 5; };
+					const previousWeekday = parts => { const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)); do { date.setUTCDate(date.getUTCDate() - 1); } while (date.getUTCDay() === 0 || date.getUTCDay() === 6); return formatDate({ year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() }); };
+					const isPublishWindow = timestamp => { const parts = getTaipeiParts(timestamp); return isWeekday(parts) && parts.hour * 60 + parts.minute >= 16 * 60; };
+					return {
+						normalizeFundDate,
+						isTaipeiStockAutoWindow(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); const minutes = parts.hour * 60 + parts.minute; return isWeekday(parts) && minutes >= 9 * 60 && minutes < 14 * 60; },
+						getQuoteAutoSlot(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); return this.isTaipeiStockAutoWindow(timestamp) ? `${formatDate(parts)}-${String(parts.hour).padStart(2, '0')}-${Math.floor(parts.minute / 5)}` : ''; },
+						isTaipeiFundPublishWindow(timestamp = Date.now()) { return isPublishWindow(timestamp); },
+						getExpectedFundNavDate(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); return isPublishWindow(timestamp) ? formatDate(parts) : previousWeekday(parts); },
+						isExpectedFundNavDate(value, timestamp = Date.now()) { return normalizeFundDate(value) === this.getExpectedFundNavDate(timestamp); }
+					};
+				},
 				isQuoteAutoWindow() { return Boolean(this.getTiming()?.isTaipeiStockAutoWindow(Date.now())); },
 				isFundPublishWindow() { return Boolean(this.getTiming()?.isTaipeiFundPublishWindow(Date.now())); },
 				getExpectedFundDate() { return this.getTiming()?.getExpectedFundNavDate(Date.now()) || ''; },
