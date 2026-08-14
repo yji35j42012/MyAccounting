@@ -96,7 +96,7 @@
 		</section>
 
 		<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
-				<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示。最新淨值單日漲跌幅按「(最新官方淨值 − 前一公開營業日淨值) ÷ 前一公開營業日淨值」計算；若公開歷史表尚未列出最新官方日期，系統會以該官方淨值補入最近五筆資料。¹ 個股價格會在進入本頁、盤中每五分鐘，以及按下「更新股價」時，經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice；本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
+					<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示。最新淨值單日漲跌幅按「(最新官方淨值 − 前一公開營業日淨值) ÷ 前一公開營業日淨值」計算；若公開歷史表尚未列出最新官方日期，系統會以該官方淨值補入最近五筆資料。基金最新與歷史淨值會依資料日期儲存於此瀏覽器的 localStorage：平日 16:00 前預期使用前一營業日資料，16:00 後才檢查當日資料。¹ 個股價格僅於平日 09:00–14:00 自動每五分鐘更新，並可隨時按下「更新股價」手動取得報價；資料經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice。本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」計算。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
 	</div>
 </template>
 
@@ -110,23 +110,24 @@ module.exports = {
 					historyTimer: null,
 					countdownTimer: null,
 					countdownNow: Date.now(),
-			quotesByFund: {
+					quoteAutoSlotByFund: {},
+				quotesByFund: {
 				taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', isRefreshing: false, quoteError: '' },
 					taiwanDaba: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
 					taiwanIntelligence: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
 					fuhwaOmni: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' }
 				},
 					navsByFund: {
-						taiwanTechnology: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' },
-						taiwanDaba: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' },
-						taiwanIntelligence: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' },
-						fuhwaOmni: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, navError: '' }
+						taiwanTechnology: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' },
+						taiwanDaba: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' },
+						taiwanIntelligence: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' },
+						fuhwaOmni: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' }
 					},
 					historiesByFund: {
-						taiwanTechnology: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' },
-						taiwanDaba: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' },
-						taiwanIntelligence: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' },
-						fuhwaOmni: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, isRefreshing: false, historyError: '' }
+						taiwanTechnology: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' },
+						taiwanDaba: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' },
+						taiwanIntelligence: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' },
+						fuhwaOmni: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' }
 					},
 			funds: [
 				{
@@ -151,11 +152,11 @@ module.exports = {
 				activeHistory() { return this.historiesByFund[this.activeFundKey]; },
 		maxWeight() { return this.activeFund.holdings.reduce((highest, holding) => Math.max(highest, holding.weight), 0); },
 		recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
-				quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return '開啟頁面即更新，盤中每 5 分鐘自動更新'; },
-				navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '進入頁面時自動取得最新官方淨值'; },
-					historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '進入頁面時自動更新最近五筆'; },
-					navTimingStatus() { return this.getRefreshTimingText(this.activeNav); },
-					historyTimingStatus() { return this.getRefreshTimingText(this.activeHistory); }
+			quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
+			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
+				historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
+				navTimingStatus() { return this.getFundTimingText(this.activeNav); },
+				historyTimingStatus() { return this.getFundTimingText(this.activeHistory); }
 	},
 		methods: {
 			formatDate(date) { return date.slice(5).replace('-', ' / '); },
@@ -165,6 +166,21 @@ module.exports = {
 				formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
 				getRefreshTimingText(state) { if (!Number.isFinite(state.fetchedAt) || state.fetchedAt <= 0) return '取得後顯示快取與自動更新倒數'; const cacheRemaining = this.formatCountdown(Math.max(0, state.cacheExpiresAt - this.countdownNow)); const autoRemaining = this.formatCountdown(Math.max(0, state.fetchedAt + 30 * 60 * 1000 - this.countdownNow)); return `快取剩餘 ${cacheRemaining} · 下次自動更新 ${autoRemaining}`; },
+				getFundTimingText(state) { const expectedDate = this.getExpectedFundDate(); if (!state.dataDate) return `目標資料日期 ${expectedDate}；快取失效時更新`; if (this.isFundPublishWindow()) return state.dataDate === expectedDate ? `資料日期 ${state.dataDate} · 已符合當日淨值` : `資料日期 ${state.dataDate} · 平日 16:00 後持續檢查`; return `資料日期 ${state.dataDate} · 平日 16:00 後再檢查`; },
+				getTiming() { return window.FundUpdateTiming; },
+				isQuoteAutoWindow() { return Boolean(this.getTiming()?.isTaipeiStockAutoWindow(Date.now())); },
+				isFundPublishWindow() { return Boolean(this.getTiming()?.isTaipeiFundPublishWindow(Date.now())); },
+				getExpectedFundDate() { return this.getTiming()?.getExpectedFundNavDate(Date.now()) || ''; },
+				getQuoteAutoSlot() { return this.getTiming()?.getQuoteAutoSlot(Date.now()) || ''; },
+				isExpectedFundDate(value) { return Boolean(this.getTiming()?.isExpectedFundNavDate(value, Date.now())); },
+				getFundStorageKey(type, fundKey) { return `cashflow-manager:fund-${type}:v1:${fundKey}`; },
+				readFundStorage(type, fundKey) { try { const value = localStorage.getItem(this.getFundStorageKey(type, fundKey)); const snapshot = value ? JSON.parse(value) : null; return snapshot?.fundKey === fundKey ? snapshot : null; } catch { return null; } },
+				writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch {} },
+				applyNavSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const navState = this.navsByFund[fundKey]; if (!targetFund || !navState || !Number.isFinite(Number(snapshot?.nav)) || !snapshot?.navDate) return false; targetFund.nav = Number(snapshot.nav); targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / '); targetFund.navChangePct = typeof snapshot.changePct === 'number' && Number.isFinite(snapshot.changePct) ? Number(snapshot.changePct) : null; if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl; navState.navUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); navState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); navState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || navState.fetchedAt + 10 * 60 * 1000; navState.dataDate = this.normalizeFundDate(targetFund.navDate); navState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
+				applyHistorySnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const historyState = this.historiesByFund[fundKey]; const rows = Array.isArray(snapshot?.rows) ? snapshot.rows.map(item => ({ date: String(item.date).replace(/\//g, '-'), value: Number(item.value), changePct: Number(item.changePct) })) : []; if (!targetFund || !historyState || rows.length !== 5 || rows.some(item => !item.date || !Number.isFinite(item.value) || !Number.isFinite(item.changePct))) return false; targetFund.historyNav = rows; targetFund.historyRange = snapshot.historyRange || targetFund.historyRange.replace(/— .*/, `— ${String(rows[rows.length - 1].date).replace(/-/g, ' / ')}`); if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl; historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); historyState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); historyState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || historyState.fetchedAt + 10 * 60 * 1000; historyState.dataDate = this.normalizeFundDate(rows[rows.length - 1].date); historyState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
+				hydrateFundCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); const historySnapshot = this.readFundStorage('history', fundKey); const navLoaded = navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) ? this.applyNavSnapshot(fundKey, navSnapshot, 'local') : false; const historyDate = historySnapshot?.rows?.[historySnapshot.rows.length - 1]?.date; const historyLoaded = historySnapshot && this.isExpectedFundDate(historyDate) ? this.applyHistorySnapshot(fundKey, historySnapshot, 'local') : false; return { navLoaded, historyLoaded }; },
+				async refreshFundSnapshots() { const fundKey = this.activeFundKey; const cache = this.hydrateFundCache(fundKey); const requests = []; if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey)); if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); if (requests.length) await Promise.all(requests); },
+				maybeAutoRefreshYahooQuotes() { if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
 			getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 			getQuoteRequest(fundKey) {
 				const workerBaseUrl = this.getWorkerBaseUrl();
@@ -177,16 +193,17 @@ module.exports = {
 				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
 				return { url: `/api/trpc/market.yahooQuotes?input=${input}`, isExternalProxy: false };
 			},
-				getNavRequest(fundKey) {
+				getNavRequest(fundKey, force = false) {
 				const workerBaseUrl = this.getWorkerBaseUrl();
 				if (workerBaseUrl) {
-					const endpoint = new URL(`${workerBaseUrl}/nav`);
-					endpoint.searchParams.set('fund', fundKey);
-						endpoint.searchParams.set('cacheVersion', '4');
+						const endpoint = new URL(`${workerBaseUrl}/nav`);
+						endpoint.searchParams.set('fund', fundKey);
+							endpoint.searchParams.set('cacheVersion', '4');
+							if (force) endpoint.searchParams.set('force', '1');
 					return { url: endpoint.toString(), isExternalProxy: true };
 				}
 				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 淨值端點');
-				const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
+					const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
 				return { url: `/api/trpc/market.officialNav?input=${input}`, isExternalProxy: false };
 			},
 				getHistoryRequest(fundKey, force = false) {
@@ -202,9 +219,8 @@ module.exports = {
 					const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
 				return { url: `/api/trpc/market.recentHistoryNav?input=${input}`, isExternalProxy: false };
 			},
-			selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.refreshRecentHistoryNav(); }); },
-		async refreshYahooQuotes() {
-			const fundKey = this.activeFundKey;
+				selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
+			async refreshYahooQuotes(fundKey = this.activeFundKey) {
 			const quoteState = this.quotesByFund[fundKey];
 			if (quoteState.isRefreshing) return;
 			quoteState.isRefreshing = true;
@@ -231,8 +247,7 @@ module.exports = {
 					quoteState.isRefreshing = false;
 				}
 			},
-			async refreshOfficialNav() {
-				const fundKey = this.activeFundKey;
+				async refreshOfficialNav(force = false, fundKey = this.activeFundKey) {
 				const navState = this.navsByFund[fundKey];
 				if (navState.isRefreshing) return;
 				navState.isRefreshing = true;
@@ -240,30 +255,22 @@ module.exports = {
 				try {
 					const abortController = new AbortController();
 					const requestTimeout = window.setTimeout(() => abortController.abort(), 12 * 1000);
-					const navRequest = this.getNavRequest(fundKey);
+						const navRequest = this.getNavRequest(fundKey, force);
 					let response;
 					try { response = await fetch(navRequest.url, { cache: 'no-store', credentials: navRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); }
 					if (!response.ok) throw new Error(`官方淨值服務回應 ${response.status}`);
 					const payload = await response.json();
 					const snapshot = navRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 					if (snapshot?.fundKey !== fundKey || !Number.isFinite(snapshot?.nav) || !snapshot?.navDate) throw new Error('官方淨值資料不完整');
-					const targetFund = this.funds.find(fund => fund.key === fundKey);
-						targetFund.nav = Number(snapshot.nav);
-						targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / ');
-						targetFund.navChangePct = typeof snapshot.changePct === 'number' && Number.isFinite(snapshot.changePct) ? Number(snapshot.changePct) : null;
-						this.syncNavChangePct(targetFund);
-						if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl;
-						navState.navUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
-						navState.fetchedAt = Number(snapshot.fetchedAt) || Date.now();
-						navState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || navState.fetchedAt + 10 * 60 * 1000;
+						if (!this.applyNavSnapshot(fundKey, snapshot)) throw new Error('官方淨值資料格式不正確');
+						this.writeFundStorage('nav', fundKey, snapshot);
 				} catch {
 					navState.navError = '官方淨值更新失敗，已保留前次資料';
 				} finally {
 					navState.isRefreshing = false;
 				}
 			},
-			async refreshRecentHistoryNav(force = false) {
-				const fundKey = this.activeFundKey;
+				async refreshRecentHistoryNav(force = false, fundKey = this.activeFundKey) {
 				const historyState = this.historiesByFund[fundKey];
 				if (historyState.isRefreshing) return;
 				historyState.isRefreshing = true;
@@ -278,26 +285,18 @@ module.exports = {
 					const payload = await response.json();
 					const snapshot = historyRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 					if (snapshot?.fundKey !== fundKey || !Array.isArray(snapshot?.rows) || snapshot.rows.length !== 5) throw new Error('最近五筆歷史淨值資料不完整');
-					const rows = snapshot.rows.map(item => ({ date: String(item.date).replace(/\//g, '-'), value: Number(item.value), changePct: Number(item.changePct) }));
-					if (rows.some(item => !item.date || !Number.isFinite(item.value) || !Number.isFinite(item.changePct))) throw new Error('最近五筆歷史淨值資料格式不正確');
-					const targetFund = this.funds.find(fund => fund.key === fundKey);
-						targetFund.historyNav = rows;
-						this.syncNavChangePct(targetFund);
-					targetFund.historyRange = targetFund.historyRange.replace(/— .*/, `— ${String(snapshot.rows[4].date).replace(/\//g, ' / ')}`);
-					if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl;
-						historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
-						historyState.fetchedAt = Number(snapshot.fetchedAt) || Date.now();
-						historyState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || historyState.fetchedAt + 10 * 60 * 1000;
+						if (!this.applyHistorySnapshot(fundKey, snapshot)) throw new Error('最近五筆歷史淨值資料格式不正確');
+						this.writeFundStorage('history', fundKey, snapshot);
 				} catch {
 					historyState.historyError = '最近五筆歷史淨值更新失敗，已保留前次資料';
 				} finally {
 					historyState.isRefreshing = false;
 				}
 				},
-				normalizeFundDate(value) { const match = String(value).replace(/\s/g, '').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/); return match ? `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}` : ''; },
+					normalizeFundDate(value) { return this.getTiming()?.normalizeFundDate(value) || ''; },
 				syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 			},
-		mounted() { this.refreshYahooQuotes(); this.refreshOfficialNav(); this.refreshRecentHistoryNav(); this.quoteTimer = window.setInterval(this.refreshYahooQuotes, 5 * 60 * 1000); this.navTimer = window.setInterval(this.refreshOfficialNav, 30 * 60 * 1000); this.historyTimer = window.setInterval(this.refreshRecentHistoryNav, 30 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
+			mounted() { this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
 		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); }
 };
 </script>
