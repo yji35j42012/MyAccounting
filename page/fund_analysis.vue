@@ -28,10 +28,12 @@
 			</div>
 				<div class="fund_hero_meta">
 					<span class="fund_meta_label">最新公開淨值</span>
-					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
-					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
-						<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
-						<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
+						<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
+						<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
+							<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
+							<span class="fund_nav_contribution"><strong :class="getChangeClass(holdingsFundContributionPct)">{{ formatPercent(holdingsFundContributionPct) }}</strong><small>公開前十大對基金淨值估計貢獻</small></span>
+							<small class="fund_nav_contribution_detail">前十大標準化日報酬：{{ formatPercent(holdingsWeightedChangePct) }}；{{ holdingsSignalStatus }}</small>
+							<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
 						<small class="fund_cache_status">{{ navTimingStatus }}</small>
 						<button type="button" class="fund_cache_clear_button" @click="clearFundNavCache" aria-label="清除本機淨值快取">清除本機淨值快取</button>
 						<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
@@ -86,10 +88,6 @@
 					</button>
 					</div>
 				</div>
-				<div class="fund_holdings_signal" aria-live="polite">
-					<div><span>公開前十大對基金淨值估計貢獻</span><small>依公開持股比重合計；與基金單日淨值同為基金資產層級，但不含未列示部位</small><small>前十大標準化日報酬：{{ formatPercent(holdingsWeightedChangePct) }}</small><small>{{ holdingsSignalStatus }}</small></div>
-					<div class="fund_holdings_signal_value"><strong :class="getChangeClass(holdingsFundContributionPct)">{{ formatPercent(holdingsFundContributionPct) }}</strong><small>{{ holdingsChangeAssessment }}</small></div>
-				</div>
 				<div class="fund_table_box">
 					<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌²</th><th>比重</th></tr></thead>
 						<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }}</small></td><td class="fund_change"><strong :class="['fund_today_change', getChangeClass(item.changePct)]">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></td><td class="fund_weight"><strong>{{ item.weight.toFixed(2) }}%</strong></td></tr></tbody>
@@ -106,7 +104,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.3.0-2026.08.17';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.0-2026.08.17';
 
 module.exports = {
 	data() {
