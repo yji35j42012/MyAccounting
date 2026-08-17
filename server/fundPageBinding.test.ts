@@ -30,15 +30,17 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain("localStorage.removeItem(this.getFundStorageKey(type, fund.key))");
 		expect(source).toContain('priceChange: quote.price - quote.previousClose');
 		expect(source).toContain('formatQuoteChange(getQuoteChangeAmount(item))');
-		expect(source).toContain('公開前十大持股加權漲跌');
+		expect(source).toContain('公開前十大對基金淨值估計貢獻');
 		expect(source).toContain('holdingsWeightedChangePct()');
+		expect(source).toContain('holdingsFundContributionPct()');
+		expect(source).toContain('fundContributionPct');
 		expect(source).toContain('hydrateYahooQuoteCache(this.activeFundKey)');
 		expect(source).toContain('this.persistYahooQuoteSnapshot(fundKey, snapshot.fetchedAt);');
 		expect(source).toContain("'quotes'");
 		expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
 		expect(source).toContain("this.persistHoldingsSignalSnapshot(fundKey);");
 		expect(source).toContain("'holdings-signal'");
-		expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.2.0-2026.08.17';");
+		expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.3.0-2026.08.17';");
 		expect(source).toContain('console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`);');
 		expect(source).not.toContain('class="fund_progress"');
 	});
@@ -69,7 +71,7 @@ describe("fund page manual quote update binding", () => {
     expect(state.funds.every((fund: { key: string }) => state.navsByFund[fund.key].cacheMode === "cleared" && state.historiesByFund[fund.key].cacheMode === "cleared")).toBe(true);
   });
 
-  it("calculates and formats Yahoo price change amounts from price and previous close", async () => {
+	it("calculates and formats Yahoo price change amounts from price and previous close", async () => {
     const { component } = await loadFundPageComponent();
     const instance = { ...component.methods };
 
@@ -79,6 +81,14 @@ describe("fund page manual quote update binding", () => {
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 622, previousClose: 662 }))).toBe("TWD -40.00");
 		expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 177, changePct: -0.56 }))).toBe("TWD -1.00");
 		expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182 }))).toBe("TWD —");
+	});
+
+	it("labels holdings contribution as same-day comparable only when quote and NAV dates match", async () => {
+		const { component } = await loadFundPageComponent();
+		const instance = { ...component.methods };
+
+		expect(instance.getHoldingsNavDateStatus("2026 / 08 / 13 13:55", "2026 / 08 / 13")).toContain("可作同日方向對照");
+		expect(instance.getHoldingsNavDateStatus("2026 / 08 / 14 13:55", "2026 / 08 / 13")).toContain("僅供方向觀察");
 	});
 
 	it("hydrates and persists each fund's Yahoo quote cache with price, percent, and amount changes", async () => {
@@ -130,16 +140,21 @@ describe("fund page manual quote update binding", () => {
 		expect(targetFund.holdings[0].price).toBeNull();
 	});
 
-	it("calculates public top-ten holdings' weighted change and assessment", async () => {
-    const { component } = await loadFundPageComponent();
-    const instance = {
-      activeFund: { holdings: [{ weight: 50, changePct: 2 }, { weight: 30, changePct: -1 }, { weight: 20, changePct: null }] },
-      ...component.methods,
-    };
-    const weightedChange = component.computed.holdingsWeightedChangePct.call(instance);
-    instance.holdingsWeightedChangePct = weightedChange;
+	it("calculates public top-ten standardized return and fund-level contribution separately", async () => {
+		const { component } = await loadFundPageComponent();
+		const instance = {
+			activeFund: { holdings: [{ weight: 50, changePct: 2 }, { weight: 30, changePct: -1 }, { weight: 20, changePct: null }] },
+			...component.methods,
+		};
+		const calculation = instance.calculateHoldingsWeightedChange(instance.activeFund.holdings);
+		const weightedChange = component.computed.holdingsWeightedChangePct.call(instance);
+		const fundContribution = component.computed.holdingsFundContributionPct.call(instance);
+		instance.holdingsWeightedChangePct = weightedChange;
+		instance.holdingsFundContributionPct = fundContribution;
 
-    expect(weightedChange).toBeCloseTo(0.875, 8);
+		expect(calculation.totalWeight).toBe(80);
+		expect(weightedChange).toBeCloseTo(0.875, 8);
+		expect(fundContribution).toBeCloseTo(0.7, 8);
 		expect(component.computed.holdingsChangeAssessment.call(instance)).toBe("列示持股整體偏多");
 	});
 
@@ -154,6 +169,7 @@ describe("fund page manual quote update binding", () => {
 			fundKey,
 			holdingsDate: targetFund.holdingsDate,
 			weightedChangePct: 1.2345,
+			fundContributionPct: 0.6642,
 			totalWeight: 53.8,
 			quotedCount: 10,
 			holdingsCount: 10,
@@ -165,6 +181,7 @@ describe("fund page manual quote update binding", () => {
 		expect(instance.hydrateHoldingsSignalCache(fundKey)).toBe(true);
 		expect(state.holdingsSignalsByFund[fundKey]).toMatchObject({
 			weightedChangePct: 1.2345,
+			fundContributionPct: 0.6642,
 			totalWeight: 53.8,
 			quotedCount: 10,
 			cacheMode: "local",
@@ -183,6 +200,7 @@ describe("fund page manual quote update binding", () => {
 			holdingsCount: 10,
 		});
 		expect(refreshedSnapshot.weightedChangePct).toBeCloseTo(calculated.weightedChangePct, 8);
+		expect(refreshedSnapshot.fundContributionPct).toBeCloseTo(calculated.fundContributionPct, 8);
 		expect(state.holdingsSignalsByFund[fundKey].cacheMode).toBe("remote");
 	});
 
@@ -195,6 +213,7 @@ describe("fund page manual quote update binding", () => {
 			fundKey,
 			holdingsDate: "2026 / 03 / 31",
 			weightedChangePct: -0.45,
+			fundContributionPct: -0.26325,
 			totalWeight: 58.5,
 			quotedCount: 10,
 			holdingsCount: 10,
