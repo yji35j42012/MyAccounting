@@ -104,7 +104,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.0-2026.08.17';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.1-2026.08.17';
 
 module.exports = {
 	data() {
@@ -269,12 +269,13 @@ module.exports = {
 					if (typeof fundKey !== 'string' || !this.quotesByFund[fundKey]) fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
 			if (quoteState.isRefreshing) return;
-			quoteState.isRefreshing = true;
-			quoteState.quoteError = '';
-			try {
-				const abortController = new AbortController();
-				const requestTimeout = window.setTimeout(() => abortController.abort(), 12 * 1000);
-					const quoteRequest = this.getQuoteRequest(fundKey);
+						quoteState.isRefreshing = true;
+						quoteState.quoteError = '';
+						try {
+							const quoteRequest = this.getQuoteRequest(fundKey);
+							const abortController = new AbortController();
+							const requestTimeoutMs = quoteRequest.isExternalProxy ? 25 * 1000 : 12 * 1000;
+							const requestTimeout = window.setTimeout(() => abortController.abort(), requestTimeoutMs);
 					let response;
 					try { response = await fetch(quoteRequest.url, { cache: 'no-store', credentials: quoteRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); }
 					if (!response.ok) throw new Error(`報價服務回應 ${response.status}`);

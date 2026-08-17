@@ -34,6 +34,7 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain('class="fund_nav_contribution"');
 		expect(source).toContain('class="fund_nav_contribution_detail"');
 		expect(source).not.toContain('class="fund_holdings_signal"');
+		expect(source).toContain('const requestTimeoutMs = quoteRequest.isExternalProxy ? 25 * 1000 : 12 * 1000;');
 		expect(source).toContain('holdingsWeightedChangePct()');
 		expect(source).toContain('holdingsFundContributionPct()');
 		expect(source).toContain('fundContributionPct');
@@ -43,7 +44,7 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
 		expect(source).toContain("this.persistHoldingsSignalSnapshot(fundKey);");
 		expect(source).toContain("'holdings-signal'");
-		expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.0-2026.08.17';");
+		expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.1-2026.08.17';");
 		expect(source).toContain('console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`);');
 		expect(source).not.toContain('class="fund_progress"');
 	});
