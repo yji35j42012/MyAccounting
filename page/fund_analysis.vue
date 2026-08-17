@@ -106,6 +106,8 @@
 </template>
 
 <script>
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.1.0-2026.08.17';
+
 module.exports = {
 	data() {
 			return {
@@ -337,7 +339,7 @@ module.exports = {
 					normalizeFundDate(value) { return this.getTiming()?.normalizeFundDate(value) || ''; },
 				syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 			},
-				mounted() { this.hydrateHoldingsSignalCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
+				mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateHoldingsSignalCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
 		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); }
 };
 </script>
