@@ -779,8 +779,6 @@
 			}
 		}
 
-
-
 		// .report_item_amount
 		&_amount {
 			margin-top: auto;
@@ -809,5 +807,21 @@
 		&._bad ._total {
 			color: rgba(239, 68, 68, 1);
 		}
+	}
+}
+
+@media (max-width: 768px) {
+	.report_group{
+		flex-wrap: wrap;
+	}
+	.report_item {
+		width: 100%;
+	}
+	.normal_shadow{
+		padding: 0 15px;
+	}
+	.normal_tb td{
+		max-width: 200px;
+		white-space: wrap;
 	}
 }
