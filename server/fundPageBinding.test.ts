@@ -32,8 +32,11 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain('formatQuoteChange(getQuoteChangeAmount(item))');
 		expect(source).toContain('公開前十大持股加權漲跌');
 		expect(source).toContain('holdingsWeightedChangePct()');
+		expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
+		expect(source).toContain("this.persistHoldingsSignalSnapshot(fundKey);");
+		expect(source).toContain("'holdings-signal'");
 		expect(source).not.toContain('class="fund_progress"');
-  });
+	});
 
   it("clears only the four funds' nav and history cache entries", async () => {
     const { component, storage } = await loadFundPageComponent();
@@ -43,15 +46,17 @@ describe("fund page manual quote update binding", () => {
       instance.getFundStorageKey("nav", fund.key),
       instance.getFundStorageKey("history", fund.key),
     ]);
-    cacheKeys.forEach((key: string) => storage.set(key, "cached"));
-    storage.set("cashflow-manager:quotes:keep", "quote cache");
-    storage.set("unrelated-setting", "keep");
+		cacheKeys.forEach((key: string) => storage.set(key, "cached"));
+		storage.set("cashflow-manager:quotes:keep", "quote cache");
+		state.funds.forEach((fund: { key: string }) => storage.set(instance.getFundStorageKey("holdings-signal", fund.key), "holding signal cache"));
+		storage.set("unrelated-setting", "keep");
 
     instance.clearFundNavCache();
 
-    expect(cacheKeys.every((key: string) => !storage.has(key))).toBe(true);
-    expect(storage.get("cashflow-manager:quotes:keep")).toBe("quote cache");
-    expect(storage.get("unrelated-setting")).toBe("keep");
+		expect(cacheKeys.every((key: string) => !storage.has(key))).toBe(true);
+		expect(storage.get("cashflow-manager:quotes:keep")).toBe("quote cache");
+		expect(state.funds.every((fund: { key: string }) => storage.get(instance.getFundStorageKey("holdings-signal", fund.key)) === "holding signal cache")).toBe(true);
+		expect(storage.get("unrelated-setting")).toBe("keep");
     expect(state.funds.every((fund: { key: string }) => state.navsByFund[fund.key].cacheMode === "cleared" && state.historiesByFund[fund.key].cacheMode === "cleared")).toBe(true);
   });
 
@@ -67,7 +72,7 @@ describe("fund page manual quote update binding", () => {
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182 }))).toBe("TWD —");
   });
 
-  it("calculates public top-ten holdings' weighted change and assessment", async () => {
+	it("calculates public top-ten holdings' weighted change and assessment", async () => {
     const { component } = await loadFundPageComponent();
     const instance = {
       activeFund: { holdings: [{ weight: 50, changePct: 2 }, { weight: 30, changePct: -1 }, { weight: 20, changePct: null }] },
@@ -77,6 +82,82 @@ describe("fund page manual quote update binding", () => {
     instance.holdingsWeightedChangePct = weightedChange;
 
     expect(weightedChange).toBeCloseTo(0.875, 8);
-    expect(component.computed.holdingsChangeAssessment.call(instance)).toBe("列示持股整體偏多");
+		expect(component.computed.holdingsChangeAssessment.call(instance)).toBe("列示持股整體偏多");
+	});
+
+	it("hydrates and refreshes each fund's weighted-holdings signal cache independently", async () => {
+		const { component, storage } = await loadFundPageComponent();
+		const state = component.data();
+		const instance = { ...state, ...component.methods };
+		const fundKey = "taiwanTechnology";
+		const targetFund = state.funds.find((fund: { key: string }) => fund.key === fundKey);
+		const cacheKey = instance.getFundStorageKey("holdings-signal", fundKey);
+		const snapshot = {
+			fundKey,
+			holdingsDate: targetFund.holdingsDate,
+			weightedChangePct: 1.2345,
+			totalWeight: 53.8,
+			quotedCount: 10,
+			holdingsCount: 10,
+			quoteUpdatedAt: "2026 / 08 / 13 13:55",
+			savedAt: 1_786_700_000_000,
+		};
+		storage.set(cacheKey, JSON.stringify(snapshot));
+
+		expect(instance.hydrateHoldingsSignalCache(fundKey)).toBe(true);
+		expect(state.holdingsSignalsByFund[fundKey]).toMatchObject({
+			weightedChangePct: 1.2345,
+			totalWeight: 53.8,
+			quotedCount: 10,
+			cacheMode: "local",
+		});
+		expect(instance.hydrateHoldingsSignalCache("taiwanDaba")).toBe(false);
+
+		state.quotesByFund[fundKey].quoteUpdatedAt = "2026 / 08 / 13 14:00";
+		expect(instance.persistHoldingsSignalSnapshot(fundKey)).toBe(true);
+		const refreshedSnapshot = JSON.parse(storage.get(cacheKey) ?? "{}");
+		const calculated = instance.calculateHoldingsWeightedChange(targetFund.holdings);
+		expect(refreshedSnapshot).toMatchObject({
+			fundKey,
+			holdingsDate: targetFund.holdingsDate,
+			quoteUpdatedAt: "2026 / 08 / 13 14:00",
+			quotedCount: 10,
+			holdingsCount: 10,
+		});
+		expect(refreshedSnapshot.weightedChangePct).toBeCloseTo(calculated.weightedChangePct, 8);
+		expect(state.holdingsSignalsByFund[fundKey].cacheMode).toBe("remote");
+	});
+
+	it("rejects a weighted-holdings cache snapshot when the public holdings date has changed", async () => {
+		const { component, storage } = await loadFundPageComponent();
+		const state = component.data();
+		const instance = { ...state, ...component.methods };
+		const fundKey = "taiwanDaba";
+		storage.set(instance.getFundStorageKey("holdings-signal", fundKey), JSON.stringify({
+			fundKey,
+			holdingsDate: "2026 / 03 / 31",
+			weightedChangePct: -0.45,
+			totalWeight: 58.5,
+			quotedCount: 10,
+			holdingsCount: 10,
+			savedAt: Date.now(),
+		}));
+
+		expect(instance.hydrateHoldingsSignalCache(fundKey)).toBe(false);
+		expect(state.holdingsSignalsByFund[fundKey].weightedChangePct).toBeNull();
+	});
+
+  it("keeps each fund's public top-ten weight total aligned with its displayed summary", async () => {
+    const { component } = await loadFundPageComponent();
+    const state = component.data();
+
+    state.funds.forEach((fund: { holdings: Array<{ weight: number; symbol: string }>; summaryCards: Array<{ label: string; value: string }> }) => {
+      const declaredWeight = Number(fund.summaryCards.find(card => card.label === "前十大列示比重")?.value.replace("%", ""));
+      const calculatedWeight = fund.holdings.reduce((total, holding) => total + holding.weight, 0);
+
+      expect(fund.holdings).toHaveLength(10);
+      expect(new Set(fund.holdings.map(holding => holding.symbol)).size).toBe(10);
+      expect(calculatedWeight).toBeCloseTo(declaredWeight, 8);
+    });
   });
 });
