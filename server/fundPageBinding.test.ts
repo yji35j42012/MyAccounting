@@ -32,10 +32,13 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain('formatQuoteChange(getQuoteChangeAmount(item))');
 		expect(source).toContain('公開前十大持股加權漲跌');
 		expect(source).toContain('holdingsWeightedChangePct()');
+		expect(source).toContain('hydrateYahooQuoteCache(this.activeFundKey)');
+		expect(source).toContain('this.persistYahooQuoteSnapshot(fundKey, snapshot.fetchedAt);');
+		expect(source).toContain("'quotes'");
 		expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
 		expect(source).toContain("this.persistHoldingsSignalSnapshot(fundKey);");
 		expect(source).toContain("'holdings-signal'");
-		expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.1.0-2026.08.17';");
+		expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.2.0-2026.08.17';");
 		expect(source).toContain('console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`);');
 		expect(source).not.toContain('class="fund_progress"');
 	});
@@ -50,13 +53,17 @@ describe("fund page manual quote update binding", () => {
     ]);
 		cacheKeys.forEach((key: string) => storage.set(key, "cached"));
 		storage.set("cashflow-manager:quotes:keep", "quote cache");
-		state.funds.forEach((fund: { key: string }) => storage.set(instance.getFundStorageKey("holdings-signal", fund.key), "holding signal cache"));
+		state.funds.forEach((fund: { key: string }) => {
+			storage.set(instance.getFundStorageKey("quotes", fund.key), "quote cache");
+			storage.set(instance.getFundStorageKey("holdings-signal", fund.key), "holding signal cache");
+		});
 		storage.set("unrelated-setting", "keep");
 
     instance.clearFundNavCache();
 
 		expect(cacheKeys.every((key: string) => !storage.has(key))).toBe(true);
 		expect(storage.get("cashflow-manager:quotes:keep")).toBe("quote cache");
+		expect(state.funds.every((fund: { key: string }) => storage.get(instance.getFundStorageKey("quotes", fund.key)) === "quote cache")).toBe(true);
 		expect(state.funds.every((fund: { key: string }) => storage.get(instance.getFundStorageKey("holdings-signal", fund.key)) === "holding signal cache")).toBe(true);
 		expect(storage.get("unrelated-setting")).toBe("keep");
     expect(state.funds.every((fund: { key: string }) => state.navsByFund[fund.key].cacheMode === "cleared" && state.historiesByFund[fund.key].cacheMode === "cleared")).toBe(true);
@@ -70,9 +77,58 @@ describe("fund page manual quote update binding", () => {
     expect(instance.getQuoteChangeAmount({ price: 622, previousClose: 662 })).toBe(-40);
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182, previousClose: 177 }))).toBe("TWD +5.00");
     expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 622, previousClose: 662 }))).toBe("TWD -40.00");
-    expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 177, changePct: -0.56 }))).toBe("TWD -1.00");
-    expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182 }))).toBe("TWD —");
-  });
+		expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 177, changePct: -0.56 }))).toBe("TWD -1.00");
+		expect(instance.formatQuoteChange(instance.getQuoteChangeAmount({ price: 182 }))).toBe("TWD —");
+	});
+
+	it("hydrates and persists each fund's Yahoo quote cache with price, percent, and amount changes", async () => {
+		const { component, storage } = await loadFundPageComponent();
+		const state = component.data();
+		const instance = { ...state, ...component.methods };
+		const fundKey = "taiwanDaba";
+		const targetFund = state.funds.find((fund: { key: string }) => fund.key === fundKey);
+		const cacheKey = instance.getFundStorageKey("quotes", fundKey);
+		const snapshot = {
+			fundKey,
+			holdingsDate: targetFund.holdingsDate,
+			quoteUpdatedAt: "2026 / 08 / 17 13:55",
+			fetchedAt: 1_786_700_000_000,
+			quotes: [
+				{ symbol: targetFund.holdings[0].symbol, price: 6700, previousClose: 6600, priceChange: 999, changePct: 999 },
+				{ symbol: targetFund.holdings[1].symbol, price: 1610, previousClose: 1600, priceChange: 999, changePct: 999 },
+			],
+		};
+		storage.set(cacheKey, JSON.stringify(snapshot));
+
+		expect(instance.hydrateYahooQuoteCache(fundKey)).toBe(true);
+		expect(targetFund.holdings[0]).toMatchObject({ price: 6700, previousClose: 6600, priceChange: 100 });
+		expect(targetFund.holdings[0].changePct).toBeCloseTo(100 / 6600 * 100, 8);
+		expect(state.quotesByFund[fundKey]).toMatchObject({ quoteUpdatedAt: "2026 / 08 / 17 13:55", quotedCount: 2, cacheMode: "local" });
+		expect(instance.hydrateYahooQuoteCache("taiwanIntelligence")).toBe(false);
+
+		expect(instance.persistYahooQuoteSnapshot(fundKey, 1_786_700_100_000)).toBe(true);
+		const refreshedSnapshot = JSON.parse(storage.get(cacheKey) ?? "{}");
+		expect(refreshedSnapshot).toMatchObject({ fundKey, holdingsDate: targetFund.holdingsDate, quoteUpdatedAt: "2026 / 08 / 17 13:55" });
+		expect(refreshedSnapshot.quotes).toHaveLength(2);
+		expect(state.quotesByFund[fundKey].cacheMode).toBe("remote");
+	});
+
+	it("rejects a Yahoo quote cache snapshot after the public holdings date changes", async () => {
+		const { component, storage } = await loadFundPageComponent();
+		const state = component.data();
+		const instance = { ...state, ...component.methods };
+		const fundKey = "taiwanIntelligence";
+		const targetFund = state.funds.find((fund: { key: string }) => fund.key === fundKey);
+		storage.set(instance.getFundStorageKey("quotes", fundKey), JSON.stringify({
+			fundKey,
+			holdingsDate: "2026 / 03 / 31",
+			quoteUpdatedAt: "2026 / 08 / 17 13:55",
+			quotes: [{ symbol: targetFund.holdings[0].symbol, price: 6700, previousClose: 6600 }],
+		}));
+
+		expect(instance.hydrateYahooQuoteCache(fundKey)).toBe(false);
+		expect(targetFund.holdings[0].price).toBeNull();
+	});
 
 	it("calculates public top-ten holdings' weighted change and assessment", async () => {
     const { component } = await loadFundPageComponent();

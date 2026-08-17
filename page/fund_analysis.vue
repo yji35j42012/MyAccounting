@@ -106,7 +106,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.1.0-2026.08.17';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.2.0-2026.08.17';
 
 module.exports = {
 	data() {
@@ -119,12 +119,12 @@ module.exports = {
 					countdownNow: Date.now(),
 						quoteAutoSlotByFund: {},
 						cacheClearNotice: '',
-				quotesByFund: {
-				taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', isRefreshing: false, quoteError: '' },
-					taiwanDaba: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
-					taiwanIntelligence: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' },
-					fuhwaOmni: { quoteUpdatedAt: '尚未取得', isRefreshing: false, quoteError: '' }
-				},
+					quotesByFund: {
+					taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', savedAt: 0, quotedCount: 0, cacheMode: '', isRefreshing: false, quoteError: '' },
+						taiwanDaba: { quoteUpdatedAt: '尚未取得', savedAt: 0, quotedCount: 0, cacheMode: '', isRefreshing: false, quoteError: '' },
+						taiwanIntelligence: { quoteUpdatedAt: '尚未取得', savedAt: 0, quotedCount: 0, cacheMode: '', isRefreshing: false, quoteError: '' },
+						fuhwaOmni: { quoteUpdatedAt: '尚未取得', savedAt: 0, quotedCount: 0, cacheMode: '', isRefreshing: false, quoteError: '' }
+					},
 					navsByFund: {
 						taiwanTechnology: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' },
 						taiwanDaba: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' },
@@ -168,7 +168,7 @@ module.exports = {
 				holdingsWeightedChangePct() { const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.weightedChangePct)) return cachedSignal.weightedChangePct; return this.calculateHoldingsWeightedChange(this.activeFund.holdings).weightedChangePct; },
 				holdingsChangeAssessment() { return this.getHoldingsChangeAssessment(this.holdingsWeightedChangePct); },
 				holdingsSignalStatus() { const signal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (!Number.isFinite(signal?.weightedChangePct)) return '尚無本機紀錄；成功取得 Yahoo 報價後會自動儲存'; const source = signal.cacheMode === 'local' ? '已由本機快取載入' : '已更新並儲存於本機'; const updatedAt = signal.quoteUpdatedAt || (signal.savedAt ? this.formatQuoteTime(signal.savedAt) : '尚未標示'); const coverage = Number.isFinite(signal.quotedCount) && Number.isFinite(signal.holdingsCount) ? `${signal.quotedCount}/${signal.holdingsCount} 檔、權重 ${signal.totalWeight.toFixed(2)}%` : '公開持股'; return `${source}：${updatedAt}（${coverage}）`; },
-			quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
+				quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; if (this.activeQuote.cacheMode === 'local') return `已由本機報價快取載入：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; if (this.activeQuote.cacheMode === 'remote') return `Yahoo 報價已更新並儲存：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
 			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
 			historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
 				navTimingStatus() { return this.getFundTimingText(this.activeNav); },
@@ -210,6 +210,10 @@ module.exports = {
 				getFundStorageKey(type, fundKey) { return `cashflow-manager:fund-${type}:v1:${fundKey}`; },
 				readFundStorage(type, fundKey) { try { const value = localStorage.getItem(this.getFundStorageKey(type, fundKey)); const snapshot = value ? JSON.parse(value) : null; return snapshot?.fundKey === fundKey ? snapshot : null; } catch { return null; } },
 				writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch {} },
+				createYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; if (!targetFund || !quoteState) return null; const quotes = targetFund.holdings.filter(holding => Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose) && Number(holding.previousClose) > 0).map(holding => ({ symbol: holding.symbol, price: Number(holding.price), previousClose: Number(holding.previousClose), priceChange: Number.isFinite(holding.priceChange) ? Number(holding.priceChange) : Number(holding.price) - Number(holding.previousClose), changePct: Number.isFinite(holding.changePct) ? Number(holding.changePct) : ((Number(holding.price) - Number(holding.previousClose)) / Number(holding.previousClose)) * 100 })); if (!quotes.length) return null; return { fundKey, holdingsDate: targetFund.holdingsDate, quoteUpdatedAt: quoteState.quoteUpdatedAt, quotes, fetchedAt: Number(fetchedAt) || Date.now() }; },
+				applyYahooQuoteSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const quoteRows = Array.isArray(snapshot?.quotes) ? snapshot.quotes : []; if (!targetFund || !quoteState || snapshot?.fundKey !== fundKey || snapshot.holdingsDate !== targetFund.holdingsDate || !quoteRows.length) return false; const allowedSymbols = new Set(targetFund.holdings.map(holding => holding.symbol)); const quotes = quoteRows.map(quote => { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); return { symbol: String(quote?.symbol || ''), price, previousClose, priceChange: price - previousClose, changePct: previousClose > 0 ? ((price - previousClose) / previousClose) * 100 : null }; }).filter(quote => allowedSymbols.has(quote.symbol) && Number.isFinite(quote.price) && Number.isFinite(quote.previousClose) && quote.previousClose > 0 && Number.isFinite(quote.priceChange) && Number.isFinite(quote.changePct)); if (!quotes.length || new Set(quotes.map(quote => quote.symbol)).size !== quotes.length) return false; const quoteBySymbol = new Map(quotes.map(quote => [quote.symbol, quote])); targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, priceChange: quote.priceChange, changePct: quote.changePct } : holding; }); quoteState.quoteUpdatedAt = String(snapshot.quoteUpdatedAt || this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now())); quoteState.savedAt = Number(snapshot.savedAt || snapshot.fetchedAt || Date.now()); quoteState.quotedCount = quotes.length; quoteState.cacheMode = cacheMode; return true; },
+				hydrateYahooQuoteCache(fundKey) { const snapshot = this.readFundStorage('quotes', fundKey); return snapshot ? this.applyYahooQuoteSnapshot(fundKey, snapshot, 'local') : false; },
+				persistYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const snapshot = this.createYahooQuoteSnapshot(fundKey, fetchedAt); if (!snapshot || !this.applyYahooQuoteSnapshot(fundKey, snapshot, 'remote')) return false; this.writeFundStorage('quotes', fundKey, snapshot); return true; },
 				calculateHoldingsWeightedChange(holdings = []) { const quotedHoldings = holdings.filter(holding => Number.isFinite(holding?.weight) && Number.isFinite(holding?.changePct)); const totalWeight = quotedHoldings.reduce((total, holding) => total + holding.weight, 0); return { weightedChangePct: totalWeight > 0 ? quotedHoldings.reduce((total, holding) => total + holding.weight * holding.changePct, 0) / totalWeight : null, totalWeight, quotedCount: quotedHoldings.length, holdingsCount: Array.isArray(holdings) ? holdings.length : 0 }; },
 				getHoldingsChangeAssessment(value) { if (!Number.isFinite(value)) return '等待 Yahoo 報價更新'; if (value > 0) return '列示持股整體偏多'; if (value < 0) return '列示持股整體偏空'; return '列示持股大致持平'; },
 				createHoldingsSignalSnapshot(fundKey) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const calculation = targetFund ? this.calculateHoldingsWeightedChange(targetFund.holdings) : null; if (!targetFund || !calculation || !Number.isFinite(calculation.weightedChangePct) || calculation.totalWeight <= 0) return null; return { fundKey, holdingsDate: targetFund.holdingsDate, weightedChangePct: calculation.weightedChangePct, totalWeight: calculation.totalWeight, quotedCount: calculation.quotedCount, holdingsCount: calculation.holdingsCount, quoteUpdatedAt: quoteState?.quoteUpdatedAt || '', fetchedAt: Date.now() }; },
@@ -260,7 +264,7 @@ module.exports = {
 					const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
 				return { url: `/api/trpc/market.recentHistoryNav?input=${input}`, isExternalProxy: false };
 			},
-					selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.hydrateHoldingsSignalCache(fundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
+					selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.hydrateYahooQuoteCache(fundKey); this.hydrateHoldingsSignalCache(fundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
 				async refreshYahooQuotes(fundKey = this.activeFundKey) {
 					if (typeof fundKey !== 'string' || !this.quotesByFund[fundKey]) fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
@@ -279,10 +283,11 @@ module.exports = {
 				const successfulQuotes = snapshot?.quotes;
 				if (!Array.isArray(successfulQuotes) || !successfulQuotes.length || snapshot.fundKey !== fundKey) throw new Error('Yahoo 股市暫時無法提供報價');
 				const quoteBySymbol = new Map(successfulQuotes.map(quote => [quote.symbol, quote]));
-				const targetFund = this.funds.find(fund => fund.key === fundKey);
-					targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, priceChange: quote.price - quote.previousClose, changePct: ((quote.price - quote.previousClose) / quote.previousClose) * 100 } : holding; });
-					quoteState.quoteUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
-					this.persistHoldingsSignalSnapshot(fundKey);
+					const targetFund = this.funds.find(fund => fund.key === fundKey);
+						targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, priceChange: quote.price - quote.previousClose, changePct: ((quote.price - quote.previousClose) / quote.previousClose) * 100 } : holding; });
+						quoteState.quoteUpdatedAt = this.formatQuoteTime(snapshot.fetchedAt);
+						this.persistYahooQuoteSnapshot(fundKey, snapshot.fetchedAt);
+						this.persistHoldingsSignalSnapshot(fundKey);
 					if (snapshot.failedSymbols?.length) quoteState.quoteError = `部分報價更新失敗，已保留前次資料（${successfulQuotes.length}/${targetFund.holdings.length}）`;
 				} catch (error) {
 					quoteState.quoteError = error?.message === 'GitHub Pages 尚未設定 Cloudflare Worker 報價端點' ? error.message : 'Yahoo 更新失敗，已保留前次成功取得的報價';
@@ -339,7 +344,7 @@ module.exports = {
 					normalizeFundDate(value) { return this.getTiming()?.normalizeFundDate(value) || ''; },
 				syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 			},
-				mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateHoldingsSignalCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
+				mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateYahooQuoteCache(this.activeFundKey); this.hydrateHoldingsSignalCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
 		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); }
 };
 </script>
