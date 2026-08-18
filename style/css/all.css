@@ -845,7 +845,7 @@ select {
   .normal_shadow {
     padding: 0 15px;
   }
-  .normal_tb td {
+  .normal_tb td:nth-child(6) {
     max-width: 200px;
     white-space: wrap;
   }
