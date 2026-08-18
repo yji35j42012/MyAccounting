@@ -44,7 +44,7 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
 		expect(source).toContain("this.persistHoldingsSignalSnapshot(fundKey);");
 		expect(source).toContain("'holdings-signal'");
-			expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.2-2026.08.17';");
+			expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.1-2026.08.18';");
 		expect(source).toContain('console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`);');
 		expect(source).not.toContain('class="fund_progress"');
 	});

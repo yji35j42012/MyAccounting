@@ -549,7 +549,6 @@
 
 
 
-
 .funcBox {
 	padding: 4px;
 }
@@ -714,6 +713,63 @@
 
 .report {
 
+	// .report_selector
+	&_selector {
+		@include d_f(flex);
+		margin-top: 32px;
+		gap: 12px;
+
+		// .report_selector_button
+		&_button {
+			flex: 1 1 0;
+			min-width: 0;
+			padding: 14px 16px;
+			border: 1px solid #dbe4f0;
+			border-radius: 12px;
+			background-color: #fff;
+			color: #475569;
+			text-align: left;
+			transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .16s ease;
+
+			span,
+			small {
+				display: block;
+			}
+
+			span {
+				font-size: 16px;
+				font-weight: 700;
+			}
+
+			small {
+				margin-top: 4px;
+				font-size: 12px;
+				color: #64748b;
+			}
+
+			&.is-active {
+				border-color: #0f172b;
+				background-color: #0f172b;
+				color: #fff;
+
+				small {
+					color: #cbd5e1;
+				}
+			}
+
+			@include hoverHandler {
+				&:not(.is-active) {
+					border-color: #94a3b8;
+					background-color: #f8fafc;
+				}
+			}
+
+			&:active {
+				transform: scale(.98);
+			}
+		}
+	}
+
 	// .report_title
 	&_title {
 		@include d_f(flex, space-between, center);
@@ -779,6 +835,8 @@
 			}
 		}
 
+
+
 		// .report_item_amount
 		&_amount {
 			margin-top: auto;
@@ -808,20 +866,149 @@
 			color: rgba(239, 68, 68, 1);
 		}
 	}
+
+	// .report_annual
+	&_annual {
+		margin-top: 32px;
+
+		// .report_annual_head
+		&_head {
+			@include d_f(flex, space-between, flex-start);
+			gap: 20px;
+
+			h2 {
+				margin-top: 4px;
+				font-size: 24px;
+				color: #0f172b;
+			}
+
+			p:last-child {
+				margin-top: 8px;
+				font-size: 14px;
+				color: #64748b;
+			}
+		}
+
+		// .report_annual_kicker
+		&_kicker {
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: .08em;
+			color: #2563eb;
+		}
+
+		// .report_annual_controls
+		&_controls {
+			@include d_f(flex, flex-end, center);
+			gap: 8px;
+			flex: none;
+
+			button {
+				padding: 8px 16px;
+				font-size: 14px;
+				box-shadow: 0 1px 3px 0 #0000001a, 0 1px 2px 0 #0000000d;
+				border-radius: 12px;
+				border: 1px solid #f0f2f5;
+
+				@include hoverHandler {
+					background-color: #48a830;
+					color: #fff;
+				}
+			}
+		}
+
+		// .report_annual_summary
+		&_summary {
+			margin-top: 24px;
+
+			.report_item {
+				height: 148px;
+			}
+		}
+
+		// .report_annual_table_box
+		&_table_box {
+			margin-top: 24px;
+			overflow-x: auto;
+		}
+
+		// .report_annual_table
+		&_table {
+			width: 100%;
+			min-width: 560px;
+			border-collapse: collapse;
+			font-size: 14px;
+			text-align: right;
+
+			th,
+			td {
+				padding: 12px 16px;
+				border-bottom: 1px solid #e2e8f0;
+				white-space: nowrap;
+			}
+
+			th {
+				background-color: #f8fafc;
+				font-weight: 700;
+				color: #475569;
+			}
+
+			th:first-child,
+			td:first-child {
+				text-align: left;
+			}
+		}
+
+		// .report_annual_income
+		&_income {
+			color: rgb(0, 151, 114);
+			font-weight: 700;
+		}
+
+		// .report_annual_expense
+		&_expense {
+			color: rgb(231, 0, 15);
+			font-weight: 700;
+		}
+	}
 }
 
 @media (max-width: 768px) {
-	.report_group{
+	.report_group {
 		flex-wrap: wrap;
 	}
+
 	.report_item {
 		width: 100%;
 	}
-	.normal_shadow{
+
+	.normal_shadow {
 		padding: 0 15px;
 	}
-	.normal_tb td{
+
+	.normal_tb td {
 		max-width: 200px;
 		white-space: wrap;
+	}
+
+	.report_annual_head {
+		flex-direction: column;
+	}
+
+	.report_annual_controls {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.report_annual_controls button {
+		flex: 1 1 0;
+	}
+
+	.report_selector {
+		gap: 8px;
+	}
+
+	.report_selector_button {
+		padding: 12px;
 	}
 }
