@@ -45,7 +45,8 @@ describe("fund page manual quote update binding", () => {
 			expect(source).toContain('syncYahooQuoteAndHoldingsSignal(fundKey, fetchedAt = Date.now(), quotedCount = 0)');
 			expect(source).toContain('const signalStored = this.persistHoldingsSignalSnapshot(fundKey);');
 			expect(source).toContain("'holdings-signal'");
-				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.2-2026.08.18';");
+				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.3-2026.08.18';");
+			expect(source).toContain('前十大標準化日報酬（隨 Yahoo 報價同步）');
 		expect(source).toContain('console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`);');
 		expect(source).not.toContain('class="fund_progress"');
 	});
@@ -161,6 +162,22 @@ describe("fund page manual quote update binding", () => {
 		expect(weightedChange).toBeCloseTo(0.875, 8);
 		expect(fundContribution).toBeCloseTo(0.7, 8);
 		expect(component.computed.holdingsChangeAssessment.call(instance)).toBe("列示持股整體偏多");
+	});
+
+	it("prefers freshly refreshed Yahoo holdings over an older standardized-return cache", async () => {
+		const { component } = await loadFundPageComponent();
+		const instance = {
+			activeFundKey: "taiwanTechnology",
+			activeFund: { holdings: [{ weight: 50, changePct: -2 }, { weight: 30, changePct: 1 }] },
+			activeQuote: { cacheMode: "remote", quoteUpdatedAt: "2026 / 08 / 18 10:40" },
+			holdingsSignalsByFund: {
+				taiwanTechnology: { weightedChangePct: 9.99, fundContributionPct: 5.37, quoteUpdatedAt: "2026 / 08 / 18 10:36" },
+			},
+			...component.methods,
+		};
+
+		expect(component.computed.holdingsWeightedChangePct.call(instance)).toBeCloseTo(-0.875, 8);
+		expect(component.computed.holdingsFundContributionPct.call(instance)).toBeCloseTo(-0.7, 8);
 	});
 
 	it("hydrates and refreshes each fund's weighted-holdings signal cache independently", async () => {

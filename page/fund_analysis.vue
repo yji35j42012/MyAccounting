@@ -32,7 +32,7 @@
 						<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
 							<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
 							<span class="fund_nav_contribution"><strong :class="getChangeClass(holdingsFundContributionPct)">{{ formatPercent(holdingsFundContributionPct) }}</strong><small>公開前十大對基金淨值估計貢獻</small></span>
-							<small class="fund_nav_contribution_detail">前十大標準化日報酬：{{ formatPercent(holdingsWeightedChangePct) }}；{{ holdingsSignalStatus }}</small>
+								<small class="fund_nav_contribution_detail">前十大標準化日報酬（隨 Yahoo 報價同步）：{{ formatPercent(holdingsWeightedChangePct) }}；{{ holdingsSignalStatus }}</small>
 							<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
 						<small class="fund_cache_status">{{ navTimingStatus }}</small>
 						<button type="button" class="fund_cache_clear_button" @click="clearFundNavCache" aria-label="清除本機淨值快取">清除本機淨值快取</button>
@@ -104,7 +104,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.2-2026.08.18';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.3-2026.08.18';
 
 module.exports = {
 	data() {
@@ -163,8 +163,8 @@ module.exports = {
 				activeNav() { return this.navsByFund[this.activeFundKey]; },
 			activeHistory() { return this.historiesByFund[this.activeFundKey]; },
 				recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
-					holdingsWeightedChangePct() { const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.weightedChangePct)) return cachedSignal.weightedChangePct; return this.calculateHoldingsWeightedChange(this.activeFund.holdings).weightedChangePct; },
-					holdingsFundContributionPct() { const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.fundContributionPct)) return cachedSignal.fundContributionPct; return this.calculateHoldingsWeightedChange(this.activeFund.holdings).fundContributionPct; },
+						holdingsWeightedChangePct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); if (this.activeQuote?.cacheMode === 'remote' && Number.isFinite(liveCalculation.weightedChangePct)) return liveCalculation.weightedChangePct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.weightedChangePct)) return cachedSignal.weightedChangePct; return liveCalculation.weightedChangePct; },
+						holdingsFundContributionPct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); if (this.activeQuote?.cacheMode === 'remote' && Number.isFinite(liveCalculation.fundContributionPct)) return liveCalculation.fundContributionPct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.fundContributionPct)) return cachedSignal.fundContributionPct; return liveCalculation.fundContributionPct; },
 					holdingsChangeAssessment() { return this.getHoldingsChangeAssessment(this.holdingsFundContributionPct); },
 						holdingsSignalStatus() { const signal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (!Number.isFinite(signal?.weightedChangePct)) return '尚無本機紀錄；成功取得 Yahoo 報價後會自動儲存'; const source = signal.cacheMode === 'local' ? '已由本機快取載入' : '已隨 Yahoo 報價同步更新並儲存於本機'; const updatedAt = signal.quoteUpdatedAt || (signal.savedAt ? this.formatQuoteTime(signal.savedAt) : '尚未標示'); const coverage = Number.isFinite(signal.quotedCount) && Number.isFinite(signal.holdingsCount) ? `${signal.quotedCount}/${signal.holdingsCount} 檔、權重 ${signal.totalWeight.toFixed(2)}%` : '公開持股'; return `${source}：${updatedAt}（${coverage}）；${this.getHoldingsNavDateStatus(updatedAt, this.activeFund.navDate)}`; },
 				quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; if (this.activeQuote.cacheMode === 'local') return `已由本機報價快取載入：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; if (this.activeQuote.cacheMode === 'remote') return `Yahoo 報價已更新並儲存：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
