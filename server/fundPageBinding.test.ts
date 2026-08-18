@@ -37,14 +37,15 @@ describe("fund page manual quote update binding", () => {
 		expect(source).toContain('const requestTimeoutMs = quoteRequest.isExternalProxy ? 25 * 1000 : 12 * 1000;');
 		expect(source).toContain('holdingsWeightedChangePct()');
 		expect(source).toContain('holdingsFundContributionPct()');
-		expect(source).toContain('fundContributionPct');
-		expect(source).toContain('hydrateYahooQuoteCache(this.activeFundKey)');
-		expect(source).toContain('this.persistYahooQuoteSnapshot(fundKey, snapshot.fetchedAt);');
-		expect(source).toContain("'quotes'");
-		expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
-		expect(source).toContain("this.persistHoldingsSignalSnapshot(fundKey);");
-		expect(source).toContain("'holdings-signal'");
-			expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.1-2026.08.18';");
+			expect(source).toContain('fundContributionPct');
+			expect(source).toContain('hydrateYahooQuoteCache(this.activeFundKey)');
+			expect(source).toContain('this.syncYahooQuoteAndHoldingsSignal(fundKey, snapshot.fetchedAt, successfulQuotes.length)');
+			expect(source).toContain("'quotes'");
+			expect(source).toContain('hydrateHoldingsSignalCache(this.activeFundKey)');
+			expect(source).toContain('syncYahooQuoteAndHoldingsSignal(fundKey, fetchedAt = Date.now(), quotedCount = 0)');
+			expect(source).toContain('const signalStored = this.persistHoldingsSignalSnapshot(fundKey);');
+			expect(source).toContain("'holdings-signal'");
+				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.2-2026.08.18';");
 		expect(source).toContain('console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`);');
 		expect(source).not.toContain('class="fund_progress"');
 	});
@@ -206,6 +207,42 @@ describe("fund page manual quote update binding", () => {
 		expect(refreshedSnapshot.weightedChangePct).toBeCloseTo(calculated.weightedChangePct, 8);
 		expect(refreshedSnapshot.fundContributionPct).toBeCloseTo(calculated.fundContributionPct, 8);
 		expect(state.holdingsSignalsByFund[fundKey].cacheMode).toBe("remote");
+	});
+
+	it("synchronizes the refreshed Yahoo quote snapshot and fund NAV contribution in one update", async () => {
+		const { component, storage } = await loadFundPageComponent();
+		const state = component.data();
+		const instance = { ...state, ...component.methods };
+		const fundKey = "taiwanTechnology";
+		const targetFund = state.funds.find((fund: { key: string }) => fund.key === fundKey);
+
+		targetFund.holdings = targetFund.holdings.map((holding: { price: number; symbol: string; weight: number }, index: number) => ({
+			...holding,
+			price: 100 + index * 10,
+			previousClose: 99 + index * 10,
+			priceChange: 1,
+			changePct: 1 / (99 + index * 10) * 100,
+		}));
+		state.quotesByFund[fundKey].quoteUpdatedAt = "2026 / 08 / 18 13:55";
+
+		expect(instance.syncYahooQuoteAndHoldingsSignal(fundKey, 1_786_750_500_000, 10)).toBe(true);
+		const calculation = instance.calculateHoldingsWeightedChange(targetFund.holdings);
+		const signalSnapshot = JSON.parse(storage.get(instance.getFundStorageKey("holdings-signal", fundKey)) ?? "{}");
+
+		expect(state.quotesByFund[fundKey]).toMatchObject({ quotedCount: 10, cacheMode: "remote" });
+		expect(state.holdingsSignalsByFund[fundKey]).toMatchObject({
+			fundContributionPct: calculation.fundContributionPct,
+			weightedChangePct: calculation.weightedChangePct,
+			quoteUpdatedAt: "2026 / 08 / 18 13:55",
+			cacheMode: "remote",
+		});
+		expect(signalSnapshot).toMatchObject({
+			fundKey,
+			quotedCount: 10,
+			fundContributionPct: calculation.fundContributionPct,
+			quoteUpdatedAt: "2026 / 08 / 18 13:55",
+		});
+		expect(storage.get(instance.getFundStorageKey("quotes", fundKey))).toBeTruthy();
 	});
 
 	it("rejects a weighted-holdings cache snapshot when the public holdings date has changed", async () => {
