@@ -104,7 +104,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.1-2026.08.17';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.4.2-2026.08.17';
 
 module.exports = {
 	data() {
