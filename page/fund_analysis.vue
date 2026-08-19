@@ -110,7 +110,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.23-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.24-2026.08.19';
 const HOLDING_SYMBOLS = {
 	'台積電': '2330.TW', '旺矽': '6223.TWO', '台光電子': '2383.TW', '台光電': '2383.TW', '欣興': '3037.TW', '台燿': '6274.TWO', '創意電子': '3443.TW', '聯電': '2303.TW', '奇鋐': '3017.TW', '穎崴': '6515.TW', '國巨': '2327.TW', '國巨*': '2327.TW', '信驊科技': '5274.TWO', '信驊': '5274.TWO', '南電': '8046.TW', '台達電子': '2308.TW', '台達電': '2308.TW', '智邦': '2345.TW', '華邦電子': '2344.TW', '華邦電': '2344.TW', '南亞科': '2408.TW', '景碩科技': '3189.TW', '景碩': '3189.TW', '聯發科': '2454.TW'
 };
@@ -191,7 +191,7 @@ module.exports = {
 					holdingsStatus() { if (this.activeHoldings.isRefreshing) return '正在檢查官方公開持股'; if (this.activeHoldings.holdingsError) return this.activeHoldings.holdingsUpdatedAt ? `${this.activeHoldings.holdingsError} 前次成功更新：${this.activeHoldings.holdingsUpdatedAt}` : this.activeHoldings.holdingsError; if (this.activeHoldings.cacheMode === 'local') return `已由本機持股快取載入：${this.activeHoldings.holdingsUpdatedAt}`; return this.activeHoldings.holdingsUpdatedAt ? `官方公開持股已更新：${this.activeHoldings.holdingsUpdatedAt}` : '進入頁面時檢查；成功後每日檢查一次'; },
 					navTimingStatus() { return this.getFundTimingText(this.activeNav); },
 					historyTimingStatus() { return this.getFundTimingText(this.activeHistory); },
-						holdingsTimingStatus() { if (!this.activeHoldings.fetchedAt) return '成功取得後顯示下次每日檢查時間'; return `下次每日檢查 ${this.formatTaipeiHourMinute(this.activeHoldings.fetchedAt + 24 * 60 * 60 * 1000)}`; }
+						holdingsTimingStatus() { if (!this.activeHoldings.fetchedAt) return '成功取得後顯示下次每日檢查時間'; return `下次每日檢查 ${this.formatTaipeiDateTime(this.activeHoldings.fetchedAt + 24 * 60 * 60 * 1000)}`; }
 	},
 		methods: {
 			formatDate(date) { return date.slice(5).replace('-', ' / '); },
@@ -201,7 +201,7 @@ module.exports = {
 			getQuoteChangeAmount(holding) { if (Number.isFinite(holding?.priceChange)) return holding.priceChange; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose)) return holding.price - holding.previousClose; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.changePct) && 100 + holding.changePct !== 0) { const derivedPreviousClose = holding.price / (1 + holding.changePct / 100); return holding.price - derivedPreviousClose; } return null; },
 			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
 					formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
-					formatTaipeiHourMinute(timestamp) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(timestamp)); },
+					formatTaipeiDateTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
 				getRefreshTimingText(state) { if (!Number.isFinite(state.fetchedAt) || state.fetchedAt <= 0) return '取得後顯示快取與自動更新倒數'; const cacheRemaining = this.formatCountdown(Math.max(0, state.cacheExpiresAt - this.countdownNow)); const autoRemaining = this.formatCountdown(Math.max(0, state.fetchedAt + 30 * 60 * 1000 - this.countdownNow)); return `快取剩餘 ${cacheRemaining} · 下次自動更新 ${autoRemaining}`; },
 				getFundTimingText(state) { const expectedDate = this.getExpectedFundDate(); if (!state.dataDate) return `目標資料日期 ${expectedDate}；快取失效時更新`; if (this.isFundPublishWindow()) return state.dataDate === expectedDate ? `資料日期 ${state.dataDate} · 已符合當日淨值` : `資料日期 ${state.dataDate} · 平日 16:00 後持續檢查`; return `資料日期 ${state.dataDate} · 平日 16:00 後再檢查`; },
