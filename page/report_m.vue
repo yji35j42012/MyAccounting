@@ -40,6 +40,19 @@
 					</div>
 				</div>
 			</div>
+			<section class="report_category_expenses normal_shadow" aria-label="本月指定分類消費總額">
+				<div class="report_category_expenses_head">
+					<div>
+						<p>本月分類支出</p>
+						<h3>日常消費總額</h3>
+					</div><span>餐飲、生活雜費、交通</span>
+				</div>
+				<div class="report_category_expenses_grid">
+					<div v-for="item in monthlyCategoryExpenses" :key="item.category"
+						class="report_category_expenses_item"><span>{{ item.category }}</span><strong>${{
+				formatAmount(item.amount) }}</strong></div>
+				</div>
+			</section>
 		</section>
 
 		<section v-else class="report_annual normal_shadow" aria-labelledby="annual-report-title">
@@ -111,14 +124,12 @@ module.exports = {
 		const objectDate = new Date();
 		const year = objectDate.getFullYear();
 		const month = objectDate.getMonth() + 1;
-		console.log(this.$store.state.AccData);
 		this.setReportMonth(year, month);
-		this.setAnnualYear(year);
-		if (this.$store.state.AccData == null) {
+		this.setAnnualYear(year); if (this.$store.state.AccData == null) {
 			var get_url = url + "?func=getAccounting";
 			axios.get(get_url).then(res => {
 				this.resetAccountingData(res.data);
-				store.dispatch("SET_ACCDATA_ACTION", res.data);
+			store.dispatch("SET_ACCDATA_ACTION", res.data);
 				store.dispatch("SET_LOADING_ACTION", false);
 			});
 		} else {
@@ -135,6 +146,10 @@ module.exports = {
 		},
 		annualMonths() {
 			return this.showAnnualAccounting.months;
+		},
+		monthlyCategoryExpenses() {
+			const categoryExpenses = this.showAccounting.categoryExpenses || {};
+			return ['餐飲', '生活雜費', '交通'].map(category => ({ category, amount: Number(categoryExpenses[category]) || 0 }));
 		}
 	},
 	methods: {
@@ -142,7 +157,7 @@ module.exports = {
 			return Number(value || 0).toLocaleString('en-US');
 		},
 		createMonthlySummary(month) {
-			return { month: Number(month) || 0, month_in: 0, month_out: 0, total: 0 };
+			return { month: Number(month) || 0, month_in: 0, month_out: 0, total: 0, categoryExpenses: { '餐飲': 0, '生活雜費': 0, '交通': 0 } };
 		},
 		createAnnualSummary(year) {
 			return {
@@ -211,6 +226,7 @@ module.exports = {
 					monthData.month_out += amount;
 					annualData.year_out += amount;
 					annualMonthData.month_out += amount;
+					if (Object.prototype.hasOwnProperty.call(monthData.categoryExpenses, item[3])) monthData.categoryExpenses[item[3]] += amount;
 				}
 				monthData.total += cashflow;
 				annualData.total += cashflow;

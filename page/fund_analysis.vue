@@ -26,7 +26,8 @@
 						<span v-for="tag in activeFund.tags" :key="tag">{{ tag }}</span>
 					</div>
 						<div class="fund_hero_nav">
-							<div class="fund_nav_label_row"><span class="fund_meta_label">最新公開淨值</span><button type="button" :class="['fund_nav_refresh_button', activeNav.isRefreshing ? 'is-refreshing' : '']" :disabled="activeNav.isRefreshing" @click="refreshOfficialNav(true)" aria-label="重新整理最新公開淨值" title="重新整理最新公開淨值"><svg :class="['fund_refresh_icon', activeNav.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg></button></div>
+							<div class="fund_nav_label_row"><span class="fund_meta_label">最新公開淨值</span><button type="button" :class="['fund_nav_refresh_button', activeNav.isRefreshing ? 'is-refreshing' : '']" :disabled="activeNav.isRefreshing" @click="manualRefreshOfficialNav" aria-label="重新整理最新公開淨值" title="重新整理最新公開淨值"><svg :class="['fund_refresh_icon', activeNav.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg></button><small v-if="activeNav.navUpdatedAt" class="fund_nav_last_updated">最後更新 {{ activeNav.navUpdatedAt }}</small></div>
+							<span v-if="navSuccessToast" class="fund_nav_success_toast" role="status">{{ navSuccessToast }}</span>
 							<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
 							<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
 								<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
@@ -105,7 +106,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.18-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.19-2026.08.19';
 
 module.exports = {
 	data() {
@@ -117,7 +118,7 @@ module.exports = {
 					countdownTimer: null,
 					countdownNow: Date.now(),
 						quoteAutoSlotByFund: {},
-						cacheClearNotice: '',
+						cacheClearNotice: '', navSuccessToast: '', navSuccessToastTimer: null,
 					quotesByFund: {
 					taiwanTechnology: { quoteUpdatedAt: '2026 / 08 / 12 14:42', savedAt: 0, quotedCount: 0, cacheMode: '', isRefreshing: false, quoteError: '' },
 						taiwanDaba: { quoteUpdatedAt: '尚未取得', savedAt: 0, quotedCount: 0, cacheMode: '', isRefreshing: false, quoteError: '' },
@@ -300,7 +301,9 @@ module.exports = {
 					quoteState.isRefreshing = false;
 				}
 			},
-				async refreshOfficialNav(force = false, fundKey = this.activeFundKey) {
+					showNavSuccessToast() { this.navSuccessToast = '最新公開淨值已更新'; if (this.navSuccessToastTimer) window.clearTimeout(this.navSuccessToastTimer); this.navSuccessToastTimer = window.setTimeout(() => { this.navSuccessToast = ''; this.navSuccessToastTimer = null; }, 2600); },
+					async manualRefreshOfficialNav() { const updated = await this.refreshOfficialNav(true); if (updated) this.showNavSuccessToast(); },
+					async refreshOfficialNav(force = false, fundKey = this.activeFundKey) {
 				const navState = this.navsByFund[fundKey];
 				if (navState.isRefreshing) return;
 				navState.isRefreshing = true;
@@ -316,9 +319,11 @@ module.exports = {
 					const snapshot = navRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 					if (snapshot?.fundKey !== fundKey || !Number.isFinite(snapshot?.nav) || !snapshot?.navDate) throw new Error('官方淨值資料不完整');
 						if (!this.applyNavSnapshot(fundKey, snapshot)) throw new Error('官方淨值資料格式不正確');
-						this.writeFundStorage('nav', fundKey, snapshot);
-				} catch {
-					navState.navError = '官方淨值更新失敗，已保留前次資料';
+							this.writeFundStorage('nav', fundKey, snapshot);
+							return true;
+					} catch {
+						navState.navError = '官方淨值更新失敗，已保留前次資料';
+						return false;
 				} finally {
 					navState.isRefreshing = false;
 				}
@@ -350,6 +355,6 @@ module.exports = {
 				syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 			},
 					mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
-		beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); }
+			beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); if (this.navSuccessToastTimer) window.clearTimeout(this.navSuccessToastTimer); }
 };
 </script>

@@ -133,8 +133,10 @@
 	&_quote_controls { gap: 12px; @include collect-mw(S, (max-width:60%)); }
 	&_quote_meta { display: grid; grid-template-columns: auto auto; justify-content: end; @include collect-mw(XS, (grid-template-columns: auto)); }
 	&_quote_hint { grid-column: 1 / -1; color: #71839a; font-size: 12px; text-align: right; &.is-error { color: #a55b16; } }
-	&_nav_label_row { @include d_f(flex, none, center); gap: 6px; }
+	&_nav_label_row { @include d_f(flex, none, center); gap: 6px; flex-wrap: wrap; }
 	&_nav_refresh_button { @include d_f(inline-flex, center, center); width: 24px; height: 24px; padding: 0; color: #52759c; background: #edf3fa; border: 1px solid #d7e4f0; border-radius: 50%; cursor: pointer; transition: color .16s var(--ease-out, ease), background .16s var(--ease-out, ease), transform .16s var(--ease-out, ease); &:hover:not(:disabled) { color: #0f3d7a; background: #e0edf8; } &:active:not(:disabled) { transform: scale(.94); } &:disabled { cursor: wait; opacity: .65; } .fund_refresh_icon { width: 13px; height: 13px; } }
+	&_nav_last_updated { color: #8796a8; font-size: 12px; font-weight: 600; }
+	&_nav_success_toast { display: inline-flex; align-items: center; min-height: 24px; margin-top: 7px; padding: 3px 9px; color: #176348; font-size: 12px; font-weight: 700; background: #eaf7f0; border: 1px solid #c7ead8; border-radius: 999px; animation: fund-toast-in .18s var(--ease-out, ease) both; }
 	&_refresh_button { @include d_f(inline-flex, center, center); gap: 6px; min-height: 34px; padding: 0 11px; color: #1a5f9f; font-size: 12px; font-weight: 700; background: #edf5fb; border: 1px solid #c5deef; border-radius: 7px; transition: background .16s var(--ease-out, ease), border-color .16s var(--ease-out, ease), transform .16s var(--ease-out, ease); &:hover:not(:disabled) { background: #deeffa; border-color: #7bb4d7; } &:active:not(:disabled) { transform: scale(.97); } &:disabled { cursor: wait; opacity: .7; } }
 	&_refresh_icon { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; &.is-spinning { animation: fund-refresh-spin .85s linear infinite; } }
 	&_price { min-width: 126px; strong, small { display: block; } strong { color: #0f3d7a; font-size: 13px; white-space: nowrap; } small { margin-top: 3px; color: #8494aa; font-size: 12px; letter-spacing: .04em; } }
@@ -146,6 +148,7 @@
 }
 
 @keyframes fund-refresh-spin { to { transform: rotate(360deg); } }
+@keyframes fund-toast-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 768px) {
 	.header {

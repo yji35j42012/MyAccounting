@@ -752,6 +752,57 @@ select {
 .report_item._bad svg, .report_item._bad ._total {
   color: rgb(239, 68, 68);
 }
+.report_category_expenses {
+  margin-top: 20px;
+  padding: 20px 24px;
+  border: 1px solid #e6edf4;
+  background: #fbfcfe;
+}
+.report_category_expenses_head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.report_category_expenses_head p {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.report_category_expenses_head h3 {
+  margin-top: 4px;
+  color: #0f172b;
+  font-size: 18px;
+}
+.report_category_expenses_head > span {
+  color: #8a99aa;
+  font-size: 12px;
+}
+.report_category_expenses_grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.report_category_expenses_item {
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e7edf4;
+  border-radius: 10px;
+}
+.report_category_expenses_item span, .report_category_expenses_item strong {
+  display: block;
+}
+.report_category_expenses_item span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+.report_category_expenses_item strong {
+  margin-top: 6px;
+  color: #0f3d7a;
+  font-size: 22px;
+}
 .report_annual {
   margin-top: 32px;
 }
@@ -1784,6 +1835,7 @@ select {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 .fund_nav_refresh_button {
   display: inline-flex;
@@ -1813,6 +1865,25 @@ select {
 .fund_nav_refresh_button .fund_refresh_icon {
   width: 13px;
   height: 13px;
+}
+.fund_nav_last_updated {
+  color: #8796a8;
+  font-size: 12px;
+  font-weight: 600;
+}
+.fund_nav_success_toast {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 7px;
+  padding: 3px 9px;
+  color: #176348;
+  font-size: 12px;
+  font-weight: 700;
+  background: #eaf7f0;
+  border: 1px solid #c7ead8;
+  border-radius: 999px;
+  animation: fund-toast-in 0.18s var(--ease-out, ease) both;
 }
 .fund_refresh_button {
   display: inline-flex;
@@ -1899,6 +1970,16 @@ select {
 @keyframes fund-refresh-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+@keyframes fund-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 @media (max-width: 768px) {
@@ -2104,6 +2185,19 @@ select {
   }
   .report_item {
     width: 100%;
+  }
+  .report_category_expenses {
+    padding: 16px;
+  }
+  .report_category_expenses_head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .report_category_expenses_grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
   }
   .report_annual_head {
     flex-direction: column;

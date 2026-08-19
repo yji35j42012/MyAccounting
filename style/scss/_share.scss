@@ -724,10 +724,9 @@
 		@include d_f(flex);
 		margin-top: 32px;
 		gap: 12px;
-
 		@include collect-mw(S, (gap: 8px));
-		// .report_selector_button
 
+		// .report_selector_button
 		&_button {
 			flex: 1 1 0;
 			min-width: 0;
@@ -739,7 +738,6 @@
 			text-align: left;
 			transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .16s ease;
 			@include collect-mw(S, (padding: 12px));
-
 
 			span,
 			small {
@@ -814,8 +812,7 @@
 		@include d_f(flex, space-between);
 		margin-top: 32px;
 		gap: 20px;
-		@include collect-mw(S,
-			(flex-wrap: wrap));
+		@include collect-mw(S, (flex-wrap: wrap));
 	}
 
 	// .report_item
@@ -834,7 +831,6 @@
 			0 1px 2px 0 #0000000d;
 		border-radius: 12px;
 		border: 1px solid #f0f2f5;
-
 		@include collect-mw(S, (width:100%));
 
 		// .report_item_title
@@ -879,9 +875,17 @@
 		&._bad ._total {
 			color: rgba(239, 68, 68, 1);
 		}
-	}
+		}
 
-	// .report_annual
+		&_category_expenses {
+			margin-top: 20px; padding: 20px 24px; border: 1px solid #e6edf4; background: #fbfcfe;
+			@include collect-mw(S, (padding:16px));
+			&_head { @include d_f(flex, space-between, flex-end); gap: 16px; @include collect-mw(S, (align-items:flex-start, flex-direction:column, gap:6px)); p { color: #64748b; font-size: 12px; font-weight: 700; } h3 { margin-top: 4px; color: #0f172b; font-size: 18px; } >span { color: #8a99aa; font-size: 12px; } }
+			&_grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; @include collect-mw(S, (grid-template-columns:repeat(1, minmax(0, 1fr)), gap:8px, margin-top:12px)); }
+			&_item { padding: 14px 16px; background: #fff; border: 1px solid #e7edf4; border-radius: 10px; span, strong { display: block; } span { color: #64748b; font-size: 13px; font-weight: 700; } strong { margin-top: 6px; color: #0f3d7a; font-size: 22px; } }
+		}
+
+		// .report_annual
 	&_annual {
 		margin-top: 32px;
 
@@ -917,7 +921,6 @@
 			@include d_f(flex, flex-end, center);
 			gap: 8px;
 			flex: none;
-
 			@include collect-mw(S, (width: 100%, justify-content: space-between));
 
 			button {
