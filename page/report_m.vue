@@ -111,10 +111,20 @@ module.exports = {
 		const objectDate = new Date();
 		const year = objectDate.getFullYear();
 		const month = objectDate.getMonth() + 1;
-		this.resetAccountingData(this.$store.state.AccData);
+		console.log(this.$store.state.AccData);
 		this.setReportMonth(year, month);
 		this.setAnnualYear(year);
-		store.dispatch("SET_LOADING_ACTION", false);
+		if (this.$store.state.AccData == null) {
+			var get_url = url + "?func=getAccounting";
+			axios.get(get_url).then(res => {
+				this.resetAccountingData(res.data);
+				store.dispatch("SET_ACCDATA_ACTION", res.data);
+				store.dispatch("SET_LOADING_ACTION", false);
+			});
+		} else {
+			this.resetAccountingData(this.$store.state.AccData);
+			store.dispatch("SET_LOADING_ACTION", false);
+		}
 	},
 	computed: {
 		showAccounting() {
