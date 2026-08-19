@@ -1430,6 +1430,12 @@ select {
   font-size: 12px;
   line-height: 1.45;
 }
+.fund_nav_signal_line {
+  display: block;
+}
+.fund_nav_signal_line + .fund_nav_signal_line {
+  margin-top: 3px;
+}
 .fund_nav_refresh_status {
   display: block;
   margin-top: 4px;
@@ -1631,8 +1637,8 @@ select {
   gap: 8px;
 }
 .fund_holdings_asof_inline {
-  color: #71839a;
-  font-size: 11px;
+  color: #98a6b5;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: normal;
 }
@@ -1773,6 +1779,40 @@ select {
 }
 .fund_quote_hint.is-error {
   color: #a55b16;
+}
+.fund_nav_label_row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fund_nav_refresh_button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #52759c;
+  background: #edf3fa;
+  border: 1px solid #d7e4f0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.16s var(--ease-out, ease), background 0.16s var(--ease-out, ease), transform 0.16s var(--ease-out, ease);
+}
+.fund_nav_refresh_button:hover:not(:disabled) {
+  color: #0f3d7a;
+  background: #e0edf8;
+}
+.fund_nav_refresh_button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.fund_nav_refresh_button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.fund_nav_refresh_button .fund_refresh_icon {
+  width: 13px;
+  height: 13px;
 }
 .fund_refresh_button {
   display: inline-flex;

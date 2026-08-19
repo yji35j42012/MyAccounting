@@ -25,8 +25,8 @@
 					<div class="fund_tags">
 						<span v-for="tag in activeFund.tags" :key="tag">{{ tag }}</span>
 					</div>
-					<div class="fund_hero_nav">
-						<span class="fund_meta_label">最新公開淨值</span>
+						<div class="fund_hero_nav">
+							<div class="fund_nav_label_row"><span class="fund_meta_label">最新公開淨值</span><button type="button" :class="['fund_nav_refresh_button', activeNav.isRefreshing ? 'is-refreshing' : '']" :disabled="activeNav.isRefreshing" @click="refreshOfficialNav(true)" aria-label="重新整理最新公開淨值" title="重新整理最新公開淨值"><svg :class="['fund_refresh_icon', activeNav.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg></button></div>
 							<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
 							<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
 								<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
@@ -105,7 +105,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.17-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.18-2026.08.19';
 
 module.exports = {
 	data() {
