@@ -1,4 +1,4 @@
-const FUND_ANALYSIS_COMPONENT_VERSION = 'fund-analysis-v1.5.27-2026.08.19';
+const FUND_ANALYSIS_COMPONENT_VERSION = 'fund-analysis-v1.5.28-2026.08.19';
 
 const routes = [
 	{
