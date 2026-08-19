@@ -21,25 +21,28 @@
 			<div class="fund_hero_main">
 				<p class="fund_eyebrow">基金持有追蹤</p>
 				<h2 class="fund_title">{{ activeFund.name }}</h2>
-				<p class="fund_subtitle">{{ activeFund.englishName }}</p>
-				<div class="fund_tags">
-					<span v-for="tag in activeFund.tags" :key="tag">{{ tag }}</span>
-				</div>
-			</div>
-				<div class="fund_hero_meta">
-					<span class="fund_meta_label">最新公開淨值</span>
-						<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
-						<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
-							<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
-							<span class="fund_nav_contribution"><strong :class="getChangeClass(holdingsFundContributionPct)">{{ formatPercent(holdingsFundContributionPct) }}</strong><small>公開前十大對基金淨值估計貢獻</small></span>
-								<small class="fund_nav_contribution_detail">前十大標準化日報酬（隨 Yahoo 報價同步）：{{ formatPercent(holdingsWeightedChangePct) }}；{{ holdingsSignalStatus }}</small>
+					<p class="fund_subtitle">{{ activeFund.englishName }}</p>
+					<div class="fund_tags">
+						<span v-for="tag in activeFund.tags" :key="tag">{{ tag }}</span>
+					</div>
+					<div class="fund_hero_nav">
+						<span class="fund_meta_label">最新公開淨值</span>
+							<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
+							<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
+								<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{ formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
 							<small :class="['fund_nav_refresh_status', activeNav.navError ? 'is-error' : '']">{{ navStatus }}</small>
-						<small class="fund_cache_status">{{ navTimingStatus }}</small>
-						<button type="button" class="fund_cache_clear_button" @click="clearFundNavCache" aria-label="清除本機淨值快取">清除本機淨值快取</button>
+							<small class="fund_cache_status">{{ navTimingStatus }}</small>
+							<button type="button" class="fund_cache_clear_button" @click="clearFundNavCache" aria-label="清除本機淨值快取">清除本機淨值快取</button>
+						<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看淨值來源</a>
+					</div>
+					</div>
+					<aside class="fund_hero_meta fund_hero_contribution_card">
+						<span class="fund_meta_label">公開前十大對基金淨值估計貢獻</span>
+						<strong :class="getChangeClass(holdingsFundContributionPct)">{{ formatPercent(holdingsFundContributionPct) }}</strong>
+						<small class="fund_nav_contribution_detail">前十大標準化日報酬（隨 Yahoo 報價同步）：{{ formatPercent(holdingsWeightedChangePct) }}；{{ holdingsSignalStatus }}</small>
 						<span class="fund_holdings_asof">持股資料基準日：{{ activeFund.holdingsDate }}</span>
-				<a class="fund_source_link" :href="activeFund.sourceUrl" target="_blank" rel="noopener noreferrer">查看淨值來源</a>
-			</div>
-		</section>
+					</aside>
+			</section>
 
 		<section class="fund_summary">
 			<div v-for="card in activeFund.summaryCards" :key="card.label" class="fund_summary_card normal_shadow">
@@ -74,12 +77,11 @@
 		</section>
 
 		<section class="fund_holdings normal_shadow">
-			<div class="fund_section_head">
-				<div><p class="fund_kicker">投資標的</p><h3>官方公開前十大持股</h3></div>
-				<div class="fund_quote_controls">
-					<div class="fund_section_meta fund_quote_meta">
-						<span class="fund_asof">持股資料：{{ activeFund.holdingsDate }}</span>
-						<span class="fund_asof fund_price_asof">Yahoo 報價：{{ activeQuote.quoteUpdatedAt }}</span>
+				<div class="fund_section_head">
+					<div class="fund_holdings_heading"><p class="fund_kicker">投資標的 <span class="fund_holdings_asof_inline">持股資料基準日：{{ activeFund.holdingsDate }}</span></p><h3>官方公開前十大持股</h3></div>
+					<div class="fund_quote_controls">
+						<div class="fund_section_meta fund_quote_meta">
+							<span class="fund_asof">Yahoo 報價：{{ activeQuote.quoteUpdatedAt }}</span>
 						<small :class="['fund_quote_hint', activeQuote.quoteError ? 'is-error' : '']">{{ quoteStatus }}</small>
 					</div>
 						<button type="button" class="fund_refresh_button" :disabled="activeQuote.isRefreshing" @click="refreshYahooQuotes()" aria-label="更新 Yahoo 股價">
@@ -104,7 +106,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.11-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.14-2026.08.19';
 
 module.exports = {
 	data() {
