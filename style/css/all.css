@@ -1718,6 +1718,26 @@ select {
 .fund_holdings_refresh_button {
   flex: none;
 }
+.fund_holdings_cache_clear_button {
+  min-height: 34px;
+  padding: 0 10px;
+  color: #667f9c;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #d7e4f0;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: color 0.16s var(--ease-out, ease), background 0.16s var(--ease-out, ease), transform 0.16s var(--ease-out, ease);
+}
+.fund_holdings_cache_clear_button:hover, .fund_holdings_cache_clear_button:focus-visible {
+  color: #1a5f9f;
+  background: #f4f9fd;
+}
+.fund_holdings_cache_clear_button:active {
+  transform: scale(0.97);
+}
 .fund_holdings_source {
   margin-top: 15px;
   padding-top: 13px;
@@ -1854,6 +1874,14 @@ select {
 }
 .fund_quote_hint.is-error {
   color: #a55b16;
+}
+.fund_quote_cache_warning {
+  grid-column: 1/-1;
+  color: #a55b16;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: right;
 }
 .fund_nav_label_row {
   display: flex;
@@ -2190,6 +2218,9 @@ select {
     justify-content: start;
   }
   .fund_quote_hint {
+    text-align: left;
+  }
+  .fund_quote_cache_warning {
     text-align: left;
   }
   .fund_price_asof {

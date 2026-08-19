@@ -117,6 +117,7 @@
 		&_holdings_update_meta { display: grid; gap: 3px; justify-items: end; }
 		&_holdings_refresh_status { color: #71839a; font-size: 12px; line-height: 1.45; text-align: right; &.is-error { color: #a55b16; } }
 		&_holdings_refresh_button { flex: none; }
+		&_holdings_cache_clear_button { min-height: 34px; padding: 0 10px; color: #667f9c; font: inherit; font-size: 12px; font-weight: 700; background: #fff; border: 1px solid #d7e4f0; border-radius: 7px; cursor: pointer; transition: color .16s var(--ease-out, ease), background .16s var(--ease-out, ease), transform .16s var(--ease-out, ease); &:hover, &:focus-visible { color: #1a5f9f; background: #f4f9fd; } &:active { transform: scale(.97); } }
 		&_holdings_source { margin-top: 15px; padding-top: 13px; color: #72849a; font-size: 12px; line-height: 1.65; border-top: 1px solid #e6edf4; a { color: #1b5d99; font-weight: 700; } }
 		&_asof { color: #62748e; font-size: 12px; }
 	&_holdings_signal {
@@ -136,7 +137,8 @@
 	&_price_asof { padding-left: 10px; border-left: 1px solid #dce6ef; }
 	&_quote_controls { gap: 12px; @include collect-mw(S, (max-width:60%)); }
 	&_quote_meta { display: grid; grid-template-columns: auto auto; justify-content: end; @include collect-mw(XS, (grid-template-columns: auto)); }
-	&_quote_hint { grid-column: 1 / -1; color: #71839a; font-size: 12px; text-align: right; &.is-error { color: #a55b16; } }
+		&_quote_hint { grid-column: 1 / -1; color: #71839a; font-size: 12px; text-align: right; &.is-error { color: #a55b16; } }
+		&_quote_cache_warning { grid-column: 1 / -1; color: #a55b16; font-size: 12px; font-weight: 700; line-height: 1.45; text-align: right; }
 	&_nav_label_row { @include d_f(flex, none, center); gap: 6px; flex-wrap: wrap; }
 	&_nav_refresh_button { @include d_f(inline-flex, center, center); width: 24px; height: 24px; padding: 0; color: #52759c; background: #edf3fa; border: 1px solid #d7e4f0; border-radius: 50%; cursor: pointer; transition: color .16s var(--ease-out, ease), background .16s var(--ease-out, ease), transform .16s var(--ease-out, ease); &:hover:not(:disabled) { color: #0f3d7a; background: #e0edf8; } &:active:not(:disabled) { transform: scale(.94); } &:disabled { cursor: wait; opacity: .65; } .fund_refresh_icon { width: 13px; height: 13px; } }
 	&_nav_last_updated { color: #8796a8; font-size: 12px; font-weight: 600; }
@@ -196,7 +198,8 @@
 		&_section_meta { justify-content: flex-start; }
 		&_quote_controls { width: 100%; justify-content: space-between; align-items: flex-start; }
 		&_quote_meta { justify-content: start; }
-		&_quote_hint { text-align: left; }
+			&_quote_hint { text-align: left; }
+			&_quote_cache_warning { text-align: left; }
 		&_price_asof { padding-left: 0; border-left: 0; }
 	}
 }
