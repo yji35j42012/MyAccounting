@@ -127,7 +127,6 @@
 	&_weight { width: 92px; white-space: nowrap; strong { color: #0f3d7a; font-size: 13px; } }
 	&_insight_grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	&_insight { min-height: 190px; p:last-child { margin: 16px 0 0; color: #51667e; font-size: 14px; line-height: 1.75; } }
-	&_notice { margin-top: 20px; padding: 18px 20px; color: #52677e; font-size: 12px; line-height: 1.8; background: #f5f8fb; border-left: 3px solid #9bb5d0; border-radius: 8px; p+p { margin-top: 8px; } }
 	&_section_meta, &_quote_controls { @include d_f(flex, flex-end, center); gap: 10px; flex-wrap: wrap; }
 	&_price_asof { padding-left: 10px; border-left: 1px solid #dce6ef; }
 	&_quote_controls { gap: 12px; @include collect-mw(S, (max-width:60%)); }
@@ -182,11 +181,10 @@
 		}
 		&_mobile_company_group { @include d_f(flex, none, center); min-width: 0; gap: 10px; strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; } }
 			&_mobile_change, &_mobile_price { flex: none; text-align: right; strong, small { display: block; } strong { color: #0f3d7a; font-size: 13px; white-space: nowrap; } small { margin-top: 3px; color: #8494aa; font-size: 12px; white-space: nowrap; } }
-		&_mobile_change strong { font-size: 14px; font-weight: 700; }
-		&_insight_grid { grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
-		&_insight { min-height: auto; padding: 20px; }
-		&_notice { margin-top: 14px; padding: 16px; }
-		&_title { font-size: 24px; }
+			&_mobile_change strong { font-size: 14px; font-weight: 700; }
+			&_insight_grid { grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+			&_insight { min-height: auto; padding: 20px; }
+			&_title { font-size: 24px; }
 		&_section_meta { justify-content: flex-start; }
 		&_quote_controls { width: 100%; justify-content: space-between; align-items: flex-start; }
 		&_quote_meta { justify-content: start; }

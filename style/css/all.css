@@ -1790,19 +1790,6 @@ select {
   font-size: 14px;
   line-height: 1.75;
 }
-.fund_notice {
-  margin-top: 20px;
-  padding: 18px 20px;
-  color: #52677e;
-  font-size: 12px;
-  line-height: 1.8;
-  background: #f5f8fb;
-  border-left: 3px solid #9bb5d0;
-  border-radius: 8px;
-}
-.fund_notice p + p {
-  margin-top: 8px;
-}
 .fund_section_meta, .fund_quote_controls {
   display: flex;
   justify-content: flex-end;
@@ -2139,10 +2126,6 @@ select {
   .fund_insight {
     min-height: auto;
     padding: 20px;
-  }
-  .fund_notice {
-    margin-top: 14px;
-    padding: 16px;
   }
   .fund_title {
     font-size: 24px;

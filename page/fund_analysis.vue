@@ -100,13 +100,12 @@
 			</div>
 		</section>
 
-		<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
-						<section class="fund_notice"><p><strong>資料揭露：</strong>{{ activeFund.name }}的最新淨值與持股資料分別依相關基金公司官方頁面及官方投資持股頁列示。最新淨值單日漲跌幅按「(最新官方淨值 − 前一公開營業日淨值) ÷ 前一公開營業日淨值」計算；若公開歷史表尚未列出最新官方日期，系統會以該官方淨值補入最近五筆資料。基金最新與歷史淨值會依資料日期儲存於此瀏覽器的 localStorage：平日 16:00 前預期使用前一營業日資料，16:00 後才檢查當日資料。¹ 個股價格僅於平日 09:00–14:00 自動每五分鐘更新，並可隨時按下「更新股價」手動取得報價；資料經設定的報價代理自 Yahoo 股市讀取 regularMarketPrice。本機開發使用本網站伺服端，GitHub Pages 發布時使用設定的 Cloudflare Worker。² 今日漲跌幅及金額分別按「(Yahoo 當前報價 − 前一交易日收盤價) ÷ 前一交易日收盤價」與「Yahoo 當前報價 − 前一交易日收盤價」計算；初始資料尚未取得前收時，會依既有漲跌幅反推金額供閱讀。公開前十大對基金淨值的估計貢獻按「Σ(持股比重 × 個股漲跌幅) ÷ 100」計算，與基金淨值單日漲跌同為基金資產層級；另列「前十大標準化日報酬」供觀察列示持股本身的平均表現。兩者均僅反映官方公開前十大持股；未列示股票、現金、期貨、衍生性部位、費用與公開持股基準日落後等因素，仍會使結果與基金實際淨值不同。盤中報價可能與交易所當日最終收盤價不同；若更新失敗，頁面會保留該基金前次成功取得的報價。持股會因基金經理人調整而變動，畫面僅呈現官方公開列示標的，非完整投資組合。</p><p><strong>用途說明：</strong>本頁為公開資料整理與持股結構觀察，不構成任何買賣、申購或贖回建議。</p></section>
+			<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
 	</div>
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.19-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.21-2026.08.19';
 
 module.exports = {
 	data() {
