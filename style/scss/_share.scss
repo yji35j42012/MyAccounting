@@ -146,6 +146,8 @@
 	&+.normal_shadow {
 		margin-top: 20px;
 	}
+
+	@include collect-mw(S, (padding:10px 15px));
 }
 
 .normal_inp {
@@ -349,6 +351,10 @@
 		border-top: 1px solid #e2e8f0;
 		font-weight: 500;
 		white-space: nowrap;
+
+		&:nth-child(6) {
+			@include collect-mw(S, (max-width: 200px, white-space: wrap));
+		}
 	}
 
 	// .normal_tb_box
@@ -719,7 +725,9 @@
 		margin-top: 32px;
 		gap: 12px;
 
+		@include collect-mw(S, (gap: 8px));
 		// .report_selector_button
+
 		&_button {
 			flex: 1 1 0;
 			min-width: 0;
@@ -730,6 +738,8 @@
 			color: #475569;
 			text-align: left;
 			transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .16s ease;
+			@include collect-mw(S, (padding: 12px));
+
 
 			span,
 			small {
@@ -804,6 +814,8 @@
 		@include d_f(flex, space-between);
 		margin-top: 32px;
 		gap: 20px;
+		@include collect-mw(S,
+			(flex-wrap: wrap));
 	}
 
 	// .report_item
@@ -822,6 +834,8 @@
 			0 1px 2px 0 #0000000d;
 		border-radius: 12px;
 		border: 1px solid #f0f2f5;
+
+		@include collect-mw(S, (width:100%));
 
 		// .report_item_title
 		&_title {
@@ -875,6 +889,7 @@
 		&_head {
 			@include d_f(flex, space-between, flex-start);
 			gap: 20px;
+			@include collect-mw(S, (flex-direction: column));
 
 			h2 {
 				margin-top: 4px;
@@ -903,6 +918,8 @@
 			gap: 8px;
 			flex: none;
 
+			@include collect-mw(S, (width: 100%, justify-content: space-between));
+
 			button {
 				padding: 8px 16px;
 				font-size: 14px;
@@ -914,6 +931,8 @@
 					background-color: #48a830;
 					color: #fff;
 				}
+
+				@include collect-mw(S, (flex: 1 1 0))
 			}
 		}
 
@@ -973,42 +992,4 @@
 	}
 }
 
-@media (max-width: 768px) {
-	.report_group {
-		flex-wrap: wrap;
-	}
-
-	.report_item {
-		width: 100%;
-	}
-
-	.normal_shadow {
-		padding: 0 15px;
-	}
-
-	.normal_tb td:nth-child(6) {
-		max-width: 200px;
-		white-space: wrap;
-	}
-
-	.report_annual_head {
-		flex-direction: column;
-	}
-
-	.report_annual_controls {
-		width: 100%;
-		justify-content: space-between;
-	}
-
-	.report_annual_controls button {
-		flex: 1 1 0;
-	}
-
-	.report_selector {
-		gap: 8px;
-	}
-
-	.report_selector_button {
-		padding: 12px;
-	}
-}
+@media (max-width: 768px) {}

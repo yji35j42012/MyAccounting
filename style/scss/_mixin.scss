@@ -1,46 +1,103 @@
+%transition {
+	transition: all 0.3s ease-in-out;
+}
+
+%hand {
+	cursor: pointer;
+}
+
+%upspeed {
+	will-change: transform;
+}
+
 // juc 預設值 flex-start 、 align-items 預設值 stretch
-@mixin d_f($flex, $jc: flex-start, $ai: stretch) {
-    display: $flex;
-    justify-content: $jc;
-    align-items: $ai;
+@mixin d_f($flex, $jc: none, $ai: none) {
+	display: $flex;
+
+	@if ($jc !=none) {
+		justify-content: $jc;
+	}
+
+	@if ($ai !=none) {
+		align-items: $ai;
+	}
 }
 
 @mixin hoverHandler {
 
-    @media (pointer: fine) and (max-resolution: 2dppx),
-    screen and (pointer: fine) and (-webkit-max-device-pixel-ratio: 2),
-    (-moz-touch-enabled: 0) {
-        &:hover {
-            @content;
-        }
-    }
+	@media (pointer: fine) and (max-resolution: 2dppx),
+	screen and (pointer: fine) and (-webkit-max-device-pixel-ratio: 2),
+	(-moz-touch-enabled: 0) {
+		&:hover {
+			@content;
+		}
+	}
 
-    &:active {
-        
-    }
+	&:active {
+		@content;
+	}
 }
+
 
 @mixin hv {
 
-    @media (pointer: fine) and (max-resolution: 2dppx),
-    screen and (pointer: fine) and (-webkit-max-device-pixel-ratio: 2),
-    (-moz-touch-enabled: 0) {
-        &:hover {
-            @content;
-        }
-    }
+	@media (pointer: fine) and (max-resolution: 2dppx),
+	screen and (pointer: fine) and (-webkit-max-device-pixel-ratio: 2),
+	(-moz-touch-enabled: 0) {
+		&:hover {
+			@content;
+		}
+	}
 }
 
 @mixin ac {
-    &:active {
-        @content;
-    }
+	&:active {
+		@content;
+	}
 }
 
-%hand {
-    cursor: pointer;
+$breakpoints: (
+	XXL: 1440px,
+	XL: 1280px,
+	L: 1024px,
+	M: 995px,
+	S: 768px,
+	XS: 599px,
+	XXS: 360px
+);
+
+// 用來暫存所有響應式規則
+$media-rules: (
+	) !default;
+
+// 在 h1、h2 等 selector 裡收集規則
+@mixin collect-mw($size, $declarations) {
+	$rule: (
+		selector: &,
+		declarations: $declarations
+	);
+
+$media-rules: append($media-rules,
+		($size, $rule),
+		comma) !global;
 }
 
-%transition {
-    transition-duration: 0.3s;
+// 最後依 breakpoint 統一輸出
+@mixin emit-mw() {
+	@each $size, $width in $breakpoints {
+		@media screen and (max-width: $width) {
+			@each $entry in $media-rules {
+				$entry-size: nth($entry, 1);
+				$rule: nth($entry, 2);
+
+				@if $entry-size ==$size {
+					#{map-get($rule, selector)} {
+						@each $property, $value in map-get($rule, declarations) {
+							#{$property}: $value;
+						}
+					}
+				}
+			}
+		}
+	}
 }
