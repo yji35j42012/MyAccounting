@@ -111,9 +111,14 @@
 	&_history_value_group { justify-content: flex-end; min-width: 126px; small { min-width: 58px; text-align: right; } }
 	&_history_source { margin-top: 16px; padding-top: 13px; color: #72849a; font-size: 11px; line-height: 1.65; border-top: 1px solid #e6edf4; a { color: #1b5d99; font-weight: 700; } }
 	&_section_head { @include d_f(flex, space-between, flex-end); gap: 20px; margin-bottom: 18px; @include collect-mw(XS, (flex-wrap:wrap)); h3 { margin: 0; font-size: 20px; } }
-	&_holdings_heading .fund_kicker { @include d_f(flex, none, center); gap: 8px; }
-	&_holdings_asof_inline { color: #98a6b5; font-size: 12px; font-weight: 600; letter-spacing: normal; }
-	&_asof { color: #62748e; font-size: 12px; }
+		&_holdings_heading .fund_kicker { @include d_f(flex, none, center); gap: 8px; }
+		&_holdings_asof_inline { color: #98a6b5; font-size: 12px; font-weight: 600; letter-spacing: normal; }
+		&_holdings_controls { @include d_f(flex, flex-end, center); gap: 10px; flex-wrap: wrap; max-width: 420px; }
+		&_holdings_update_meta { display: grid; gap: 3px; justify-items: end; }
+		&_holdings_refresh_status { color: #71839a; font-size: 12px; line-height: 1.45; text-align: right; &.is-error { color: #a55b16; } }
+		&_holdings_refresh_button { flex: none; }
+		&_holdings_source { margin-top: 15px; padding-top: 13px; color: #72849a; font-size: 12px; line-height: 1.65; border-top: 1px solid #e6edf4; a { color: #1b5d99; font-weight: 700; } }
+		&_asof { color: #62748e; font-size: 12px; }
 	&_holdings_signal {
 		@include d_f(flex, space-between, center); gap: 16px; margin: -2px 0 16px; padding: 12px 14px; background: #f7fafc; border: 1px solid #e4edf5; border-radius: 10px;
 		span, small { display: block; } span { color: #455f7d; font-size: 12px; font-weight: 700; } small { margin-top: 3px; color: #7b8da3; font-size: 12px; line-height: 1.35; }
@@ -167,7 +172,10 @@
 			&_refresh_status { text-align: left; }
 			&_refresh_button { justify-self: start; }
 		}
-		&_holdings { margin-top: 14px; padding: 20px; }
+			&_holdings { margin-top: 14px; padding: 20px; }
+			&_holdings_controls { width: 100%; justify-content: space-between; max-width: none; }
+			&_holdings_update_meta { justify-items: start; }
+			&_holdings_refresh_status { text-align: left; }
 		&_holdings_signal { align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 		&_holdings_signal_value { text-align: left; }
 		&_section_head { gap: 8px; margin-bottom: 14px; }

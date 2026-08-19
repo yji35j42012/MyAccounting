@@ -76,11 +76,15 @@
 				<p class="fund_history_source">資料來源：<a :href="activeFund.performanceSourceUrl || activeFund.sourceUrl + '?nav=navperformance'" target="_blank" rel="noopener noreferrer">官方淨值走勢</a>；最近五筆資料由<a :href="activeFund.historySourceUrl" target="_blank" rel="noopener noreferrer">公開基金淨值表</a>動態取得。</p>
 		</section>
 
-		<section class="fund_holdings normal_shadow">
-				<div class="fund_section_head">
-					<div class="fund_holdings_heading"><p class="fund_kicker">投資標的 <span class="fund_holdings_asof_inline">持股資料基準日：{{ activeFund.holdingsDate }}</span></p><h3>官方公開前十大持股</h3></div>
-					<div class="fund_quote_controls">
-						<div class="fund_section_meta fund_quote_meta">
+			<section class="fund_holdings normal_shadow">
+					<div class="fund_section_head">
+						<div class="fund_holdings_heading"><p class="fund_kicker">投資標的 <span class="fund_holdings_asof_inline">持股資料基準日：{{ activeFund.holdingsDate }}</span></p><h3>官方公開前十大持股</h3></div>
+						<div class="fund_holdings_controls">
+							<div class="fund_holdings_update_meta"><small :class="['fund_holdings_refresh_status', activeHoldings.isRefreshing ? 'is-refreshing' : '', activeHoldings.holdingsError ? 'is-error' : '']">{{ holdingsStatus }}</small><small class="fund_cache_status">{{ holdingsTimingStatus }}</small></div>
+							<button type="button" class="fund_refresh_button fund_holdings_refresh_button" :disabled="activeHoldings.isRefreshing" @click="refreshHoldings(true)" aria-label="更新官方公開持股"><svg :class="['fund_refresh_icon', activeHoldings.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg><span>{{ activeHoldings.isRefreshing ? '更新中' : '更新持股' }}</span></button>
+						</div>
+						<div class="fund_quote_controls">
+							<div class="fund_section_meta fund_quote_meta">
 							<span class="fund_asof">Yahoo 報價：{{ activeQuote.quoteUpdatedAt }}</span>
 						<small :class="['fund_quote_hint', activeQuote.quoteError ? 'is-error' : '']">{{ quoteStatus }}</small>
 					</div>
@@ -88,8 +92,8 @@
 						<svg :class="['fund_refresh_icon', activeQuote.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg>
 						<span>{{ activeQuote.isRefreshing ? '更新中' : '更新股價' }}</span>
 					</button>
+						</div>
 					</div>
-				</div>
 				<div class="fund_table_box">
 					<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌²</th><th>比重</th></tr></thead>
 						<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }}</small></td><td class="fund_change"><strong :class="['fund_today_change', getChangeClass(item.changePct)]">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></td><td class="fund_weight"><strong>{{ item.weight.toFixed(2) }}%</strong></td></tr></tbody>
@@ -97,15 +101,19 @@
 			</div>
 			<div class="fund_mobile_holdings" aria-label="官方公開前十大持股">
 					<article class="fund_mobile_holding" v-for="item in activeFund.holdings" :key="'mobile-' + item.name"><div class="fund_mobile_holding_top"><div class="fund_mobile_company_group"><span class="fund_rank">{{ item.rank }}</span><strong>{{ item.name }}</strong></div><div class="fund_mobile_change"><strong :class="getChangeClass(item.changePct)">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></div></div><div class="fund_mobile_holding_detail"><div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }} ・ 比重 {{ item.weight.toFixed(2) }}%</small></div></div></article>
-			</div>
-		</section>
+					</div>
+					<p v-if="activeHoldings.sourceUrl" class="fund_holdings_source">持股來源：<a :href="activeHoldings.sourceUrl" target="_blank" rel="noopener noreferrer">{{ activeHoldings.sourceName || '官方公開持股資料' }}</a>；資料更新時間 {{ activeHoldings.holdingsUpdatedAt || '尚未取得' }}。</p>
+				</section>
 
 			<section class="fund_insight_grid"><article v-for="insight in activeFund.insights" :key="insight.title" class="fund_insight normal_shadow"><p class="fund_kicker">{{ insight.kicker }}</p><h3>{{ insight.title }}</h3><p>{{ insight.text }}</p></article></section>
 	</div>
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.21-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.22-2026.08.19';
+const HOLDING_SYMBOLS = {
+	'台積電': '2330.TW', '旺矽': '6223.TWO', '台光電子': '2383.TW', '台光電': '2383.TW', '欣興': '3037.TW', '台燿': '6274.TWO', '創意電子': '3443.TW', '聯電': '2303.TW', '奇鋐': '3017.TW', '穎崴': '6515.TW', '國巨': '2327.TW', '信驊科技': '5274.TWO', '南電': '8046.TW', '台達電子': '2308.TW', '台達電': '2308.TW', '智邦': '2345.TW', '華邦電子': '2344.TW', '華邦電': '2344.TW', '南亞科': '2408.TW', '景碩科技': '3189.TW', '景碩': '3189.TW', '聯發科': '2454.TW'
+};
 
 module.exports = {
 	data() {
@@ -130,12 +138,18 @@ module.exports = {
 						taiwanIntelligence: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' },
 						fuhwaOmni: { navUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, navError: '' }
 					},
-					historiesByFund: {
+						historiesByFund: {
 						taiwanTechnology: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' },
 						taiwanDaba: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' },
 						taiwanIntelligence: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' },
-						fuhwaOmni: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' }
-					},
+							fuhwaOmni: { historyUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, historyError: '' }
+						},
+						holdingsByFund: {
+							taiwanTechnology: { holdingsUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, holdingsError: '', sourceName: '', sourceUrl: '' },
+							taiwanDaba: { holdingsUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, holdingsError: '', sourceName: '', sourceUrl: '' },
+							taiwanIntelligence: { holdingsUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, holdingsError: '', sourceName: '', sourceUrl: '' },
+							fuhwaOmni: { holdingsUpdatedAt: '', fetchedAt: 0, cacheExpiresAt: 0, dataDate: '', cacheMode: '', isRefreshing: false, holdingsError: '', sourceName: '', sourceUrl: '' }
+						},
 						holdingsSignalsByFund: {
 							taiwanTechnology: { weightedChangePct: null, fundContributionPct: null, totalWeight: 0, quotedCount: 0, holdingsCount: 10, quoteUpdatedAt: '', savedAt: 0, cacheMode: '' },
 							taiwanDaba: { weightedChangePct: null, fundContributionPct: null, totalWeight: 0, quotedCount: 0, holdingsCount: 10, quoteUpdatedAt: '', savedAt: 0, cacheMode: '' },
@@ -161,8 +175,9 @@ module.exports = {
 	computed: {
 				activeFund() { return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0]; },
 				activeQuote() { return this.quotesByFund[this.activeFundKey]; },
-				activeNav() { return this.navsByFund[this.activeFundKey]; },
-			activeHistory() { return this.historiesByFund[this.activeFundKey]; },
+					activeNav() { return this.navsByFund[this.activeFundKey]; },
+				activeHistory() { return this.historiesByFund[this.activeFundKey]; },
+				activeHoldings() { return this.holdingsByFund[this.activeFundKey]; },
 				recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
 							holdingsWeightedChangePct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); const hasLoadedYahooQuotes = ['local', 'remote'].includes(this.activeQuote?.cacheMode) && this.activeQuote?.quotedCount > 0; if (hasLoadedYahooQuotes && Number.isFinite(liveCalculation.weightedChangePct)) return liveCalculation.weightedChangePct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.weightedChangePct)) return cachedSignal.weightedChangePct; return liveCalculation.weightedChangePct; },
 							holdingsFundContributionPct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); const hasLoadedYahooQuotes = ['local', 'remote'].includes(this.activeQuote?.cacheMode) && this.activeQuote?.quotedCount > 0; if (hasLoadedYahooQuotes && Number.isFinite(liveCalculation.fundContributionPct)) return liveCalculation.fundContributionPct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.fundContributionPct)) return cachedSignal.fundContributionPct; return liveCalculation.fundContributionPct; },
@@ -172,9 +187,11 @@ module.exports = {
 							holdingsSignalDateStatus() { const signal = this.holdingsSignalsByFund?.[this.activeFundKey]; const updatedAt = signal?.quoteUpdatedAt || (signal?.savedAt ? this.formatQuoteTime(signal.savedAt) : ''); return this.getHoldingsQuoteDateStatus(updatedAt); },
 				quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; if (this.activeQuote.cacheMode === 'local') return `已由本機報價快取載入：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; if (this.activeQuote.cacheMode === 'remote') return `Yahoo 報價已更新並儲存：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
 			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
-			historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
-				navTimingStatus() { return this.getFundTimingText(this.activeNav); },
-				historyTimingStatus() { return this.getFundTimingText(this.activeHistory); }
+					historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
+					holdingsStatus() { if (this.activeHoldings.isRefreshing) return '正在檢查官方公開持股'; if (this.activeHoldings.holdingsError) return this.activeHoldings.holdingsUpdatedAt ? `${this.activeHoldings.holdingsError} 前次成功更新：${this.activeHoldings.holdingsUpdatedAt}` : this.activeHoldings.holdingsError; if (this.activeHoldings.cacheMode === 'local') return `已由本機持股快取載入：${this.activeHoldings.holdingsUpdatedAt}`; return this.activeHoldings.holdingsUpdatedAt ? `官方公開持股已更新：${this.activeHoldings.holdingsUpdatedAt}` : '進入頁面時檢查；成功後每日檢查一次'; },
+					navTimingStatus() { return this.getFundTimingText(this.activeNav); },
+					historyTimingStatus() { return this.getFundTimingText(this.activeHistory); },
+					holdingsTimingStatus() { if (!this.activeHoldings.fetchedAt) return '成功取得後顯示每日檢查與快取時間'; const cacheRemaining = this.formatCountdown(Math.max(0, this.activeHoldings.cacheExpiresAt - this.countdownNow)); const checkRemaining = this.formatCountdown(Math.max(0, this.activeHoldings.fetchedAt + 24 * 60 * 60 * 1000 - this.countdownNow)); return `持股快取剩餘 ${cacheRemaining} · 下次每日檢查 ${checkRemaining}`; }
 	},
 		methods: {
 			formatDate(date) { return date.slice(5).replace('-', ' / '); },
@@ -199,8 +216,9 @@ module.exports = {
 						normalizeFundDate,
 						isTaipeiStockAutoWindow(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); const minutes = parts.hour * 60 + parts.minute; return isWeekday(parts) && minutes >= 9 * 60 && minutes < 14 * 60; },
 						getQuoteAutoSlot(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); return this.isTaipeiStockAutoWindow(timestamp) ? `${formatDate(parts)}-${String(parts.hour).padStart(2, '0')}-${Math.floor(parts.minute / 5)}` : ''; },
-						isTaipeiFundPublishWindow(timestamp = Date.now()) { return isPublishWindow(timestamp); },
-						getExpectedFundNavDate(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); return isPublishWindow(timestamp) ? formatDate(parts) : previousWeekday(parts); },
+							isTaipeiFundPublishWindow(timestamp = Date.now()) { return isPublishWindow(timestamp); },
+							getTaipeiCalendarDate(timestamp = Date.now()) { return formatDate(getTaipeiParts(timestamp)); },
+							getExpectedFundNavDate(timestamp = Date.now()) { const parts = getTaipeiParts(timestamp); return isPublishWindow(timestamp) ? formatDate(parts) : previousWeekday(parts); },
 						isExpectedFundNavDate(value, timestamp = Date.now()) { return normalizeFundDate(value) === this.getExpectedFundNavDate(timestamp); }
 					};
 				},
@@ -214,7 +232,7 @@ module.exports = {
 				writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch {} },
 					getHoldingsQuoteDateStatus(quoteUpdatedAt) { const quoteDate = this.normalizeFundDate(quoteUpdatedAt); const quoteTimeMatch = String(quoteUpdatedAt || '').match(/(\d{1,2}:\d{2})/); const quoteDateTime = quoteDate ? `${quoteDate}${quoteTimeMatch ? ` ${quoteTimeMatch[1]}` : ''}` : ''; return quoteDateTime ? `報價日期 ${quoteDateTime}，僅供方向觀察` : '尚無法確認報價日期'; },
 				createYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; if (!targetFund || !quoteState) return null; const quotes = targetFund.holdings.filter(holding => Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose) && Number(holding.previousClose) > 0).map(holding => ({ symbol: holding.symbol, price: Number(holding.price), previousClose: Number(holding.previousClose), priceChange: Number.isFinite(holding.priceChange) ? Number(holding.priceChange) : Number(holding.price) - Number(holding.previousClose), changePct: Number.isFinite(holding.changePct) ? Number(holding.changePct) : ((Number(holding.price) - Number(holding.previousClose)) / Number(holding.previousClose)) * 100 })); if (!quotes.length) return null; return { fundKey, holdingsDate: targetFund.holdingsDate, quoteUpdatedAt: quoteState.quoteUpdatedAt, quotes, fetchedAt: Number(fetchedAt) || Date.now() }; },
-				applyYahooQuoteSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const quoteRows = Array.isArray(snapshot?.quotes) ? snapshot.quotes : []; if (!targetFund || !quoteState || snapshot?.fundKey !== fundKey || snapshot.holdingsDate !== targetFund.holdingsDate || !quoteRows.length) return false; const allowedSymbols = new Set(targetFund.holdings.map(holding => holding.symbol)); const quotes = quoteRows.map(quote => { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); return { symbol: String(quote?.symbol || ''), price, previousClose, priceChange: price - previousClose, changePct: previousClose > 0 ? ((price - previousClose) / previousClose) * 100 : null }; }).filter(quote => allowedSymbols.has(quote.symbol) && Number.isFinite(quote.price) && Number.isFinite(quote.previousClose) && quote.previousClose > 0 && Number.isFinite(quote.priceChange) && Number.isFinite(quote.changePct)); if (!quotes.length || new Set(quotes.map(quote => quote.symbol)).size !== quotes.length) return false; const quoteBySymbol = new Map(quotes.map(quote => [quote.symbol, quote])); targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, priceChange: quote.priceChange, changePct: quote.changePct } : holding; }); quoteState.quoteUpdatedAt = String(snapshot.quoteUpdatedAt || this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now())); quoteState.savedAt = Number(snapshot.savedAt || snapshot.fetchedAt || Date.now()); quoteState.quotedCount = quotes.length; quoteState.cacheMode = cacheMode; return true; },
+					applyYahooQuoteSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const quoteRows = Array.isArray(snapshot?.quotes) ? snapshot.quotes : []; if (!targetFund || !quoteState || snapshot?.fundKey !== fundKey || snapshot.holdingsDate !== targetFund.holdingsDate || !quoteRows.length) return false; const allowedSymbols = new Set(targetFund.holdings.map(holding => holding.symbol).filter(Boolean)); const quotes = quoteRows.map(quote => { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); return { symbol: String(quote?.symbol || ''), price, previousClose, priceChange: price - previousClose, changePct: previousClose > 0 ? ((price - previousClose) / previousClose) * 100 : null }; }).filter(quote => allowedSymbols.has(quote.symbol) && Number.isFinite(quote.price) && Number.isFinite(quote.previousClose) && quote.previousClose > 0 && Number.isFinite(quote.priceChange) && Number.isFinite(quote.changePct)); if (!quotes.length || new Set(quotes.map(quote => quote.symbol)).size !== quotes.length) return false; const quoteBySymbol = new Map(quotes.map(quote => [quote.symbol, quote])); targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, priceChange: quote.priceChange, changePct: quote.changePct } : holding; }); quoteState.quoteUpdatedAt = String(snapshot.quoteUpdatedAt || this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now())); quoteState.savedAt = Number(snapshot.savedAt || snapshot.fetchedAt || Date.now()); quoteState.quotedCount = quotes.length; quoteState.cacheMode = cacheMode; return true; },
 					hydrateYahooQuoteCache(fundKey) { const snapshot = this.readFundStorage('quotes', fundKey); const hydrated = snapshot ? this.applyYahooQuoteSnapshot(fundKey, snapshot, 'local') : false; if (hydrated) this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true); return hydrated; },
 						persistYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const snapshot = this.createYahooQuoteSnapshot(fundKey, fetchedAt); if (!snapshot || !this.applyYahooQuoteSnapshot(fundKey, snapshot, 'remote')) return false; this.writeFundStorage('quotes', fundKey, snapshot); return true; },
 						refreshHoldingsSignalFromCurrentQuotes(fundKey, cacheMode = 'remote', persist = false) { const snapshot = this.createHoldingsSignalSnapshot(fundKey); if (!snapshot || !this.applyHoldingsSignalSnapshot(fundKey, snapshot, cacheMode)) return false; if (persist) this.writeFundStorage('holdings-signal', fundKey, snapshot); return true; },
@@ -227,9 +245,50 @@ module.exports = {
 				persistHoldingsSignalSnapshot(fundKey) { const snapshot = this.createHoldingsSignalSnapshot(fundKey); if (!snapshot || !this.applyHoldingsSignalSnapshot(fundKey, snapshot, 'remote')) return false; this.writeFundStorage('holdings-signal', fundKey, snapshot); return true; },
 				clearFundNavCache() { this.funds.forEach(fund => { ['nav', 'history'].forEach(type => { try { localStorage.removeItem(this.getFundStorageKey(type, fund.key)); } catch {} }); this.navsByFund[fund.key].cacheMode = 'cleared'; this.historiesByFund[fund.key].cacheMode = 'cleared'; }); this.cacheClearNotice = '已清除本機淨值快取；下次進入時會重新取得資料'; },
 				applyNavSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const navState = this.navsByFund[fundKey]; if (!targetFund || !navState || !Number.isFinite(Number(snapshot?.nav)) || !snapshot?.navDate) return false; targetFund.nav = Number(snapshot.nav); targetFund.navDate = String(snapshot.navDate).replace(/\//g, ' / '); targetFund.navChangePct = typeof snapshot.changePct === 'number' && Number.isFinite(snapshot.changePct) ? Number(snapshot.changePct) : null; if (snapshot.sourceUrl) targetFund.sourceUrl = snapshot.sourceUrl; navState.navUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); navState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); navState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || navState.fetchedAt + 10 * 60 * 1000; navState.dataDate = this.normalizeFundDate(targetFund.navDate); navState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
-				applyHistorySnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const historyState = this.historiesByFund[fundKey]; const rows = Array.isArray(snapshot?.rows) ? snapshot.rows.map(item => ({ date: String(item.date).replace(/\//g, '-'), value: Number(item.value), changePct: Number(item.changePct) })) : []; if (!targetFund || !historyState || rows.length !== 5 || rows.some(item => !item.date || !Number.isFinite(item.value) || !Number.isFinite(item.changePct))) return false; targetFund.historyNav = rows; targetFund.historyRange = snapshot.historyRange || targetFund.historyRange.replace(/— .*/, `— ${String(rows[rows.length - 1].date).replace(/-/g, ' / ')}`); if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl; historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); historyState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); historyState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || historyState.fetchedAt + 10 * 60 * 1000; historyState.dataDate = this.normalizeFundDate(rows[rows.length - 1].date); historyState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
-				hydrateFundCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); const historySnapshot = this.readFundStorage('history', fundKey); const navLoaded = navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) ? this.applyNavSnapshot(fundKey, navSnapshot, 'local') : false; const historyDate = historySnapshot?.rows?.[historySnapshot.rows.length - 1]?.date; const historyLoaded = historySnapshot && this.isExpectedFundDate(historyDate) ? this.applyHistorySnapshot(fundKey, historySnapshot, 'local') : false; return { navLoaded, historyLoaded }; },
-				async refreshFundSnapshots() { const fundKey = this.activeFundKey; const cache = this.hydrateFundCache(fundKey); const requests = []; if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey)); if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); if (requests.length) await Promise.all(requests); },
+					applyHistorySnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const historyState = this.historiesByFund[fundKey]; const rows = Array.isArray(snapshot?.rows) ? snapshot.rows.map(item => ({ date: String(item.date).replace(/\//g, '-'), value: Number(item.value), changePct: Number(item.changePct) })) : []; if (!targetFund || !historyState || rows.length !== 5 || rows.some(item => !item.date || !Number.isFinite(item.value) || !Number.isFinite(item.changePct))) return false; targetFund.historyNav = rows; targetFund.historyRange = snapshot.historyRange || targetFund.historyRange.replace(/— .*/, `— ${String(rows[rows.length - 1].date).replace(/-/g, ' / ')}`); if (snapshot.sourceUrl) targetFund.historySourceUrl = snapshot.sourceUrl; historyState.historyUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now()); historyState.fetchedAt = Number(snapshot.fetchedAt) || Date.now(); historyState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || historyState.fetchedAt + 10 * 60 * 1000; historyState.dataDate = this.normalizeFundDate(rows[rows.length - 1].date); historyState.cacheMode = cacheMode; this.syncNavChangePct(targetFund); return true; },
+					applyHoldingsSnapshot(fundKey, snapshot, cacheMode = 'remote') {
+						const targetFund = this.funds.find(fund => fund.key === fundKey);
+						const holdingsState = this.holdingsByFund[fundKey];
+						const rows = Array.isArray(snapshot?.holdings) ? snapshot.holdings.map((item, index) => ({ rank: Number(item?.rank) || index + 1, name: String(item?.name || '').trim(), weight: Number(item?.weight), industry: String(item?.industry || '').trim() })).filter(item => item.name && item.industry && Number.isFinite(item.weight) && item.weight >= 0 && item.weight <= 100).sort((left, right) => left.rank - right.rank).slice(0, 10) : [];
+						if (!targetFund || !holdingsState || snapshot?.fundKey !== fundKey || !snapshot?.holdingsDate || !rows.length) return false;
+						const previousDate = this.normalizeFundDate(targetFund.holdingsDate);
+						const nextDate = this.normalizeFundDate(snapshot.holdingsDate);
+						const priorByName = new Map(targetFund.holdings.map(item => [item.name, item]));
+						const holdingsChanged = previousDate !== nextDate || rows.some((item, index) => { const prior = targetFund.holdings[index]; return !prior || prior.name !== item.name || Number(prior.weight) !== item.weight; });
+						const holdingsDate = String(snapshot.holdingsDate).replace(/\//g, ' / ');
+						targetFund.holdings = rows.map(item => {
+							const prior = priorByName.get(item.name);
+							const symbol = HOLDING_SYMBOLS[item.name] || prior?.symbol || '';
+							const retainQuote = !holdingsChanged && prior?.symbol === symbol;
+							return { ...item, symbol, price: retainQuote ? prior?.price ?? null : null, previousClose: retainQuote ? prior?.previousClose ?? null : null, priceChange: retainQuote ? prior?.priceChange ?? null : null, changePct: retainQuote ? prior?.changePct ?? null : null, market: symbol ? `Yahoo · ${symbol.endsWith('.TWO') ? 'TPEX' : 'TWSE'}` : '待確認 Yahoo 代號' };
+						});
+						targetFund.holdingsDate = holdingsDate;
+						const totalWeight = rows.reduce((total, item) => total + item.weight, 0);
+						const industryTotals = rows.reduce((result, item) => ({ ...result, [item.industry]: (result[item.industry] || 0) + item.weight }), {});
+						const leadingIndustry = Object.entries(industryTotals).sort((left, right) => right[1] - left[1])[0];
+						if (targetFund.summaryCards?.[0]) { targetFund.summaryCards[0].value = `${totalWeight.toFixed(2)}%`; targetFund.summaryCards[0].detail = '依官方公開前十大逐檔權重加總'; }
+						if (targetFund.summaryCards?.[1] && leadingIndustry) { targetFund.summaryCards[1].label = `${leadingIndustry[0]}比重`; targetFund.summaryCards[1].value = `${Number(leadingIndustry[1]).toFixed(2)}%`; targetFund.summaryCards[1].detail = '僅以前十大官方產業分類計算'; }
+						holdingsState.holdingsUpdatedAt = this.formatQuoteTime(snapshot.savedAt || snapshot.fetchedAt || Date.now());
+						holdingsState.fetchedAt = Number(snapshot.fetchedAt) || Date.now();
+						holdingsState.cacheExpiresAt = Number(snapshot.cacheExpiresAt) || holdingsState.fetchedAt + 24 * 60 * 60 * 1000;
+						holdingsState.dataDate = nextDate;
+						holdingsState.cacheMode = cacheMode;
+						holdingsState.sourceName = String(snapshot.sourceName || holdingsState.sourceName || '官方公開持股');
+						holdingsState.sourceUrl = String(snapshot.sourceUrl || holdingsState.sourceUrl || '');
+						if (holdingsChanged) {
+							const quoteState = this.quotesByFund[fundKey];
+							if (quoteState) { quoteState.quoteUpdatedAt = ''; quoteState.quotedCount = 0; quoteState.cacheMode = ''; quoteState.quoteError = ''; }
+							const signalState = this.holdingsSignalsByFund[fundKey];
+							if (signalState) { signalState.weightedChangePct = null; signalState.fundContributionPct = null; signalState.totalWeight = 0; signalState.quotedCount = 0; signalState.holdingsCount = rows.length; signalState.quoteUpdatedAt = ''; signalState.cacheMode = ''; }
+							if (cacheMode !== 'local') { try { localStorage.removeItem(this.getFundStorageKey('quotes', fundKey)); localStorage.removeItem(this.getFundStorageKey('holdings-signal', fundKey)); } catch {} }
+						} else if (this.quotesByFund[fundKey]?.quotedCount) this.refreshHoldingsSignalFromCurrentQuotes(fundKey, cacheMode, true);
+						return true;
+					},
+					hydrateHoldingsCache(fundKey) { const snapshot = this.readFundStorage('holdings', fundKey); return snapshot ? this.applyHoldingsSnapshot(fundKey, snapshot, 'local') : false; },
+					isHoldingsCheckedToday(state) { const fetchedAt = Number(state?.fetchedAt); const timing = this.getTiming(); return Boolean(fetchedAt && timing?.getTaipeiCalendarDate && timing.getTaipeiCalendarDate(fetchedAt) === timing.getTaipeiCalendarDate(Date.now())); },
+					async refreshHoldingsIfNeeded(fundKey = this.activeFundKey) { if (this.isHoldingsCheckedToday(this.holdingsByFund[fundKey])) return false; return this.refreshHoldings(false, fundKey); },
+					hydrateFundCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); const historySnapshot = this.readFundStorage('history', fundKey); const navLoaded = navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) ? this.applyNavSnapshot(fundKey, navSnapshot, 'local') : false; const historyDate = historySnapshot?.rows?.[historySnapshot.rows.length - 1]?.date; const historyLoaded = historySnapshot && this.isExpectedFundDate(historyDate) ? this.applyHistorySnapshot(fundKey, historySnapshot, 'local') : false; return { navLoaded, historyLoaded }; },
+					async refreshFundSnapshots() { const fundKey = this.activeFundKey; const cache = this.hydrateFundCache(fundKey); const requests = []; if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey)); if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); requests.push(this.refreshHoldingsIfNeeded(fundKey)); if (requests.length) await Promise.all(requests); },
 				maybeAutoRefreshYahooQuotes() { if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
 			getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 			getQuoteRequest(fundKey) {
@@ -256,7 +315,7 @@ module.exports = {
 					const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
 				return { url: `/api/trpc/market.officialNav?input=${input}`, isExternalProxy: false };
 			},
-				getHistoryRequest(fundKey, force = false) {
+					getHistoryRequest(fundKey, force = false) {
 				const workerBaseUrl = this.getWorkerBaseUrl();
 				if (workerBaseUrl) {
 					const endpoint = new URL(`${workerBaseUrl}/history`);
@@ -267,9 +326,11 @@ module.exports = {
 				}
 				if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 歷史淨值端點');
 					const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
-				return { url: `/api/trpc/market.recentHistoryNav?input=${input}`, isExternalProxy: false };
-			},
-						selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.hydrateHoldingsSignalCache(fundKey); this.hydrateYahooQuoteCache(fundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
+						return { url: `/api/trpc/market.recentHistoryNav?input=${input}`, isExternalProxy: false };
+					},
+					getHoldingsRequest(fundKey, force = false) { const workerBaseUrl = this.getWorkerBaseUrl(); if (workerBaseUrl) { const endpoint = new URL(`${workerBaseUrl}/holdings`); endpoint.searchParams.set('fund', fundKey); if (force) endpoint.searchParams.set('force', '1'); return { url: endpoint.toString(), isExternalProxy: true }; } if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 持股端點'); const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } })); return { url: `/api/trpc/market.publicHoldings?input=${input}`, isExternalProxy: false }; },
+					async refreshHoldings(force = false, fundKey = this.activeFundKey) { if (typeof fundKey !== 'string' || !this.holdingsByFund[fundKey]) fundKey = this.activeFundKey; const holdingsState = this.holdingsByFund[fundKey]; if (holdingsState.isRefreshing) return false; holdingsState.isRefreshing = true; holdingsState.holdingsError = ''; try { const holdingsRequest = this.getHoldingsRequest(fundKey, force); const abortController = new AbortController(); const requestTimeout = window.setTimeout(() => abortController.abort(), holdingsRequest.isExternalProxy ? 25 * 1000 : 12 * 1000); let response; try { response = await fetch(holdingsRequest.url, { cache: 'no-store', credentials: holdingsRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); } if (!response.ok) throw new Error(`官方公開持股服務回應 ${response.status}`); const payload = await response.json(); const snapshot = holdingsRequest.isExternalProxy ? payload : payload?.result?.data?.json; if (snapshot?.fundKey !== fundKey || !Array.isArray(snapshot?.holdings) || !snapshot.holdings.length || !snapshot.holdingsDate) throw new Error('官方公開持股資料不完整'); const targetFund = this.funds.find(fund => fund.key === fundKey); const previousSignature = targetFund ? targetFund.holdings.map(item => `${item.name}:${item.weight}`).join('|') : ''; if (!this.applyHoldingsSnapshot(fundKey, snapshot)) throw new Error('官方公開持股資料格式不正確'); const holdingsChanged = previousSignature !== (targetFund?.holdings || []).map(item => `${item.name}:${item.weight}`).join('|'); this.writeFundStorage('holdings', fundKey, snapshot); if (holdingsChanged && this.isQuoteAutoWindow()) this.refreshYahooQuotes(fundKey); return true; } catch { holdingsState.holdingsError = '官方公開持股更新失敗，已保留前次資料'; return false; } finally { holdingsState.isRefreshing = false; } },
+							selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.hydrateHoldingsCache(fundKey); this.hydrateHoldingsSignalCache(fundKey); this.hydrateYahooQuoteCache(fundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
 				async refreshYahooQuotes(fundKey = this.activeFundKey) {
 					if (typeof fundKey !== 'string' || !this.quotesByFund[fundKey]) fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
@@ -353,7 +414,7 @@ module.exports = {
 					normalizeFundDate(value) { return this.getTiming()?.normalizeFundDate(value) || ''; },
 				syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 			},
-					mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
+						mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateHoldingsCache(this.activeFundKey); this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
 			beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); if (this.navSuccessToastTimer) window.clearTimeout(this.navSuccessToastTimer); }
 };
 </script>
