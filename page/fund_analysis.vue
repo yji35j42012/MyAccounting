@@ -89,20 +89,21 @@
 							<span class="fund_asof">Yahoo 報價：{{ activeQuote.quoteUpdatedAt }}</span>
 							<small :class="['fund_quote_hint', activeQuote.quoteError ? 'is-error' : '']">{{ quoteStatus }}</small>
 							<small v-if="quoteCacheIncomplete" class="fund_quote_cache_warning" role="status">{{ quoteCacheIncompleteMessage }}</small>
-					</div>
+						</div>
 						<button type="button" class="fund_refresh_button" :disabled="activeQuote.isRefreshing" @click="refreshYahooQuotes()" aria-label="更新 Yahoo 股價">
 						<svg :class="['fund_refresh_icon', activeQuote.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg>
 						<span>{{ activeQuote.isRefreshing ? '更新中' : '更新股價' }}</span>
-					</button>
+						</button>
+							</div>
 						</div>
+						<aside v-if="quoteMissingHoldings.length" class="fund_quote_missing" role="status" aria-live="polite"><strong>待補齊報價（{{ quoteMissingHoldings.length }} 檔）</strong><span v-for="item in quoteMissingHoldings" :key="`missing-${item.name}`">{{ item.name }}<small>{{ item.reason }}</small></span><p>請按「更新股價」重新取得最新 Yahoo 報價。</p></aside>
+					<div class="fund_table_box">
+						<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌²</th><th>比重</th></tr></thead>
+							<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose) }}</small><small>{{ item.market }}</small></td><td class="fund_change"><strong :class="['fund_today_change', getChangeClass(item.changePct)]"><span>{{ formatPercent(item.changePct) }}</span><em v-if="isFlatQuote(item)" class="fund_flat_badge">平盤</em></strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></td><td class="fund_weight"><strong>{{ item.weight.toFixed(2) }}%</strong></td></tr></tbody>
+						</table>
 					</div>
-				<div class="fund_table_box">
-					<table class="fund_table"><thead><tr><th>排名</th><th>投資標的</th><th>Yahoo 股價¹</th><th>今日漲跌²</th><th>比重</th></tr></thead>
-						<tbody><tr v-for="item in activeFund.holdings" :key="item.name"><td><span class="fund_rank">{{ item.rank }}</span></td><td class="fund_company">{{ item.name }}</td><td class="fund_price"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }}</small></td><td class="fund_change"><strong :class="['fund_today_change', getChangeClass(item.changePct)]">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></td><td class="fund_weight"><strong>{{ item.weight.toFixed(2) }}%</strong></td></tr></tbody>
-				</table>
-			</div>
-			<div class="fund_mobile_holdings" aria-label="官方公開前十大持股">
-					<article class="fund_mobile_holding" v-for="item in activeFund.holdings" :key="'mobile-' + item.name"><div class="fund_mobile_holding_top"><div class="fund_mobile_company_group"><span class="fund_rank">{{ item.rank }}</span><strong>{{ item.name }}</strong></div><div class="fund_mobile_change"><strong :class="getChangeClass(item.changePct)">{{ formatPercent(item.changePct) }}</strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></div></div><div class="fund_mobile_holding_detail"><div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price) }}</strong><small>{{ item.market }} ・ 比重 {{ item.weight.toFixed(2) }}%</small></div></div></article>
+					<div class="fund_mobile_holdings" aria-label="官方公開前十大持股">
+						<article class="fund_mobile_holding" v-for="item in activeFund.holdings" :key="'mobile-' + item.name"><div class="fund_mobile_holding_top"><div class="fund_mobile_company_group"><span class="fund_rank">{{ item.rank }}</span><strong>{{ item.name }}</strong></div><div class="fund_mobile_change"><strong :class="getChangeClass(item.changePct)"><span>{{ formatPercent(item.changePct) }}</span><em v-if="isFlatQuote(item)" class="fund_flat_badge">平盤</em></strong><small :class="getChangeClass(getQuoteChangeAmount(item))">{{ formatQuoteChange(getQuoteChangeAmount(item)) }}</small></div></div><div class="fund_mobile_holding_detail"><div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price) }}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose) }}</small><small>{{ item.market }} ・ 比重 {{ item.weight.toFixed(2) }}%</small></div></div></article>
 					</div>
 					<p v-if="activeHoldings.sourceUrl" class="fund_holdings_source">持股來源：<a :href="activeHoldings.sourceUrl" target="_blank" rel="noopener noreferrer">{{ activeHoldings.sourceName || '官方公開持股資料' }}</a>；資料更新時間 {{ activeHoldings.holdingsUpdatedAt || '尚未取得' }}。</p>
 				</section>
@@ -112,7 +113,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.28-2026.08.19';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.29-2026.08.19';
 const HOLDING_SYMBOLS = {
 	'台積電': '2330.TW', '旺矽': '6223.TWO', '台光電子': '2383.TW', '台光電': '2383.TW', '欣興': '3037.TW', '台燿': '6274.TWO', '創意': '3443.TW', '創意電子': '3443.TW', '聯電': '2303.TW', '奇鋐': '3017.TW', '穎崴': '6515.TW', '國巨': '2327.TW', '國巨*': '2327.TW', '信驊科技': '5274.TWO', '信驊': '5274.TWO', '南電': '8046.TW', '台達電子': '2308.TW', '台達電': '2308.TW', '智邦': '2345.TW', '華邦電子': '2344.TW', '華邦電': '2344.TW', '南亞科': '2408.TW', '景碩科技': '3189.TW', '景碩': '3189.TW', '聯發科': '2454.TW'
 };
@@ -190,6 +191,7 @@ module.exports = {
 						quoteCacheCoverage() { return this.getQuoteCacheCoverage(this.activeFundKey); },
 						quoteCacheIncomplete() { return this.activeQuote?.cacheMode === 'local' && this.quoteCacheCoverage.quotedCount < this.quoteCacheCoverage.expectedCount; },
 						quoteCacheIncompleteMessage() { const coverage = this.quoteCacheCoverage; return `本機報價快取不完整（${coverage.quotedCount}/${coverage.expectedCount} 檔）；請按「更新股價」補齊目前持股報價。`; },
+						quoteMissingHoldings() { return this.activeFund.holdings.filter(holding => !holding?.symbol || !Number.isFinite(holding?.price) || !Number.isFinite(holding?.previousClose) || Number(holding.previousClose) <= 0).map(holding => ({ name: holding.name, reason: holding?.symbol ? '尚無法取得 Yahoo 報價' : '尚未確認 Yahoo 代號' })); },
 					quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; if (this.activeQuote.cacheMode === 'cleared') return '已清除本機持股與報價快取；請更新持股或股價'; if (this.activeQuote.cacheMode === 'local') return `已由本機報價快取載入：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; if (this.activeQuote.cacheMode === 'remote') return `Yahoo 報價已更新並儲存：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
 			navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
 					historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
@@ -202,9 +204,10 @@ module.exports = {
 			formatDate(date) { return date.slice(5).replace('-', ' / '); },
 			formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
 			formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
-			formatQuoteChange(value) { return Number.isFinite(value) ? `TWD ${value > 0 ? '+' : ''}${this.formatPrice(value)}` : 'TWD —'; },
-			getQuoteChangeAmount(holding) { if (Number.isFinite(holding?.priceChange)) return holding.priceChange; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose)) return holding.price - holding.previousClose; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.changePct) && 100 + holding.changePct !== 0) { const derivedPreviousClose = holding.price / (1 + holding.changePct / 100); return holding.price - derivedPreviousClose; } return null; },
-			getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
+				formatQuoteChange(value) { return Number.isFinite(value) ? `TWD ${value > 0 ? '+' : ''}${this.formatPrice(value)}` : 'TWD —'; },
+				getQuoteChangeAmount(holding) { if (Number.isFinite(holding?.priceChange)) return holding.priceChange; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.previousClose)) return holding.price - holding.previousClose; if (Number.isFinite(holding?.price) && Number.isFinite(holding?.changePct) && 100 + holding.changePct !== 0) { const derivedPreviousClose = holding.price / (1 + holding.changePct / 100); return holding.price - derivedPreviousClose; } return null; },
+				isFlatQuote(holding) { return Number.isFinite(holding?.changePct) && Math.abs(Number(holding.changePct)) < 0.005; },
+				getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
 					formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 					formatTaipeiDateTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
