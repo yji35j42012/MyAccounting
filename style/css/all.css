@@ -1597,6 +1597,10 @@ select {
 .fund_batch_nav_row .fund_batch_nav_date {
   color: #60768e;
 }
+.fund_batch_nav_row .fund_batch_nav_date.is-stale {
+  color: #bd3441;
+  font-weight: 700;
+}
 .fund_nav_refresh_status {
   display: block;
   margin-top: 4px;

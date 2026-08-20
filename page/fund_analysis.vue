@@ -44,7 +44,7 @@
 							<button type="button" class="fund_full_refresh_button" :disabled="activeFullRefresh.isRefreshing || batchRefresh.isRefreshing" @click="clearAndRefreshActiveFundData" aria-label="清除目前基金全部快取並重新取得資料"><svg :class="['fund_refresh_icon', activeFullRefresh.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg><span>{{ activeFullRefresh.isRefreshing ? '正在重新取得所有資料' : '清除快取並重新取得全部資料' }}</span></button>
 							<small v-if="activeFullRefresh.message" :class="['fund_full_refresh_status', activeFullRefresh.isError ? 'is-error' : '']" role="status">{{ activeFullRefresh.message }}</small>
 							<button type="button" class="fund_batch_refresh_button" :disabled="batchRefresh.isRefreshing" @click="clearAndRefreshAllFundsData" aria-label="清除四檔基金全部快取並重新取得資料"><svg :class="['fund_refresh_icon', batchRefresh.isRefreshing ? 'is-spinning' : '']" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2.34 5.66M20 4v7h-7" /></svg><span>{{ batchRefresh.isRefreshing ? '正在重整四檔基金' : '一鍵重整四檔基金' }}</span></button>
-							<div class="fund_batch_nav_list" aria-label="四檔基金最新淨值"><article v-for="item in batchNavRows" :key="item.key" class="fund_batch_nav_row"><strong>{{ item.name }}</strong><span>新臺幣 {{ formatPrice(item.nav) }}</span><small class="fund_batch_nav_date">淨值日期 {{ item.navDate }}</small><small>{{ item.updatedTime }}</small></article></div>
+							<div class="fund_batch_nav_list" aria-label="四檔基金最新淨值"><article v-for="item in batchNavRows" :key="item.key" class="fund_batch_nav_row"><strong>{{ item.name }}</strong><span>新臺幣 {{ formatPrice(item.nav) }}</span><small :class="['fund_batch_nav_date', item.isStale ? 'is-stale' : '']">淨值日期 {{ item.navDate }}</small><small>{{ item.updatedTime }}</small></article></div>
 						</aside>
 			</section>
 
@@ -117,7 +117,7 @@
 </template>
 
 <script>
-			const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.37-2026.08.20';
+			const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.38-2026.08.20';
 const YAHOO_MARKET_TIME_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
 const YAHOO_MARKET_TIME_MAX_FUTURE_MS = 5 * 60 * 1000;
 const HOLDING_SYMBOLS = {
@@ -195,7 +195,7 @@ module.exports = {
 					activeHistory() { return this.historiesByFund[this.activeFundKey]; },
 					activeHoldings() { return this.holdingsByFund[this.activeFundKey]; },
 					activeFullRefresh() { return this.fullRefreshByFund[this.activeFundKey] || { isRefreshing: false, isError: false, message: '' }; },
-					batchNavRows() { return this.funds.map(fund => ({ key: fund.key, name: fund.shortName, nav: fund.nav, navDate: fund.navDate || '尚未取得', updatedTime: this.formatUpdateHourMinute(this.navsByFund[fund.key]?.navUpdatedAt) })); },
+					batchNavRows() { return this.funds.map(fund => ({ key: fund.key, name: fund.shortName, nav: fund.nav, navDate: fund.navDate || '尚未取得', isStale: !this.isNavDataDateToday(fund.navDate), updatedTime: this.formatUpdateHourMinute(this.navsByFund[fund.key]?.navUpdatedAt) })); },
 				recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
 							holdingsWeightedChangePct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); const hasLoadedYahooQuotes = ['local', 'remote'].includes(this.activeQuote?.cacheMode) && this.activeQuote?.quotedCount > 0; if (hasLoadedYahooQuotes && Number.isFinite(liveCalculation.weightedChangePct)) return liveCalculation.weightedChangePct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.weightedChangePct)) return cachedSignal.weightedChangePct; return liveCalculation.weightedChangePct; },
 							holdingsFundContributionPct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); const hasLoadedYahooQuotes = ['local', 'remote'].includes(this.activeQuote?.cacheMode) && this.activeQuote?.quotedCount > 0; if (hasLoadedYahooQuotes && Number.isFinite(liveCalculation.fundContributionPct)) return liveCalculation.fundContributionPct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.fundContributionPct)) return cachedSignal.fundContributionPct; return liveCalculation.fundContributionPct; },
@@ -227,6 +227,7 @@ module.exports = {
 					getChangeClass(value) { if (value > 0) return 'fund_positive'; if (value < 0) return 'fund_negative'; return 'fund_flat'; },
 					formatQuoteTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 					formatUpdateHourMinute(value) { const match = String(value || '').match(/(\d{1,2}:\d{2})/); return match ? match[1] : '尚未更新'; },
+					isNavDataDateToday(value) { const currentDate = this.getTiming()?.getTaipeiCalendarDate?.(Date.now()) || ''; return Boolean(currentDate && this.normalizeFundDate(value) === currentDate); },
 					formatTaipeiDateTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 				formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
 				getRefreshTimingText(state) { if (!Number.isFinite(state.fetchedAt) || state.fetchedAt <= 0) return '取得後顯示快取與自動更新倒數'; const cacheRemaining = this.formatCountdown(Math.max(0, state.cacheExpiresAt - this.countdownNow)); const autoRemaining = this.formatCountdown(Math.max(0, state.fetchedAt + 30 * 60 * 1000 - this.countdownNow)); return `快取剩餘 ${cacheRemaining} · 下次自動更新 ${autoRemaining}`; },
