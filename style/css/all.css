@@ -1531,27 +1531,14 @@ select {
 .fund_full_refresh_status.is-error {
   color: #a55b16;
 }
-.fund_batch_refresh_panel {
-  width: 100%;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid #dfe8f0;
-}
-.fund_batch_refresh_head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  color: #52677e;
-  font-size: 12px;
-  font-weight: 700;
-}
 .fund_batch_refresh_button {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  align-self: flex-start;
   gap: 6px;
   min-height: 32px;
+  margin-top: 12px;
   padding: 0 10px;
   color: #155c47;
   font-size: 12px;
@@ -1576,49 +1563,39 @@ select {
   width: 14px;
   height: 14px;
 }
-.fund_batch_refresh_summary {
-  display: block;
-  margin-top: 7px;
-  color: #52718f;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.45;
+.fund_batch_nav_list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  width: 100%;
+  margin-top: 10px;
 }
-.fund_batch_refresh_summary.is-error {
-  color: #a55b16;
-}
-.fund_batch_refresh_row {
-  margin-top: 8px;
+.fund_batch_nav_row {
   padding: 8px 9px;
   background: #fff;
   border: 1px solid #e5edf5;
   border-radius: 7px;
 }
-.fund_batch_refresh_row strong, .fund_batch_refresh_row span, .fund_batch_refresh_row small {
+.fund_batch_nav_row strong, .fund_batch_nav_row span, .fund_batch_nav_row small {
   display: block;
 }
-.fund_batch_refresh_row strong {
+.fund_batch_nav_row strong {
   color: #274c77;
   font-size: 12px;
 }
-.fund_batch_refresh_row span {
+.fund_batch_nav_row span {
   margin-top: 3px;
-  color: #667f9c;
+  color: #1a5f9f;
   font-size: 12px;
-  line-height: 1.35;
+  font-weight: 700;
 }
-.fund_batch_refresh_row small {
-  margin-top: 4px;
+.fund_batch_nav_row small {
+  margin-top: 3px;
   color: #71839a;
   font-size: 12px;
-  line-height: 1.35;
 }
-.fund_batch_refresh_row.is-error {
-  background: #fffaf3;
-  border-color: #ead4af;
-}
-.fund_batch_refresh_row.is-error strong, .fund_batch_refresh_row.is-error small {
-  color: #a55b16;
+.fund_batch_nav_row .fund_batch_nav_date {
+  color: #60768e;
 }
 .fund_nav_refresh_status {
   display: block;
@@ -2567,8 +2544,7 @@ select {
   }
 }
 @media screen and (max-width: 360px) {
-  .fund_batch_refresh_head {
-    align-items: flex-start;
-    flex-direction: column;
+  .fund_batch_nav_list {
+    grid-template-columns: 1fr;
   }
 }/*# sourceMappingURL=all.css.map */

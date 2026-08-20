@@ -51,7 +51,7 @@ describe("fund page manual quote update binding", () => {
 			expect(source).toContain("refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true)");
 			expect(source).toContain("const signalStored = this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'remote', true);");
 			expect(source).toContain("'holdings-signal'");
-				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.34-2026.08.20';");
+				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.37-2026.08.20';");
 			expect(source).not.toContain('資料揭露：');
 			expect(source).not.toContain('class="fund_notice"');
 			expect(source).toContain('class="fund_holdings_asof_inline"');
@@ -113,8 +113,14 @@ describe("fund page manual quote update binding", () => {
 				expect(source).toContain('清除快取並重新取得全部資料');
 				expect(source).toContain('clearAndRefreshAllFundsData');
 				expect(source).toContain('一鍵重整四檔基金');
-				expect(source).toContain('batchRefreshRows()');
-				expect(source).toContain('row.statusText');
+				expect(source).toContain("batchRefresh.isRefreshing ? '正在重整四檔基金' : '一鍵重整四檔基金'");
+				expect(source).toContain('outcomes.every(Boolean)');
+				expect(source).toContain('batchNavRows()');
+				expect(source).toContain('class="fund_batch_nav_list"');
+				expect(source).toContain('淨值日期 {{ item.navDate }}');
+				expect(source).toContain('formatUpdateHourMinute(value)');
+				expect(source).not.toContain('class="fund_batch_refresh_panel"');
+				expect(source).not.toContain('row.statusText');
 				expect(source).toContain("['nav', 'history', 'holdings', 'quotes', 'holdings-signal']");
 			});
 
@@ -261,22 +267,27 @@ describe("fund page manual quote update binding", () => {
 			expect(state.fullRefreshByFund[fundKey]).toMatchObject({ isRefreshing: false, isError: true, message: "已清除本機快取；部分資料更新失敗，畫面保留前次成功資料" });
 		});
 
-		it("refreshes all four funds from a single batch control and reports each result", async () => {
+		it("refreshes all four funds from a single batch control and lists only NAV values with hour-minute update times", async () => {
 			const { component } = await loadFundPageComponent();
 			const state = component.data();
 			const instance = { ...state, ...component.methods };
 			const calls: string[] = [];
-			instance.formatQuoteTime = () => "2026 / 08 / 20 17:10";
 			instance.clearAndRefreshFundData = async (fundKey: string) => { calls.push(fundKey); return fundKey !== "fuhwaOmni"; };
 
 			const result = await instance.clearAndRefreshAllFundsData();
 
 			expect(result).toBe(false);
 			expect(calls).toEqual(state.funds.map((fund: { key: string }) => fund.key));
-			expect(state.batchRefresh).toMatchObject({ isRefreshing: false, isError: true, message: "四檔基金已完成重整；1 檔有部分資料更新失敗" });
-			expect(state.batchRefresh.results).toMatchObject({ taiwanTechnology: { success: true, completedAt: "2026 / 08 / 20 17:10" }, fuhwaOmni: { success: false, message: "部分資料更新失敗，已保留前次成功資料" } });
-			const rows = component.computed.batchRefreshRows.call(instance);
-			expect(rows.find((row: { key: string }) => row.key === "fuhwaOmni")).toMatchObject({ isError: true, statusText: "部分資料更新失敗，已保留前次成功資料（本次完成 2026 / 08 / 20 17:10）" });
+			expect(state.batchRefresh).toEqual({ isRefreshing: false });
+			state.navsByFund.taiwanTechnology.navUpdatedAt = "2026 / 08 / 20 16:42";
+			state.navsByFund.taiwanDaba.navUpdatedAt = "2026 / 08 / 20 09:05";
+			const rows = component.computed.batchNavRows.call(instance);
+			expect(rows).toHaveLength(4);
+			expect(rows[0]).toMatchObject({ key: "taiwanTechnology", name: "安聯台灣科技", nav: state.funds[0].nav, navDate: state.funds[0].navDate, updatedTime: "16:42" });
+			expect(rows[1]).toMatchObject({ key: "taiwanDaba", updatedTime: "09:05" });
+			expect(rows[2].updatedTime).toBe("尚未更新");
+			expect(component.methods.formatUpdateHourMinute("2026 / 08 / 20 16:42")).toBe("16:42");
+			expect(component.methods.formatUpdateHourMinute("")).toBe("尚未更新");
 		});
 
 		it("detects incomplete local Yahoo quote caches and clears only the active fund's holdings caches", async () => {
