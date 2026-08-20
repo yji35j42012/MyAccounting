@@ -51,7 +51,7 @@ describe("fund page manual quote update binding", () => {
 			expect(source).toContain("refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true)");
 			expect(source).toContain("const signalStored = this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'remote', true);");
 			expect(source).toContain("'holdings-signal'");
-				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.32-2026.08.20';");
+				expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.34-2026.08.20';");
 			expect(source).not.toContain('資料揭露：');
 			expect(source).not.toContain('class="fund_notice"');
 			expect(source).toContain('class="fund_holdings_asof_inline"');
@@ -102,6 +102,7 @@ describe("fund page manual quote update binding", () => {
 				expect(source).toContain('前收盤 TWD {{ formatPrice(item.previousClose) }}');
 				expect(source).toContain('class="fund_quote_missing"');
 				expect(source).toContain('quoteUnverifiedHoldings()');
+				expect(source.match(/quoteUnverifiedHoldings\(\)/g)).toHaveLength(1);
 				expect(source).toContain('isYahooQuoteVerified(quote, referenceTime = Date.now())');
 				expect(source).toContain("'待確認'");
 				expect(source).toContain('class="fund_company_link"');
@@ -110,6 +111,10 @@ describe("fund page manual quote update binding", () => {
 				expect(source).not.toContain('{{ item.market }} ・ 比重');
 				expect(source).toContain('clearAndRefreshActiveFundData');
 				expect(source).toContain('清除快取並重新取得全部資料');
+				expect(source).toContain('clearAndRefreshAllFundsData');
+				expect(source).toContain('一鍵重整四檔基金');
+				expect(source).toContain('batchRefreshRows()');
+				expect(source).toContain('row.statusText');
 				expect(source).toContain("['nav', 'history', 'holdings', 'quotes', 'holdings-signal']");
 			});
 
@@ -234,7 +239,7 @@ describe("fund page manual quote update binding", () => {
 			expect(calls).toEqual(expect.arrayContaining([["nav", true, fundKey], ["history", true, fundKey], ["holdings", true, fundKey], ["quotes", true, fundKey]]));
 			expect(["nav", "history", "holdings", "quotes", "holdings-signal"].every(type => !storage.has(instance.getFundStorageKey(type, fundKey)))).toBe(true);
 			expect(storage.get(instance.getFundStorageKey("quotes", "taiwanDaba"))).toBe("keep");
-			expect(state.fullRefreshByFund[fundKey]).toMatchObject({ isRefreshing: false, isError: false, message: "目前基金快取已清除，淨值、歷史、持股與 Yahoo 報價皆已重新取得" });
+			expect(state.fullRefreshByFund[fundKey]).toMatchObject({ isRefreshing: false, isError: false, message: "本機快取已清除，淨值、歷史、持股與 Yahoo 報價皆已重新取得" });
 		});
 
 		it("keeps the current display values and reports partial failure when full refresh cannot obtain every source", async () => {
@@ -253,7 +258,25 @@ describe("fund page manual quote update binding", () => {
 
 			expect(result).toBe(false);
 			expect(targetFund.nav).toBe(originalNav);
-			expect(state.fullRefreshByFund[fundKey]).toMatchObject({ isRefreshing: false, isError: true, message: "已清除目前基金快取；部分資料更新失敗，畫面保留前次成功資料" });
+			expect(state.fullRefreshByFund[fundKey]).toMatchObject({ isRefreshing: false, isError: true, message: "已清除本機快取；部分資料更新失敗，畫面保留前次成功資料" });
+		});
+
+		it("refreshes all four funds from a single batch control and reports each result", async () => {
+			const { component } = await loadFundPageComponent();
+			const state = component.data();
+			const instance = { ...state, ...component.methods };
+			const calls: string[] = [];
+			instance.formatQuoteTime = () => "2026 / 08 / 20 17:10";
+			instance.clearAndRefreshFundData = async (fundKey: string) => { calls.push(fundKey); return fundKey !== "fuhwaOmni"; };
+
+			const result = await instance.clearAndRefreshAllFundsData();
+
+			expect(result).toBe(false);
+			expect(calls).toEqual(state.funds.map((fund: { key: string }) => fund.key));
+			expect(state.batchRefresh).toMatchObject({ isRefreshing: false, isError: true, message: "四檔基金已完成重整；1 檔有部分資料更新失敗" });
+			expect(state.batchRefresh.results).toMatchObject({ taiwanTechnology: { success: true, completedAt: "2026 / 08 / 20 17:10" }, fuhwaOmni: { success: false, message: "部分資料更新失敗，已保留前次成功資料" } });
+			const rows = component.computed.batchRefreshRows.call(instance);
+			expect(rows.find((row: { key: string }) => row.key === "fuhwaOmni")).toMatchObject({ isError: true, statusText: "部分資料更新失敗，已保留前次成功資料（本次完成 2026 / 08 / 20 17:10）" });
 		});
 
 		it("detects incomplete local Yahoo quote caches and clears only the active fund's holdings caches", async () => {
@@ -319,7 +342,8 @@ describe("fund page manual quote update binding", () => {
 
 			expect(instance.isFlatQuote(instance.activeFund.holdings[0])).toBe(true);
 			expect(instance.isFlatQuote({ changePct: 0.006 })).toBe(false);
-				expect(component.computed.quoteUnverifiedHoldings.call(instance)).toEqual([
+			expect(component.methods.quoteUnverifiedHoldings).toBeUndefined();
+			expect(component.computed.quoteUnverifiedHoldings.call(instance)).toEqual([
 					{ name: "待確認公司", reason: "尚未確認 Yahoo 代號" },
 					{ name: "暫無報價公司", reason: "尚無法取得已驗證 Yahoo 報價" },
 			]);

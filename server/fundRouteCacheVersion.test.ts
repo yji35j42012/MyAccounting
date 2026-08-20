@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
-const fundVersion = 'fund-analysis-v1.5.32-2026.08.20';
+const fundVersion = 'fund-analysis-v1.5.34-2026.08.20';
 
 describe('基金頁版本化 SFC 載入', () => {
 	it('uses one release version to bust GitHub Pages caches for the route script and fund component', async () => {

@@ -1531,6 +1531,95 @@ select {
 .fund_full_refresh_status.is-error {
   color: #a55b16;
 }
+.fund_batch_refresh_panel {
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #dfe8f0;
+}
+.fund_batch_refresh_head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: #52677e;
+  font-size: 12px;
+  font-weight: 700;
+}
+.fund_batch_refresh_button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  color: #155c47;
+  font-size: 12px;
+  font-weight: 700;
+  background: #e9f7f0;
+  border: 1px solid #b8dfcd;
+  border-radius: 7px;
+  transition: background 0.16s var(--ease-out, ease), border-color 0.16s var(--ease-out, ease), transform 0.16s var(--ease-out, ease);
+}
+.fund_batch_refresh_button:hover:not(:disabled) {
+  background: #d9f1e4;
+  border-color: #75b99b;
+}
+.fund_batch_refresh_button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.fund_batch_refresh_button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.fund_batch_refresh_button .fund_refresh_icon {
+  width: 14px;
+  height: 14px;
+}
+.fund_batch_refresh_summary {
+  display: block;
+  margin-top: 7px;
+  color: #52718f;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.fund_batch_refresh_summary.is-error {
+  color: #a55b16;
+}
+.fund_batch_refresh_row {
+  margin-top: 8px;
+  padding: 8px 9px;
+  background: #fff;
+  border: 1px solid #e5edf5;
+  border-radius: 7px;
+}
+.fund_batch_refresh_row strong, .fund_batch_refresh_row span, .fund_batch_refresh_row small {
+  display: block;
+}
+.fund_batch_refresh_row strong {
+  color: #274c77;
+  font-size: 12px;
+}
+.fund_batch_refresh_row span {
+  margin-top: 3px;
+  color: #667f9c;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.fund_batch_refresh_row small {
+  margin-top: 4px;
+  color: #71839a;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.fund_batch_refresh_row.is-error {
+  background: #fffaf3;
+  border-color: #ead4af;
+}
+.fund_batch_refresh_row.is-error strong, .fund_batch_refresh_row.is-error small {
+  color: #a55b16;
+}
 .fund_nav_refresh_status {
   display: block;
   margin-top: 4px;
@@ -1591,8 +1680,7 @@ select {
 .fund_summary_card {
   min-height: 132px;
 }
-.fund_summary_card span,
-.fund_summary_card small {
+.fund_summary_card span, .fund_summary_card small {
   display: block;
 }
 .fund_summary_card span {
@@ -1649,8 +1737,7 @@ select {
 .fund_history_metrics > div + div {
   border-left: 1px solid #e6edf4;
 }
-.fund_history_metrics span,
-.fund_history_metrics small {
+.fund_history_metrics span, .fund_history_metrics small {
   display: block;
   color: #697c94;
   font-size: 11px;
@@ -1811,8 +1898,7 @@ select {
   border: 1px solid #e4edf5;
   border-radius: 10px;
 }
-.fund_holdings_signal span,
-.fund_holdings_signal small {
+.fund_holdings_signal span, .fund_holdings_signal small {
   display: block;
 }
 .fund_holdings_signal span {
@@ -2025,8 +2111,7 @@ select {
 .fund_price {
   min-width: 154px;
 }
-.fund_price strong,
-.fund_price small {
+.fund_price strong, .fund_price small {
   display: block;
 }
 .fund_price strong {
@@ -2066,8 +2151,7 @@ select {
 .fund_change {
   min-width: 124px;
 }
-.fund_change strong,
-.fund_change small {
+.fund_change strong, .fund_change small {
   display: block;
 }
 .fund_change small {
@@ -2300,9 +2384,7 @@ select {
     flex: none;
     text-align: right;
   }
-  .fund_mobile_change strong,
-  .fund_mobile_change small, .fund_mobile_price strong,
-  .fund_mobile_price small {
+  .fund_mobile_change strong, .fund_mobile_change small, .fund_mobile_price strong, .fund_mobile_price small {
     display: block;
   }
   .fund_mobile_change strong, .fund_mobile_price strong {
@@ -2482,5 +2564,11 @@ select {
   }
   .fund_quote_meta {
     grid-template-columns: auto;
+  }
+}
+@media screen and (max-width: 360px) {
+  .fund_batch_refresh_head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }/*# sourceMappingURL=all.css.map */
