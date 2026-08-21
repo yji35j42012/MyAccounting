@@ -51,7 +51,7 @@ describe("fund page manual quote update binding", () => {
 			expect(source).toContain("refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true)");
 			expect(source).toContain("const signalStored = this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'remote', true);");
 			expect(source).toContain("'holdings-signal'");
-					expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.38-2026.08.20';");
+						expect(source).toContain("const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.40-2026.08.20';");
 			expect(source).not.toContain('資料揭露：');
 			expect(source).not.toContain('class="fund_notice"');
 			expect(source).toContain('class="fund_holdings_asof_inline"');
@@ -115,9 +115,14 @@ describe("fund page manual quote update binding", () => {
 				expect(source).toContain('一鍵重整四檔基金');
 				expect(source).toContain("batchRefresh.isRefreshing ? '正在重整四檔基金' : '一鍵重整四檔基金'");
 				expect(source).toContain('outcomes.every(Boolean)');
+				expect(source).toContain('hydrateFundNavCache(fundKey)');
+				expect(source).toContain('async refreshAllFundNavSnapshots()');
+				expect(source).toContain('this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots();');
 				expect(source).toContain('batchNavRows()');
 				expect(source).toContain('class="fund_batch_nav_list"');
 				expect(source).toContain('淨值日期 {{ item.navDate }}');
+				expect(source).toContain('單日 {{ formatPercent(item.navChangePct) }}');
+				expect(source).toContain("['fund_batch_nav_change', getChangeClass(item.navChangePct)]");
 				expect(source).toContain('formatUpdateHourMinute(value)');
 				expect(source).toContain('isNavDataDateToday(value)');
 				expect(source).toContain("item.isStale ? 'is-stale' : ''");
@@ -228,7 +233,30 @@ describe("fund page manual quote update binding", () => {
 			expect(state.funds.every((fund: { key: string }) => state.navsByFund[fund.key].cacheMode === "cleared" && state.historiesByFund[fund.key].cacheMode === "cleared")).toBe(true);
 		});
 
-		it("clears the active fund's five cache records and forces every data source to refresh", async () => {
+		it("hydrates a valid NAV cache and concurrently refreshes the other three fund NAVs on page open", async () => {
+			const { component, storage } = await loadFundPageComponent();
+			const state = component.data();
+			const instance = { ...state, ...component.methods };
+			const cachedFund = state.funds[0];
+			storage.set(instance.getFundStorageKey("nav", cachedFund.key), JSON.stringify({
+				fundKey: cachedFund.key,
+				nav: 759.66,
+				navDate: "2026/08/20",
+				changePct: 1.3,
+				fetchedAt: Date.now(),
+				savedAt: Date.now(),
+			}));
+			instance.isExpectedFundDate = (value: string) => value === "2026/08/20";
+			const refreshed: Array<[boolean, string]> = [];
+			instance.refreshOfficialNav = async (force: boolean, fundKey: string) => { refreshed.push([force, fundKey]); return true; };
+
+			expect(await instance.refreshAllFundNavSnapshots()).toBe(true);
+			expect(cachedFund).toMatchObject({ nav: 759.66, navDate: "2026 / 08 / 20" });
+			expect(cachedFund.navChangePct).toEqual(expect.any(Number));
+			expect(refreshed).toEqual(state.funds.slice(1).map((fund: { key: string }) => [true, fund.key]));
+		});
+
+			it("clears the active fund's five cache records and forces every data source to refresh", async () => {
 			const { component, storage } = await loadFundPageComponent();
 			const state = component.data();
 			const fundKey = "taiwanTechnology";
@@ -284,15 +312,21 @@ describe("fund page manual quote update binding", () => {
 			expect(state.batchRefresh).toEqual({ isRefreshing: false });
 			state.funds[0].navDate = "2026 / 08 / 20";
 			state.funds[1].navDate = "2026 / 08 / 19";
+			state.funds[0].navChangePct = 1.3;
+			state.funds[1].navChangePct = -0.8;
+			state.funds[2].navChangePct = 0;
 			state.navsByFund.taiwanTechnology.navUpdatedAt = "2026 / 08 / 20 16:42";
 			state.navsByFund.taiwanDaba.navUpdatedAt = "2026 / 08 / 20 09:05";
 			const rows = component.computed.batchNavRows.call(instance);
 			expect(rows).toHaveLength(4);
-			expect(rows[0]).toMatchObject({ key: "taiwanTechnology", name: "安聯台灣科技", nav: state.funds[0].nav, navDate: state.funds[0].navDate, isStale: false, updatedTime: "16:42" });
-			expect(rows[1]).toMatchObject({ key: "taiwanDaba", navDate: "2026 / 08 / 19", isStale: true, updatedTime: "09:05" });
+			expect(rows[0]).toMatchObject({ key: "taiwanTechnology", name: "安聯台灣科技", nav: state.funds[0].nav, navChangePct: 1.3, navDate: state.funds[0].navDate, isStale: false, updatedTime: "16:42" });
+			expect(rows[1]).toMatchObject({ key: "taiwanDaba", navChangePct: -0.8, navDate: "2026 / 08 / 19", isStale: true, updatedTime: "09:05" });
 			expect(rows[2].updatedTime).toBe("尚未更新");
 			expect(component.methods.formatUpdateHourMinute("2026 / 08 / 20 16:42")).toBe("16:42");
 			expect(component.methods.formatUpdateHourMinute("")).toBe("尚未更新");
+			expect(component.methods.getChangeClass(1.3)).toBe("fund_positive");
+			expect(component.methods.getChangeClass(-0.8)).toBe("fund_negative");
+			expect(component.methods.getChangeClass(0)).toBe("fund_flat");
 			expect(component.methods.isNavDataDateToday.call(instance, "2026 / 08 / 20")).toBe(true);
 			expect(component.methods.isNavDataDateToday.call(instance, "2026 / 08 / 19")).toBe(false);
 		});
