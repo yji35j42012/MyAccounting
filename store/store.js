@@ -153,7 +153,7 @@ const store = new Vuex.Store({
 				}
 			],
 			taiwanDaba: [
-				{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units:"" },
+				{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units: "" },
 				{ id: '3', date: '2026.08.11', principal: 10000, subscriptionNav: 313.43, units: 31.9 },
 				{ id: '4', date: '2026.08.06', principal: 3000, subscriptionNav: 311.29, units: 9.7 },
 				{ id: '5', date: '2026.07.31', principal: 3000, subscriptionNav: 268.54, units: 11.2 },
@@ -185,7 +185,7 @@ const store = new Vuex.Store({
 					units: 216
 				}
 			],
-		    fuhwaOmni: [
+			fuhwaOmni: [
 				{
 					id: 2,
 					date: "2026.08.25",
@@ -267,8 +267,14 @@ const store = new Vuex.Store({
 		SET_ACCDATA(state, data) {
 			state.AccData = data;
 		},
-		SET_FUNDDATA(state,data){
-			state.FundData = data;
+		SET_FUNDDATA(state, data) {
+			if (data[0] == "all") {
+				state.FundData = data[1];
+			} else {
+				state.FundData[data[0]]=data[1][data[0]]
+			}
+			// console.log("state.FundData", state.FundData);
+
 		}
 	},
 	actions: {
@@ -284,7 +290,7 @@ const store = new Vuex.Store({
 		SET_ACCDATA_ACTION({ commit }, data) {
 			commit("SET_ACCDATA", data);
 		},
-		SET_FUND_ACTION({commit},data){
+		SET_FUND_ACTION({ commit }, data) {
 			commit("SET_FUNDDATA", data);
 		}
 	},

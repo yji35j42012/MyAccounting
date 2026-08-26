@@ -62,12 +62,14 @@
 					<div>
 						<p class="fund_kicker">{{ activeFund.riskLevel }}</p>
 						<h3>{{ activeFund.name }}</h3>
-						<div class="fund_purchase_page_card_controls"><button class="fund_purchase_page_add_button"
-								type="button" @click="openPurchaseModal('add')">＋ 新增申購紀錄</button><button
+						<div class="fund_purchase_page_card_controls">
+							<button class="fund_purchase_page_add_button" type="button"
+								@click="openPurchaseModal('add')">＋ 新增申購紀錄</button><button
 								:class="['fund_purchase_page_filter_button', showOnlyIncomplete ? 'is-active' : '']"
 								type="button" :aria-pressed="showOnlyIncomplete"
 								@click="showOnlyIncomplete = !showOnlyIncomplete">{{ showOnlyIncomplete ? '顯示全部紀錄' :
-					'僅顯示待補資料' }}</button></div>
+					'僅顯示待補資料' }}</button>
+						</div>
 					</div>
 					<div class="fund_purchase_page_nav"><span>最新公開淨值</span><strong>{{ formatNav(activeFund.nav)
 							}}</strong><small>淨值日期 {{ formatDate(activeFund.navDate) }} · {{
@@ -174,9 +176,11 @@
 					<p v-if="purchaseModal.error" class="fund_purchase_page_modal_error" role="alert">{{
 					purchaseModal.error }}</p>
 					<p class="fund_purchase_page_modal_hint">申購淨值或庫存單位數留白時，紀錄會標示為待補資料，且不納入損益試算。</p>
-					<div class="alert_funcbox"><button class="normal_btn _secondary" type="button"
-							@click="closePurchaseModal">取消</button><button class="normal_btn _primary" type="submit">{{
-					purchaseModal.mode === 'edit' ? '儲存更新' : '新增紀錄' }}</button></div>
+					<div class="alert_funcbox">
+						<button class="normal_btn _secondary" type="button" @click="closePurchaseModal">取消</button>
+						<button class="normal_btn _primary" type="submit">{{ purchaseModal.mode === 'edit' ? '儲存更新' :
+					'新增紀錄' }}</button>
+					</div>
 				</form>
 			</div>
 		</div>
@@ -256,7 +260,7 @@ module.exports = {
 				{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
 			]
 
-			store.dispatch("SET_FUND_ACTION", objData.objList);
+			store.dispatch("SET_FUND_ACTION",[ 'all',objData.objList]);
 			store.dispatch("SET_LOADING_ACTION", false);
 		});
 	},
@@ -264,11 +268,149 @@ module.exports = {
 		selectFund(fundKey) { if (this.funds.some(fund => fund.key === fundKey)) { this.activeFundKey = fundKey; this.showOnlyIncomplete = false; this.purchaseSaveMessage = ''; } },
 		getTodayInputDate() { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); },
 		formatInputDate(value) { return this.normalizeDate(value); },
-		openPurchaseModal(mode, record = null) { const current = record || {}; this.purchaseSaveMessage = ''; this.purchaseModal = { mode, editingId: current.id ?? '', form: { date: current.date ? this.formatInputDate(current.date) : this.getTodayInputDate(), principal: current.principal ?? '', subscriptionNav: current.subscriptionNav ?? '', units: current.units ?? '' }, error: '' }; },
+		openPurchaseModal(mode, record = null) {
+			const current = record || {}; this.purchaseSaveMessage = '';
+			this.purchaseModal = {
+				mode, editingId: current.id ?? '',
+				form: {
+					date: current.date ?
+						this.formatInputDate(current.date) : this.getTodayInputDate(),
+					principal: current.principal ?? '',
+					subscriptionNav: current.subscriptionNav ?? '',
+					units: current.units ?? ''
+				}, error: ''
+			};
+		},
 		closePurchaseModal() { this.purchaseModal = { mode: '', editingId: '', form: { date: '', principal: '', subscriptionNav: '', units: '' }, error: '' }; },
 		getNextPurchaseRecordId(fundKey) { const ids = this.getFundPurchaseRecords(fundKey).map(record => Number(record.id)).filter(Number.isFinite); return String((ids.length ? Math.max(...ids) : 0) + 1); },
 		normalizeOptionalNumber(value, fieldName) { if (value === '' || value === null || value === undefined) return ''; const number = Number(value); if (!Number.isFinite(number) || number < 0) throw new Error(`${ fieldName }必須是 0 或以上的數字`); return number; },
-		savePurchaseRecord() { try { const form = this.purchaseModal.form; const date = this.normalizeDate(form.date); const principal = Number(form.principal); if (!date) throw new Error('請填寫日期'); if (!Number.isFinite(principal) || principal <= 0) throw new Error('投入本金必須大於 0'); const record = { id: this.purchaseModal.mode === 'edit' ? this.purchaseModal.editingId : this.getNextPurchaseRecordId(this.activeFundKey), date: date.replace(/-/g, '.'), principal, subscriptionNav: this.normalizeOptionalNumber(form.subscriptionNav, '申購淨值'), units: this.normalizeOptionalNumber(form.units, '庫存單位數') }; if (this.purchaseModal.mode === 'edit') { this.$store.commit('UPDATE_FUND_PURCHASE_RECORD', { fundKey: this.activeFundKey, record }); this.purchaseSaveMessage = '申購紀錄已更新，相關試算已同步重算。'; } else { this.$store.commit('ADD_FUND_PURCHASE_RECORD', { fundKey: this.activeFundKey, record }); this.purchaseSaveMessage = '申購紀錄已新增，相關試算已同步重算。'; } this.closePurchaseModal(); } catch (error) { this.purchaseModal.error = error instanceof Error ? error.message : '儲存申購紀錄時發生錯誤'; } },
+		savePurchaseRecord() {
+			try {
+				const form = this.purchaseModal.form;
+				const date = this.normalizeDate(form.date);
+				const principal = Number(form.principal);
+				if (!date) throw new Error('請填寫日期');
+				if (!Number.isFinite(principal) || principal <= 0) throw new Error('投入本金必須大於 0');
+				const record = {
+					id: this.purchaseModal.mode === 'edit' ?
+						this.purchaseModal.editingId : this.getNextPurchaseRecordId(this.activeFundKey),
+					date: date.replace(/-/g, '.'),
+					principal, subscriptionNav: this.normalizeOptionalNumber(form.subscriptionNav, '申購淨值'),
+					units: this.normalizeOptionalNumber(form.units, '庫存單位數')
+				};
+				store.dispatch("SET_LOADING_ACTION", true);
+				if (this.purchaseModal.mode === 'edit') {
+					var get_url = url +
+						"?func=updateFund&id=" + record.id +
+						"&date=" + record.date +
+						"&principal=" + record.principal +
+						"&subscriptionNav=" + record.subscriptionNav +
+						"&units=" + record.units +
+						"&fund=" + this.activeFundKey;
+					axios.get(get_url).then(res => {
+						let objData = {
+							objTitle: [],
+							objList: {},
+						}
+						var t = objData.objTitle;
+						var l = objData.objList;
+
+						res.data.forEach(element => {
+							var item = {
+								id: element[0],
+								date: element[1],
+								principal: element[2],
+								subscriptionNav: element[3],
+								units: element[4],
+							}
+							if (element[0] !== '') {
+								if (t.indexOf(element[8]) == -1) {
+									t.push(element[8]);
+									l[element[8]] = [item]
+								} else {
+									l[element[8]].push(item)
+								}
+							}
+						});
+						// l['taiwanDaba'] = [
+						// 	{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units: "" },
+						// 	{ id: '3', date: '2026.08.11', principal: 10000, subscriptionNav: 313.43, units: 31.9 },
+						// 	{ id: '4', date: '2026.08.06', principal: 3000, subscriptionNav: 311.29, units: 9.7 },
+						// 	{ id: '5', date: '2026.07.31', principal: 3000, subscriptionNav: 268.54, units: 11.2 },
+						// 	{ id: '6', date: '2026.06.30', principal: 3000, subscriptionNav: 333.2, units: 9 },
+						// 	{ id: '7', date: '2026.06.03', principal: 40000, subscriptionNav: 334.56, units: 119.6 },
+						// 	{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
+						// 	{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
+						// ]
+						store.dispatch("SET_FUND_ACTION", [this.activeFundKey,objData.objList]);
+						setTimeout(() => {
+							// this.clearEdit();
+							store.dispatch("SET_LOADING_ACTION", false);
+						}, 500);
+					});
+
+					// this.$store.commit('UPDATE_FUND_PURCHASE_RECORD', {
+					// 	fundKey: this.activeFundKey, record
+					// }); this.purchaseSaveMessage = '申購紀錄已更新，相關試算已同步重算。';
+				} else {
+					var get_url = url +
+						"?func=setFund" +
+						"&date=" + record.date +
+						"&principal=" + record.principal +
+						"&subscriptionNav=" + record.subscriptionNav +
+						"&units=" + record.units +
+						"&fund=" + this.activeFundKey;
+					console.log('add', get_url);
+					axios.get(get_url).then(res => {
+						let objData = {
+							objTitle: [],
+							objList: {},
+						}
+						var t = objData.objTitle;
+						var l = objData.objList;
+
+						res.data.forEach(element => {
+							var item = {
+								id: element[0],
+								date: element[1],
+								principal: element[2],
+								subscriptionNav: element[3],
+								units: element[4],
+							}
+							if (element[0] !== '') {
+								if (t.indexOf(element[8]) == -1) {
+									t.push(element[8]);
+									l[element[8]] = [item]
+								} else {
+									l[element[8]].push(item)
+								}
+							}
+						});
+						// l['taiwanDaba'] = [
+						// 	{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units: "" },
+						// 	{ id: '3', date: '2026.08.11', principal: 10000, subscriptionNav: 313.43, units: 31.9 },
+						// 	{ id: '4', date: '2026.08.06', principal: 3000, subscriptionNav: 311.29, units: 9.7 },
+						// 	{ id: '5', date: '2026.07.31', principal: 3000, subscriptionNav: 268.54, units: 11.2 },
+						// 	{ id: '6', date: '2026.06.30', principal: 3000, subscriptionNav: 333.2, units: 9 },
+						// 	{ id: '7', date: '2026.06.03', principal: 40000, subscriptionNav: 334.56, units: 119.6 },
+						// 	{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
+						// 	{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
+						// ]
+						store.dispatch("SET_FUND_ACTION", [this.activeFundKey,objData.objList]);
+						setTimeout(() => {
+							// this.clearEdit();
+							store.dispatch("SET_LOADING_ACTION", false);
+						}, 500);
+					});
+					// this.$store.commit('ADD_FUND_PURCHASE_RECORD',
+					// 	{ fundKey: this.activeFundKey, record });
+					// this.purchaseSaveMessage = '申購紀錄已新增，相關試算已同步重算。';
+				}
+				this.closePurchaseModal();
+			} catch (error) {
+				this.purchaseModal.error = error instanceof Error ? error.message : '儲存申購紀錄時發生錯誤';
+			}
+		},
 		getNavStorageKey(fundKey) { return `cashflow-manager:fund-nav:v1:${ fundKey }`; },
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getNavRequest(fundKey, force = false) {
