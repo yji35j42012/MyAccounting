@@ -1,4 +1,5 @@
 const FUND_ANALYSIS_COMPONENT_VERSION = 'fund-analysis-v1.5.40-2026.08.20';
+const FUND_PURCHASE_COMPONENT_VERSION = 'fund-purchase-v1.0.3-2026.08.25';
 
 const routes = [
 	{
@@ -20,6 +21,10 @@ const routes = [
 	{
 		path: '/fund',
 		component: () => loadModule(`./page/fund_analysis.vue?v=${FUND_ANALYSIS_COMPONENT_VERSION}`, options),
+	},
+	{
+		path: '/fund-purchase',
+		component: () => loadModule(`./page/fund_purchase.vue?v=${FUND_PURCHASE_COMPONENT_VERSION}`, options),
 	},
 ];
 const router = VueRouter.createRouter({

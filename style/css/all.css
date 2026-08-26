@@ -790,7 +790,8 @@ select {
   border: 1px solid #e7edf4;
   border-radius: 10px;
 }
-.report_category_expenses_item span, .report_category_expenses_item strong {
+.report_category_expenses_item span,
+.report_category_expenses_item strong {
   display: block;
 }
 .report_category_expenses_item span {
@@ -1594,6 +1595,18 @@ select {
   color: #71839a;
   font-size: 12px;
 }
+.fund_batch_nav_row .fund_batch_nav_change {
+  font-weight: 700;
+}
+.fund_batch_nav_row .fund_batch_nav_change.fund_positive {
+  color: #bd3441;
+}
+.fund_batch_nav_row .fund_batch_nav_change.fund_negative {
+  color: #11724d;
+}
+.fund_batch_nav_row .fund_batch_nav_change.fund_flat {
+  color: #71839a;
+}
 .fund_batch_nav_row .fund_batch_nav_date {
   color: #60768e;
 }
@@ -2208,6 +2221,283 @@ select {
   color: #6d7f93 !important;
 }
 
+.fund_purchase_page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  color: #0f172b;
+}
+.fund_purchase_page_selector {
+  margin-bottom: 20px;
+}
+.fund_purchase_page_hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 20px;
+  border-left: 5px solid #155c47;
+}
+.fund_purchase_page_hero h2 {
+  margin: 0;
+  font-size: 28px;
+}
+.fund_purchase_page_hero p:not(.fund_kicker) {
+  max-width: 650px;
+  margin: 8px 0 0;
+  color: #60768e;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.fund_purchase_page_refresh {
+  display: flex;
+  align-items: flex-end;
+  flex: none;
+  flex-direction: column;
+  gap: 7px;
+}
+.fund_purchase_page_refresh_button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  color: #155c47;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  background: #e9f7f0;
+  border: 1px solid #b8dfcd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease-out, ease), border-color 0.16s var(--ease-out, ease), transform 0.16s var(--ease-out, ease);
+}
+.fund_purchase_page_refresh_button:hover:not(:disabled) {
+  background: #d9f1e4;
+  border-color: #75b99b;
+}
+.fund_purchase_page_refresh_button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.fund_purchase_page_refresh_button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.fund_purchase_page_refresh_status {
+  margin: 0;
+  color: #62748e;
+  font-size: 12px;
+  text-align: right;
+}
+.fund_purchase_page_refresh_status.is-error {
+  color: #a55b16;
+}
+.fund_purchase_page_totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.fund_purchase_page_total {
+  min-width: 0;
+  border-top: 3px solid #155c47;
+}
+.fund_purchase_page_total span, .fund_purchase_page_total strong, .fund_purchase_page_total small {
+  display: block;
+}
+.fund_purchase_page_total span {
+  color: #60768e;
+  font-size: 13px;
+  font-weight: 700;
+}
+.fund_purchase_page_total strong {
+  margin: 9px 0 5px;
+  font-size: 25px;
+  letter-spacing: 0.01em;
+}
+.fund_purchase_page_total small {
+  color: #7b8da3;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.fund_purchase_page_content {
+  min-width: 0;
+}
+.fund_purchase_page_card {
+  min-width: 0;
+}
+.fund_purchase_page_card_head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+.fund_purchase_page_card_head h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.fund_purchase_page_nav {
+  flex: none;
+  min-width: 126px;
+  padding: 8px 10px;
+  text-align: right;
+  background: #f7fafc;
+  border: 1px solid #e5edf5;
+  border-radius: 8px;
+}
+.fund_purchase_page_nav span, .fund_purchase_page_nav strong, .fund_purchase_page_nav small {
+  display: block;
+}
+.fund_purchase_page_nav span, .fund_purchase_page_nav small {
+  color: #71839a;
+  font-size: 11px;
+}
+.fund_purchase_page_nav strong {
+  margin: 3px 0;
+  color: #155c47;
+  font-size: 14px;
+}
+.fund_purchase_page_table_box {
+  overflow-x: auto;
+}
+.fund_purchase_page_table {
+  width: 100%;
+  min-width: 790px;
+  border-collapse: collapse;
+}
+.fund_purchase_page_table th {
+  padding: 0 9px 10px;
+  color: #62748e;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+.fund_purchase_page_table td {
+  height: 48px;
+  padding: 7px 9px;
+  color: #304b69;
+  font-size: 12px;
+  border-top: 1px solid #e8eef4;
+  white-space: nowrap;
+}
+.fund_purchase_page_table tbody tr:hover {
+  background: #f9fbfd;
+}
+.fund_purchase_page_table strong {
+  font-size: 12px;
+}
+.fund_purchase_page_mobile_records {
+  display: none;
+}
+.fund_purchase_page_note {
+  margin: 18px 0 0;
+  padding: 13px 15px;
+  color: #6b7f96;
+  font-size: 12px;
+  line-height: 1.7;
+  background: #f8fafc;
+  border: 1px solid #e5edf5;
+  border-radius: 9px;
+}
+
+@media (max-width: 768px) {
+  .fund_purchase_page {
+    padding-bottom: 24px;
+  }
+  .fund_purchase_page_hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .fund_purchase_page_hero h2 {
+    font-size: 24px;
+  }
+  .fund_purchase_page_refresh {
+    width: 100%;
+    align-items: flex-start;
+  }
+  .fund_purchase_page_refresh_status {
+    text-align: left;
+  }
+  .fund_purchase_page_totals {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .fund_purchase_page_total {
+    padding: 17px 18px;
+  }
+  .fund_purchase_page_total strong {
+    margin-top: 7px;
+    font-size: 23px;
+  }
+  .fund_purchase_page_card {
+    padding: 20px;
+  }
+  .fund_purchase_page_card_head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .fund_purchase_page_nav {
+    width: 100%;
+    text-align: left;
+  }
+  .fund_purchase_page_table_box {
+    display: none;
+  }
+  .fund_purchase_page_mobile_records {
+    display: grid;
+    gap: 10px;
+  }
+  .fund_purchase_page_mobile_record {
+    padding: 12px 13px;
+    background: #fbfcfe;
+    border: 1px solid #e7edf4;
+    border-radius: 9px;
+  }
+  .fund_purchase_page_mobile_record_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .fund_purchase_page_mobile_record_top strong {
+    color: #274c77;
+    font-size: 13px;
+  }
+  .fund_purchase_page_mobile_record_top span {
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .fund_purchase_page_mobile_record dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px 12px;
+    margin: 11px 0 0;
+  }
+  .fund_purchase_page_mobile_record dl > div {
+    min-width: 0;
+  }
+  .fund_purchase_page_mobile_record dl dt {
+    color: #7b8da3;
+    font-size: 11px;
+  }
+  .fund_purchase_page_mobile_record dl dd {
+    margin: 3px 0 0;
+    color: #304b69;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .fund_purchase_page_note {
+    margin-top: 14px;
+  }
+}
 @keyframes fund-refresh-spin {
   to {
     transform: rotate(360deg);

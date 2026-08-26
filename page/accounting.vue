@@ -5,7 +5,7 @@
 		<div class="content_h1" data-txt="管理您的所有交易">交易紀錄</div>
 		<div class="filter normal_shadow">
 			<div class="filter_title">篩選</div>
-			<div class="filter_box ">
+			<div class="filter_box">
 				<sel-component :selType="this.sel_type_child" @sel-return="selTypeChild"></sel-component>
 				<label class="normal_inp">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -111,7 +111,6 @@
 						<textarea class="normal_textarea" placeholder="輸入備註..."
 							v-model="accounting_edit.edit_remark"></textarea>
 					</div>
-
 					<div class="alert_funcbox">
 						<button class="normal_btn _secondary" @click="(isShowAlert(''))">取消</button>
 						<button class="normal_btn _primary" @click="accountingChange"
@@ -138,9 +137,9 @@ module.exports = {
 				edit_id: 0,
 				edit_date: "",
 				edit_type: "支出",
-				edit_sort: "選擇分類",
+				edit_sort: "餐飲",
 				edit_amount: 0,
-				edit_acc: "選擇帳戶",
+				edit_acc: "信用卡(永豐)",
 				edit_remark: ""
 			},
 			sel_type_child: {
@@ -196,7 +195,7 @@ module.exports = {
 				var filter = [];
 				// sort amount acc remark
 				rShow.forEach(item => {
-					
+
 					if (item.accounting_date.indexOf(this.sel_type_child.filter_inp) !== -1 ||
 						item.accounting_sort.indexOf(this.sel_type_child.filter_inp) !== -1 ||
 						item.accounting_acc.indexOf(this.sel_type_child.filter_inp) !== -1 ||
@@ -220,7 +219,7 @@ module.exports = {
 		},
 		showCalendar() {
 			this.calendar_data.isShow = !this.calendar_data.isShow;
-			this.calendar_data.date = this.accounting_edit.edit_date
+			this.calendar_data.date = this.accounting_edit.edit_date;
 		},
 		selTypeChild(data) {
 			this.sel_type_child.selText = data;
@@ -260,7 +259,7 @@ module.exports = {
 				this.alertData.class = "";
 				return;
 			}
-			this.calendar_data.isShow = false
+			this.calendar_data.isShow = false;
 			if (s == "add") {
 				this.alertData.class = "showAdd";
 				this.accounting_edit.edit_date = this.getDate();
