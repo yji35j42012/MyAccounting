@@ -182,7 +182,8 @@ select {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav_link, .nav_link svg {
+  .nav_link,
+  .nav_link svg {
     transition: none;
   }
 }
@@ -811,7 +812,7 @@ select {
 }
 .report_category_expenses_grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -821,7 +822,8 @@ select {
   border: 1px solid #e7edf4;
   border-radius: 10px;
 }
-.report_category_expenses_item span, .report_category_expenses_item strong {
+.report_category_expenses_item span,
+.report_category_expenses_item strong {
   display: block;
 }
 .report_category_expenses_item span {
@@ -833,6 +835,15 @@ select {
   margin-top: 6px;
   color: #0f3d7a;
   font-size: 22px;
+}
+.report_category_expenses_item.is-investment-expense strong {
+  color: rgb(231, 0, 15);
+}
+.report_category_expenses_item.is-investment-profit strong {
+  color: rgb(0, 151, 114);
+}
+.report_category_expenses.report_annual_category_expenses {
+  margin-top: 24px;
 }
 .report_annual {
   margin-top: 32px;
@@ -2928,6 +2939,11 @@ select {
   .fund_price_asof {
     padding-left: 0;
     border-left: 0;
+  }
+}
+@media screen and (max-width: 995px) {
+  .report_category_expenses_grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media screen and (max-width: 768px) {

@@ -40,17 +40,17 @@
 					</div>
 				</div>
 			</div>
-			<section class="report_category_expenses normal_shadow" aria-label="本月指定分類消費總額">
+			<section class="report_category_expenses normal_shadow" aria-label="本月指定分類收支總額">
 				<div class="report_category_expenses_head">
 					<div>
-						<p>本月分類支出</p>
-						<h3>日常消費總額</h3>
-					</div><span>餐飲、生活雜費、交通</span>
+						<p>本月分類收支</p>
+						<h3>日常消費、投資支出與投資獲利</h3>
+					</div><span>餐飲、生活雜費、交通、投資支出、投資獲利</span>
 				</div>
 				<div class="report_category_expenses_grid">
 					<div v-for="item in monthlyCategoryExpenses" :key="item.category"
-						class="report_category_expenses_item"><span>{{ item.category }}</span><strong>${{
-				formatAmount(item.amount) }}</strong></div>
+						:class="['report_category_expenses_item', item.tone]"><span>{{ item.category
+							}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
 				</div>
 			</section>
 		</section>
@@ -85,6 +85,20 @@
 				formatAmount(showAnnualAccounting.total) }}</div>
 				</div>
 			</div>
+
+			<section class="report_category_expenses report_annual_category_expenses" aria-label="全年指定分類收支總額">
+				<div class="report_category_expenses_head">
+					<div>
+						<p>全年分類收支</p>
+						<h3>日常消費、投資支出與投資獲利</h3>
+					</div><span>餐飲、生活雜費、交通、投資支出、投資獲利</span>
+				</div>
+				<div class="report_category_expenses_grid">
+					<div v-for="item in annualCategoryExpenses" :key="item.category"
+						:class="['report_category_expenses_item', item.tone]"><span>{{ item.category
+							}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
+				</div>
+			</section>
 
 			<div class="report_annual_table_box">
 				<table class="report_annual_table">
@@ -129,7 +143,7 @@ module.exports = {
 			var get_url = url + "?func=getAccounting";
 			axios.get(get_url).then(res => {
 				this.resetAccountingData(res.data);
-			store.dispatch("SET_ACCDATA_ACTION", res.data);
+				store.dispatch("SET_ACCDATA_ACTION", res.data);
 				store.dispatch("SET_LOADING_ACTION", false);
 			});
 		} else {
@@ -148,16 +162,27 @@ module.exports = {
 			return this.showAnnualAccounting.months;
 		},
 		monthlyCategoryExpenses() {
-			const categoryExpenses = this.showAccounting.categoryExpenses || {};
-			return ['餐飲', '生活雜費', '交通'].map(category => ({ category, amount: Number(categoryExpenses[category]) || 0 }));
+			return this.createCategoryExpenseItems(this.showAccounting.categoryExpenses || {});
+		},
+		annualCategoryExpenses() {
+			return this.createCategoryExpenseItems(this.showAnnualAccounting.categoryExpenses || {});
 		}
 	},
 	methods: {
 		formatAmount(value) {
 			return Number(value || 0).toLocaleString('en-US');
 		},
+		createCategoryExpenseItems(categoryExpenses) {
+			return [
+				{ category: '餐飲', tone: 'is-expense', amount: Number(categoryExpenses['餐飲']) || 0 },
+				{ category: '生活雜費', tone: 'is-expense', amount: Number(categoryExpenses['生活雜費']) || 0 },
+				{ category: '交通', tone: 'is-expense', amount: Number(categoryExpenses['交通']) || 0 },
+				{ category: '投資支出', tone: 'is-investment-expense', amount: Number(categoryExpenses['投資支出']) || 0 },
+				{ category: '投資獲利', tone: 'is-investment-profit', amount: Number(categoryExpenses['投資獲利']) || 0 }
+			];
+		},
 		createMonthlySummary(month) {
-			return { month: Number(month) || 0, month_in: 0, month_out: 0, total: 0, categoryExpenses: { '餐飲': 0, '生活雜費': 0, '交通': 0 } };
+			return { month: Number(month) || 0, month_in: 0, month_out: 0, total: 0, categoryExpenses: { '餐飲': 0, '生活雜費': 0, '交通': 0, '投資支出': 0, '投資獲利': 0 } };
 		},
 		createAnnualSummary(year) {
 			return {
@@ -165,6 +190,7 @@ module.exports = {
 				year_in: 0,
 				year_out: 0,
 				total: 0,
+				categoryExpenses: { '餐飲': 0, '生活雜費': 0, '交通': 0, '投資支出': 0, '投資獲利': 0 },
 				months: Array.from({ length: 12 }, (_, index) => this.createMonthlySummary(index + 1))
 			};
 		},
@@ -226,7 +252,14 @@ module.exports = {
 					monthData.month_out += amount;
 					annualData.year_out += amount;
 					annualMonthData.month_out += amount;
-					if (Object.prototype.hasOwnProperty.call(monthData.categoryExpenses, item[3])) monthData.categoryExpenses[item[3]] += amount;
+				}
+				const categoryKey = item[3] === '投資'
+					? (isIncome ? '投資獲利' : '投資支出')
+					: item[3];
+				if (Object.prototype.hasOwnProperty.call(monthData.categoryExpenses, categoryKey)) {
+					monthData.categoryExpenses[categoryKey] += amount;
+					annualMonthData.categoryExpenses[categoryKey] += amount;
+					annualData.categoryExpenses[categoryKey] += amount;
 				}
 				monthData.total += cashflow;
 				annualData.total += cashflow;

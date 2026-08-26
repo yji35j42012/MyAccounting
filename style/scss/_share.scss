@@ -81,7 +81,9 @@
 			box-shadow: 0 0 0 5px rgba(123, 180, 215, .22);
 		}
 
-		&:active { transform: scale(.97); }
+		&:active {
+			transform: scale(.97);
+		}
 
 		@media (hover: hover) and (pointer: fine) {
 			&:hover {
@@ -103,22 +105,30 @@
 			color: #fff;
 		}
 
-			svg {
-				display: block;
-				margin-right: 4px;
-				width: 16px;
-				height: 16px;
-				vertical-align: middle;
-				transition: transform .16s var(--ease-out, ease-out);
+		svg {
+			display: block;
+			margin-right: 4px;
+			width: 16px;
+			height: 16px;
+			vertical-align: middle;
+			transition: transform .16s var(--ease-out, ease-out);
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			&:hover svg {
+				transform: scale(1.08);
 			}
+		}
 
-			@media (hover: hover) and (pointer: fine) { &:hover svg { transform: scale(1.08); } }
+		@media (prefers-reduced-motion: reduce) {
 
-			@media (prefers-reduced-motion: reduce) {
-				&, svg { transition: none; }
+			&,
+			svg {
+				transition: none;
 			}
 		}
 	}
+}
 
 .content {
 	padding: 24px;
@@ -904,17 +914,85 @@
 		&._bad ._total {
 			color: rgba(239, 68, 68, 1);
 		}
+	}
+
+	&_category_expenses {
+		margin-top: 20px;
+		padding: 20px 24px;
+		border: 1px solid #e6edf4;
+		background: #fbfcfe;
+		@include collect-mw(S, (padding:16px));
+
+		&_head {
+			@include d_f(flex, space-between, flex-end);
+			gap: 16px;
+			@include collect-mw(S, (align-items:flex-start, flex-direction:column, gap:6px));
+
+			p {
+				color: #64748b;
+				font-size: 12px;
+				font-weight: 700;
+			}
+
+			h3 {
+				margin-top: 4px;
+				color: #0f172b;
+				font-size: 18px;
+			}
+
+			>span {
+				color: #8a99aa;
+				font-size: 12px;
+			}
 		}
 
-		&_category_expenses {
-			margin-top: 20px; padding: 20px 24px; border: 1px solid #e6edf4; background: #fbfcfe;
-			@include collect-mw(S, (padding:16px));
-			&_head { @include d_f(flex, space-between, flex-end); gap: 16px; @include collect-mw(S, (align-items:flex-start, flex-direction:column, gap:6px)); p { color: #64748b; font-size: 12px; font-weight: 700; } h3 { margin-top: 4px; color: #0f172b; font-size: 18px; } >span { color: #8a99aa; font-size: 12px; } }
-			&_grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; @include collect-mw(S, (grid-template-columns:repeat(1, minmax(0, 1fr)), gap:8px, margin-top:12px)); }
-			&_item { padding: 14px 16px; background: #fff; border: 1px solid #e7edf4; border-radius: 10px; span, strong { display: block; } span { color: #64748b; font-size: 13px; font-weight: 700; } strong { margin-top: 6px; color: #0f3d7a; font-size: 22px; } }
+		&_grid {
+			display: grid;
+			grid-template-columns: repeat(5, minmax(0, 1fr));
+			gap: 12px;
+			margin-top: 16px;
+			@include collect-mw(M, (grid-template-columns:repeat(2, minmax(0, 1fr))));
+			@include collect-mw(S, (grid-template-columns:repeat(1, minmax(0, 1fr)), gap:8px, margin-top:12px));
 		}
 
-		// .report_annual
+		&_item {
+			padding: 14px 16px;
+			background: #fff;
+			border: 1px solid #e7edf4;
+			border-radius: 10px;
+
+			span,
+			strong {
+				display: block;
+			}
+
+			span {
+				color: #64748b;
+				font-size: 13px;
+				font-weight: 700;
+			}
+
+			strong {
+				margin-top: 6px;
+				color: #0f3d7a;
+				font-size: 22px;
+			}
+
+			&.is-investment-expense strong {
+				color: rgb(231, 0, 15);
+			}
+
+			&.is-investment-profit strong {
+				color: rgb(0, 151, 114);
+			}
+		}
+
+		&.report_annual_category_expenses {
+			margin-top: 24px;
+		}
+	}
+
+	// .report_annual
 	&_annual {
 		margin-top: 32px;
 
