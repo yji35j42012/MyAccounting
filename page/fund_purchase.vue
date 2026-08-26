@@ -219,7 +219,46 @@ module.exports = {
 	mounted() {
 		this.hydrateFundCaches();
 		this.refreshAllFunds(false);
-		store.dispatch('SET_LOADING_ACTION', false);
+		var get_url = url + "?func=getFund";
+		axios.get(get_url).then(res => {
+			// this.resetFundData(res.data);
+			let objData = {
+				objTitle: [],
+				objList: {},
+			}
+			var t = objData.objTitle;
+			var l = objData.objList;
+			res.data.forEach(element => {
+				var item = {
+					id: element[0],
+					date: element[1],
+					principal: element[2],
+					subscriptionNav: element[3],
+					units: element[4],
+				}
+				if (element[0] !== '') {
+					if (t.indexOf(element[8]) == -1) {
+						t.push(element[8]);
+						l[element[8]] = [item]
+					} else {
+						l[element[8]].push(item)
+					}
+				}
+			});
+			l['taiwanDaba'] = [
+				{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units: "" },
+				{ id: '3', date: '2026.08.11', principal: 10000, subscriptionNav: 313.43, units: 31.9 },
+				{ id: '4', date: '2026.08.06', principal: 3000, subscriptionNav: 311.29, units: 9.7 },
+				{ id: '5', date: '2026.07.31', principal: 3000, subscriptionNav: 268.54, units: 11.2 },
+				{ id: '6', date: '2026.06.30', principal: 3000, subscriptionNav: 333.2, units: 9 },
+				{ id: '7', date: '2026.06.03', principal: 40000, subscriptionNav: 334.56, units: 119.6 },
+				{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
+				{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
+			]
+
+			store.dispatch("SET_FUND_ACTION", objData.objList);
+			store.dispatch("SET_LOADING_ACTION", false);
+		});
 	},
 	methods: {
 		selectFund(fundKey) { if (this.funds.some(fund => fund.key === fundKey)) { this.activeFundKey = fundKey; this.showOnlyIncomplete = false; this.purchaseSaveMessage = ''; } },
@@ -249,7 +288,10 @@ module.exports = {
 		formatPercent(value) { return Number.isFinite(value) ? `${ value > 0 ? '+' : '' }${ Number(value).toFixed(2) }%` : '—'; },
 		getChangeClass(value) { return value > 0 ? 'fund_positive' : value < 0 ? 'fund_negative' : 'fund_flat'; },
 		formatTaipeiDateTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
-		getFundPurchaseRecords(fundKey) { const records = this.$store?.state?.FundData?.[fundKey]; return Array.isArray(records) ? records : []; },
+		getFundPurchaseRecords(fundKey) {
+			const records = this.$store?.state?.FundData?.[fundKey];
+			return Array.isArray(records) ? records : [];
+		},
 		isIncompletePurchaseRecord(record) { const isMissingValue = value => value === '' || value === null || value === undefined || !Number.isFinite(Number(value)); return !record || isMissingValue(record.subscriptionNav) || isMissingValue(record.units); },
 		calculateRecord(record, nav) { const principal = Number(record.principal); const isIncomplete = this.isIncompletePurchaseRecord(record); const units = Number(record.units); const navValue = Number(nav); const marketValue = !isIncomplete && Number.isFinite(units) && Number.isFinite(navValue) && navValue > 0 ? units * navValue : null; const profitLoss = Number.isFinite(marketValue) ? marketValue - principal : null; const returnPct = Number.isFinite(profitLoss) && principal > 0 ? (profitLoss / principal) * 100 : null; return { ...record, isIncomplete, marketValue, profitLoss, returnPct }; },
 		sumProfitLoss(records) { return records.reduce((total, record) => total + (Number.isFinite(record.profitLoss) ? record.profitLoss : 0), 0); },

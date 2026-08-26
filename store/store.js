@@ -267,6 +267,9 @@ const store = new Vuex.Store({
 		SET_ACCDATA(state, data) {
 			state.AccData = data;
 		},
+		SET_FUNDDATA(state,data){
+			state.FundData = data;
+		}
 	},
 	actions: {
 		SET_LOADING_ACTION({ commit }, boo) {
@@ -280,6 +283,9 @@ const store = new Vuex.Store({
 		},
 		SET_ACCDATA_ACTION({ commit }, data) {
 			commit("SET_ACCDATA", data);
+		},
+		SET_FUND_ACTION({commit},data){
+			commit("SET_FUNDDATA", data);
 		}
-	}
+	},
 });
