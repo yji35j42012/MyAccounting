@@ -206,10 +206,10 @@
 
 @media (max-width: 768px) {
 	.header {
-		height: 66px; padding: 10px 14px; justify-content: space-between;
-		&_title { flex: none; &_icon { width: 34px; height: 34px; margin-right: 6px; border-radius: 10px; } &_h1 { font-size: 14px; white-space: nowrap; &::after { display: none; } } }
+		height: 66px; padding: 10px 8px; justify-content: space-between;
+		&_title { flex: none; &_icon { width: 32px; height: 32px; margin-right: 4px; border-radius: 10px; } &_h1 { font-size: 13px; white-space: nowrap; &::after { display: none; } } }
 	}
-	.nav { gap: 3px; margin-left: 8px; &_link { padding: 8px 7px; font-size: 12px; white-space: nowrap; svg { width: 13px; height: 13px; margin-right: 3px; } } }
+		.nav { gap: 0; margin-left: 2px; &_link { padding: 8px 3px; font-size: 11px; white-space: nowrap; &:focus-visible { outline-width: 2px; outline-offset: 1px; } svg { width: 12px; height: 12px; margin-right: 2px; } } }
 	.fund {
 		&_history {
 			margin-top: 14px; padding: 20px;

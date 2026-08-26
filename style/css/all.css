@@ -143,6 +143,26 @@ select {
   line-height: 14px;
   color: #45556c;
   border-radius: 12px;
+  transition: color 0.16s var(--ease-out, ease-out), background-color 0.16s var(--ease-out, ease-out), box-shadow 0.16s var(--ease-out, ease-out), transform 0.16s var(--ease-out, ease-out);
+}
+.nav_link:focus-visible {
+  outline: 3px solid #7bb4d7;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(123, 180, 215, 0.22);
+}
+.nav_link:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav_link:hover {
+    color: #0f3d7a;
+    background-color: #edf3fa;
+    transform: translateY(-1px);
+  }
+  .nav_link.router-link-active:hover, .nav_link.router-link-exact-active:hover {
+    color: #fff;
+    background-color: #1e2c42;
+  }
 }
 .nav_link.router-link-active, .nav_link.router-link-exact-active {
   background-color: #0f172b;
@@ -154,6 +174,17 @@ select {
   width: 16px;
   height: 16px;
   vertical-align: middle;
+  transition: transform 0.16s var(--ease-out, ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav_link:hover svg {
+    transform: scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav_link, .nav_link svg {
+    transition: none;
+  }
 }
 
 .content {
@@ -790,8 +821,7 @@ select {
   border: 1px solid #e7edf4;
   border-radius: 10px;
 }
-.report_category_expenses_item span,
-.report_category_expenses_item strong {
+.report_category_expenses_item span, .report_category_expenses_item strong {
   display: block;
 }
 .report_category_expenses_item span {
@@ -2516,38 +2546,42 @@ select {
 @media (max-width: 768px) {
   .header {
     height: 66px;
-    padding: 10px 14px;
+    padding: 10px 8px;
     justify-content: space-between;
   }
   .header_title {
     flex: none;
   }
   .header_title_icon {
-    width: 34px;
-    height: 34px;
-    margin-right: 6px;
+    width: 32px;
+    height: 32px;
+    margin-right: 4px;
     border-radius: 10px;
   }
   .header_title_h1 {
-    font-size: 14px;
+    font-size: 13px;
     white-space: nowrap;
   }
   .header_title_h1::after {
     display: none;
   }
   .nav {
-    gap: 3px;
-    margin-left: 8px;
+    gap: 0;
+    margin-left: 2px;
   }
   .nav_link {
-    padding: 8px 7px;
-    font-size: 12px;
+    padding: 8px 3px;
+    font-size: 11px;
     white-space: nowrap;
   }
+  .nav_link:focus-visible {
+    outline-width: 2px;
+    outline-offset: 1px;
+  }
   .nav_link svg {
-    width: 13px;
-    height: 13px;
-    margin-right: 3px;
+    width: 12px;
+    height: 12px;
+    margin-right: 2px;
   }
   .fund_history {
     margin-top: 14px;

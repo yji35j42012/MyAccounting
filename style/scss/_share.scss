@@ -34,6 +34,7 @@
 			height: 40px;
 			margin-right: 10px;
 			--tw-gradient-to: var(--color-blue-600);
+			// background-image: linear-gradient(to bottom right in oklab, #000 0%, #0000 100%);
 			background-image: linear-gradient(to bottom right in oklab,
 					oklch(20.8% .042 265.755) 0%,
 					oklch(54.6% .245 262.881) 100%);
@@ -72,6 +73,29 @@
 		line-height: 14px;
 		color: #45556c;
 		border-radius: 12px;
+		transition: color .16s var(--ease-out, ease-out), background-color .16s var(--ease-out, ease-out), box-shadow .16s var(--ease-out, ease-out), transform .16s var(--ease-out, ease-out);
+
+		&:focus-visible {
+			outline: 3px solid #7bb4d7;
+			outline-offset: 2px;
+			box-shadow: 0 0 0 5px rgba(123, 180, 215, .22);
+		}
+
+		&:active { transform: scale(.97); }
+
+		@media (hover: hover) and (pointer: fine) {
+			&:hover {
+				color: #0f3d7a;
+				background-color: #edf3fa;
+				transform: translateY(-1px);
+			}
+
+			&.router-link-active:hover,
+			&.router-link-exact-active:hover {
+				color: #fff;
+				background-color: #1e2c42;
+			}
+		}
 
 		&.router-link-active,
 		&.router-link-exact-active {
@@ -79,15 +103,22 @@
 			color: #fff;
 		}
 
-		svg {
-			display: block;
-			margin-right: 4px;
-			width: 16px;
-			height: 16px;
-			vertical-align: middle;
+			svg {
+				display: block;
+				margin-right: 4px;
+				width: 16px;
+				height: 16px;
+				vertical-align: middle;
+				transition: transform .16s var(--ease-out, ease-out);
+			}
+
+			@media (hover: hover) and (pointer: fine) { &:hover svg { transform: scale(1.08); } }
+
+			@media (prefers-reduced-motion: reduce) {
+				&, svg { transition: none; }
+			}
 		}
 	}
-}
 
 .content {
 	padding: 24px;
@@ -132,6 +163,7 @@
 			margin-bottom: 20px;
 		}
 	}
+
 }
 
 .normal_shadow {
@@ -183,6 +215,7 @@
 	input {
 		width: 100%;
 		height: 100%;
+
 	}
 }
 
@@ -382,6 +415,7 @@
 		;
 	}
 
+
 	.type {
 		display: inline-block;
 		padding: 2px 8px;
@@ -456,6 +490,8 @@
 		padding: 24px;
 		background-color: #fff;
 		border-radius: 12px;
+
+
 	}
 
 	// .alert_title
@@ -537,6 +573,17 @@
 	}
 }
 
+
+
+
+
+
+
+
+
+
+
+
 .funcBox {
 	padding: 4px;
 }
@@ -550,6 +597,7 @@
 	}
 }
 
+
 .content {
 	overflow-x: hidden;
 	overflow-y: auto;
@@ -559,6 +607,7 @@
 
 .accounting {
 	padding: 20px;
+
 
 	// .accounting_item
 	&_item {
@@ -607,6 +656,7 @@
 			margin-top: 10px;
 			color: #707070;
 		}
+
 	}
 
 	// .accounting_group
@@ -854,72 +904,17 @@
 		&._bad ._total {
 			color: rgba(239, 68, 68, 1);
 		}
-	}
-
-	&_category_expenses {
-		margin-top: 20px;
-		padding: 20px 24px;
-		border: 1px solid #e6edf4;
-		background: #fbfcfe;
-		@include collect-mw(S, (padding:16px));
-
-		&_head {
-			@include d_f(flex, space-between, flex-end);
-			gap: 16px;
-			@include collect-mw(S, (align-items:flex-start, flex-direction:column, gap:6px));
-
-			p {
-				color: #64748b;
-				font-size: 12px;
-				font-weight: 700;
-			}
-
-			h3 {
-				margin-top: 4px;
-				color: #0f172b;
-				font-size: 18px;
-			}
-
-			>span {
-				color: #8a99aa;
-				font-size: 12px;
-			}
 		}
 
-		&_grid {
-			display: grid;
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: 12px;
-			margin-top: 16px;
-			@include collect-mw(S, (grid-template-columns:repeat(1, minmax(0, 1fr)), gap:8px, margin-top:12px));
+		&_category_expenses {
+			margin-top: 20px; padding: 20px 24px; border: 1px solid #e6edf4; background: #fbfcfe;
+			@include collect-mw(S, (padding:16px));
+			&_head { @include d_f(flex, space-between, flex-end); gap: 16px; @include collect-mw(S, (align-items:flex-start, flex-direction:column, gap:6px)); p { color: #64748b; font-size: 12px; font-weight: 700; } h3 { margin-top: 4px; color: #0f172b; font-size: 18px; } >span { color: #8a99aa; font-size: 12px; } }
+			&_grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; @include collect-mw(S, (grid-template-columns:repeat(1, minmax(0, 1fr)), gap:8px, margin-top:12px)); }
+			&_item { padding: 14px 16px; background: #fff; border: 1px solid #e7edf4; border-radius: 10px; span, strong { display: block; } span { color: #64748b; font-size: 13px; font-weight: 700; } strong { margin-top: 6px; color: #0f3d7a; font-size: 22px; } }
 		}
 
-		&_item {
-			padding: 14px 16px;
-			background: #fff;
-			border: 1px solid #e7edf4;
-			border-radius: 10px;
-
-			span,
-			strong {
-				display: block;
-			}
-
-			span {
-				color: #64748b;
-				font-size: 13px;
-				font-weight: 700;
-			}
-
-			strong {
-				margin-top: 6px;
-				color: #0f3d7a;
-				font-size: 22px;
-			}
-		}
-	}
-
-	// .report_annual
+		// .report_annual
 	&_annual {
 		margin-top: 32px;
 
@@ -1028,3 +1023,5 @@
 		}
 	}
 }
+
+@media (max-width: 768px) {}
