@@ -249,16 +249,16 @@ module.exports = {
 					}
 				}
 			});
-			l['taiwanDaba'] = [
-				{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units: "" },
-				{ id: '3', date: '2026.08.11', principal: 10000, subscriptionNav: 313.43, units: 31.9 },
-				{ id: '4', date: '2026.08.06', principal: 3000, subscriptionNav: 311.29, units: 9.7 },
-				{ id: '5', date: '2026.07.31', principal: 3000, subscriptionNav: 268.54, units: 11.2 },
-				{ id: '6', date: '2026.06.30', principal: 3000, subscriptionNav: 333.2, units: 9 },
-				{ id: '7', date: '2026.06.03', principal: 40000, subscriptionNav: 334.56, units: 119.6 },
-				{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
-				{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
-			]
+			// l['taiwanDaba'] = [
+			// 	{ id: '2', date: '2026.08.25', principal: 5000, subscriptionNav: "", units: "" },
+			// 	{ id: '3', date: '2026.08.11', principal: 10000, subscriptionNav: 313.43, units: 31.9 },
+			// 	{ id: '4', date: '2026.08.06', principal: 3000, subscriptionNav: 311.29, units: 9.7 },
+			// 	{ id: '5', date: '2026.07.31', principal: 3000, subscriptionNav: 268.54, units: 11.2 },
+			// 	{ id: '6', date: '2026.06.30', principal: 3000, subscriptionNav: 333.2, units: 9 },
+			// 	{ id: '7', date: '2026.06.03', principal: 40000, subscriptionNav: 334.56, units: 119.6 },
+			// 	{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
+			// 	{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
+			// ]
 
 			store.dispatch("SET_FUND_ACTION",[ 'all',objData.objList]);
 			store.dispatch("SET_LOADING_ACTION", false);
