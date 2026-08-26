@@ -195,7 +195,6 @@ module.exports = {
 				var filter = [];
 				// sort amount acc remark
 				rShow.forEach(item => {
-
 					if (item.accounting_date.indexOf(this.sel_type_child.filter_inp) !== -1 ||
 						item.accounting_sort.indexOf(this.sel_type_child.filter_inp) !== -1 ||
 						item.accounting_acc.indexOf(this.sel_type_child.filter_inp) !== -1 ||
