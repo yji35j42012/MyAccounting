@@ -1,0 +1,209 @@
+.auth_panel {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+// 登入頁的工作階段檢查由 AuthPanel 與 login.vue 自行處理，不應被既有頁面路由 Loading 遮罩阻斷。
+.content.login + .loading {
+	display: none;
+}
+
+.auth_panel_status,
+.auth_user_email {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	max-width: 180px;
+	padding: 7px 9px;
+	color: #334155;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.auth_logout_button,
+.auth_text_button {
+	border: 0;
+	background: transparent;
+	color: #355f97;
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.auth_logout_button {
+	padding: 7px 9px;
+	border: 1px solid #d6e1ee;
+	border-radius: 8px;
+}
+
+.auth_logout_button:disabled,
+.auth_text_button:disabled,
+.auth_primary_button:disabled {
+	cursor: not-allowed;
+	opacity: .6;
+}
+
+.auth_page {
+	display: grid;
+	min-height: calc(100vh - 120px);
+	place-items: start center;
+	padding: 44px 20px 80px;
+	background: linear-gradient(135deg, #f5f9ff 0%, #eef7f3 100%);
+}
+
+.auth_card {
+	width: min(100%, 480px);
+	padding: 34px;
+	border: 1px solid #dae4ee;
+	border-radius: 18px;
+	background: #fff;
+	box-shadow: 0 18px 42px rgba(25, 52, 85, .1);
+}
+
+.auth_eyebrow {
+	margin: 0 0 7px;
+	color: #11724d;
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+}
+
+.auth_card h2 {
+	margin: 0;
+	color: #0f2037;
+	font-size: 28px;
+}
+
+.auth_intro,
+.auth_security_note {
+	margin: 12px 0 0;
+	color: #64748b;
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+.auth_security_note {
+	padding-top: 16px;
+	border-top: 1px solid #e8eef5;
+	font-size: 12px;
+}
+
+.auth_form {
+	display: grid;
+	gap: 16px;
+	margin-top: 24px;
+}
+
+.auth_field {
+	display: grid;
+	gap: 7px;
+	color: #243b55;
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.auth_field input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 12px 13px;
+	border: 1px solid #cbd8e6;
+	border-radius: 9px;
+	background: #fff;
+	color: #152b45;
+	font: inherit;
+}
+
+.auth_field input:focus-visible,
+.auth_logout_button:focus-visible,
+.auth_text_button:focus-visible,
+.auth_primary_button:focus-visible {
+	outline: 3px solid rgba(53, 95, 151, .32);
+	outline-offset: 2px;
+}
+
+.auth_primary_button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 11px 16px;
+	border: 0;
+	border-radius: 9px;
+	background: #153d78;
+	color: #fff;
+	font: inherit;
+	font-weight: 800;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.auth_switch {
+	display: flex;
+	justify-content: center;
+	gap: 7px;
+	margin-top: 18px;
+	color: #64748b;
+	font-size: 14px;
+}
+
+.auth_notice,
+.auth_error,
+.auth_signed_in {
+	margin-top: 20px;
+	padding: 13px 14px;
+	border-radius: 10px;
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.auth_notice {
+	border: 1px solid #a9dbc7;
+	background: #edf9f3;
+	color: #116543;
+}
+
+.auth_error {
+	border: 1px solid #f0c7cd;
+	background: #fff3f4;
+	color: #a32936;
+}
+
+.auth_signed_in {
+	display: grid;
+	gap: 12px;
+	border: 1px solid #a9dbc7;
+	background: #edf9f3;
+	color: #174d39;
+}
+
+@media screen and (max-width: 768px) {
+	.auth_panel {
+		gap: 3px;
+	}
+
+	.auth_user_email {
+		display: none;
+	}
+
+	.auth_login_link {
+		font-size: 12px;
+	}
+
+	.auth_page {
+		padding: 28px 16px 56px;
+	}
+
+	.auth_card {
+		padding: 24px 20px;
+	}
+
+	.auth_card h2 {
+		font-size: 24px;
+	}
+}
