@@ -257,6 +257,12 @@ const store = new Vuex.Store({
 					units: 25.5
 				}
 			],
+		}, 
+		FundRedemptionData: {
+			taiwanTechnology: [],
+			taiwanDaba: [],
+			taiwanIntelligence: [],
+			fuhwaOmni: []
 		},
 	},
 	getters: {},
@@ -271,7 +277,7 @@ const store = new Vuex.Store({
 			if (data[0] == "all") {
 				state.FundData = data[1];
 			} else {
-				state.FundData[data[0]]=data[1][data[0]]
+				state.FundData[data[0]] = data[1][data[0]]
 			}
 			// console.log("state.FundData", state.FundData);
 
