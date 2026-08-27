@@ -94,17 +94,19 @@
 		<loading v-if="showLoading"></loading>
 		<!-- <loading ></loading> -->
 	</div>
-	<script src="./js/quote-proxy-config.js"></script>
 	<script src="./js/libs/axios.js"></script>
 	<script src="https://unpkg.com/vue@latest"></script>
 	<script src="./js/libs/vue3-sfc-loader.js"></script>
 	<script src="./js/libs/vue-router_4_3_2.js"></script>
 	<script src="./js/libs/vuex_3_0_1.js"></script>
-	<script src="./store/store.js"></script>
+	<script src="./store/store.js?v=fund-data-v1.0.4-2026.08.26"></script>
 	<script src="./js/mixinJs.js"></script>
-	<script src="./js/supabase-auth-config.js?v=supabase-auth-v1.0.3-2026.08.27"
+	<script src="./js/fund-update-timing.js"></script>
+	<script src="./js/quote-proxy-config.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" data-cashflow-supabase-client="true"></script>
+	<script src="./js/supabase-auth-config.js?v=supabase-auth-v1.0.4-2026.08.27"
 		data-cashflow-auth-config="true"></script>
-	<script src="./js/route.js"></script>
+	<script src="./js/route.js?v=fund-pages-v1.5.68-2026.08.27"></script>
 	<script src="https://unpkg.com/xml2js/dist/xml2js.min.js"></script>
 	<script>
 		const options = {
@@ -138,14 +140,18 @@
 				}
 			},
 			mounted() {
+				this.setNowPage();
 				this.authChangeHandler = (event) => {
 					this.authSession = event.detail?.session || null;
 				};
 				window.addEventListener('cashflow-auth-change', this.authChangeHandler);
-
 				const auth = window.CASHFLOW_SUPABASE_AUTH;
 				if (!auth) return;
-				auth.subscribe();
+				Promise.resolve()
+					.then(() => auth.subscribe())
+					.catch(() => {
+						this.authSession = null;
+					});
 				auth.getSession()
 					.then((session) => {
 						this.authSession = session || null;
@@ -160,6 +166,7 @@
 			watch: {
 				$route(to, from) {
 					store.dispatch("SET_LOADING_ACTION", true);
+					this.setNowPage();
 					var now = this.$route.path;
 					if (now == "/" || now == 'home') {
 						this.nowPage = "home";
@@ -178,7 +185,10 @@
 				'auth-panel': Vue.defineAsyncComponent(() => loadModule(`./components/AuthPanel.vue?v=${ AUTH_COMPONENT_VERSION }`, options)),
 			},
 			methods: {
-
+				setNowPage() {
+                    const now = this.$route.path;
+                    this.nowPage = now === "/" || now === 'home' ? "home" : now.split("/")[1];
+                },
 			}
 		});
 		app.use(router);

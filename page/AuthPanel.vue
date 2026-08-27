@@ -41,7 +41,8 @@ module.exports = {
 		async restoreSession() {
 			try {
 				const auth = window.CASHFLOW_SUPABASE_AUTH;
-				auth.subscribe();
+				if (!auth || typeof auth.subscribe !== 'function') return;
+				await auth.subscribe();
 				this.session = await auth.getSession();
 			} catch (error) {
 				console.warn('[現金流管理] 無法恢復登入工作階段。', error?.message || error);
@@ -53,7 +54,8 @@ module.exports = {
 		async signOut() {
 			this.signingOut = true;
 			try {
-				const { error } = await window.CASHFLOW_SUPABASE_AUTH.getClient().auth.signOut();
+				const client = await window.CASHFLOW_SUPABASE_AUTH.getClient();
+				const { error } = await client.auth.signOut();
 				if (error) throw error;
 				this.session = null;
 				if (this.$route.path === '/login') this.$router.replace('/');
