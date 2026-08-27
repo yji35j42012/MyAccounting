@@ -140,6 +140,12 @@
 				}
 			},
 			mounted() {
+				console.log(FUND_ANALYSIS_COMPONENT_VERSION);
+				console.log(FUND_PURCHASE_COMPONENT_VERSION);
+				console.log(REPORT_COMPONENT_VERSION);
+				console.log(AUTH_COMPONENT_VERSION);
+
+
 				this.setNowPage();
 				this.authChangeHandler = (event) => {
 					this.authSession = event.detail?.session || null;
@@ -159,6 +165,7 @@
 					.catch(() => {
 						this.authSession = null;
 					});
+
 			},
 			beforeUnmount() {
 				window.removeEventListener('cashflow-auth-change', this.authChangeHandler);
@@ -186,9 +193,9 @@
 			},
 			methods: {
 				setNowPage() {
-                    const now = this.$route.path;
-                    this.nowPage = now === "/" || now === 'home' ? "home" : now.split("/")[1];
-                },
+					const now = this.$route.path;
+					this.nowPage = now === "/" || now === 'home' ? "home" : now.split("/")[1];
+				},
 			}
 		});
 		app.use(router);
