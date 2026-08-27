@@ -260,7 +260,7 @@ module.exports = {
 			// 	{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
 			// ]
 
-			store.dispatch("SET_FUND_ACTION",[ 'all',objData.objList]);
+			store.dispatch("SET_FUND_ACTION", ['all', objData.objList]);
 			store.dispatch("SET_LOADING_ACTION", false);
 		});
 	},
@@ -342,7 +342,7 @@ module.exports = {
 						// 	{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
 						// 	{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
 						// ]
-						store.dispatch("SET_FUND_ACTION", [this.activeFundKey,objData.objList]);
+						store.dispatch("SET_FUND_ACTION", [this.activeFundKey, objData.objList]);
 						setTimeout(() => {
 							// this.clearEdit();
 							store.dispatch("SET_LOADING_ACTION", false);
@@ -396,7 +396,7 @@ module.exports = {
 						// 	{ id: '8', date: '2026.05.28', principal: 70000, subscriptionNav: 331.64, units: 211.1 },
 						// 	{ id: '9', date: '2026.05.28', principal: 33000, subscriptionNav: 336.82, units: 98 }
 						// ]
-						store.dispatch("SET_FUND_ACTION", [this.activeFundKey,objData.objList]);
+						store.dispatch("SET_FUND_ACTION", [this.activeFundKey, objData.objList]);
 						setTimeout(() => {
 							// this.clearEdit();
 							store.dispatch("SET_LOADING_ACTION", false);
