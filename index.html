@@ -132,9 +132,29 @@
 					nowPage: "",
 					loadingShow: true,
 					title: 'alex',
+					authSession: null,
 				}
 			},
-			mounted() { },
+			mounted() {
+				this.authChangeHandler = (event) => {
+					this.authSession = event.detail?.session || null;
+				};
+				window.addEventListener('cashflow-auth-change', this.authChangeHandler);
+
+				const auth = window.CASHFLOW_SUPABASE_AUTH;
+				if (!auth) return;
+				auth.subscribe();
+				auth.getSession()
+					.then((session) => {
+						this.authSession = session || null;
+					})
+					.catch(() => {
+						this.authSession = null;
+					});
+			},
+			beforeUnmount() {
+				window.removeEventListener('cashflow-auth-change', this.authChangeHandler);
+			},
 			watch: {
 				$route(to, from) {
 					store.dispatch("SET_LOADING_ACTION", true);
@@ -153,8 +173,7 @@
 			},
 			components: {
 				'loading': Vue.defineAsyncComponent(() => loadModule('./components/Loading.vue', options)),
-				// 'header-component': Vue.defineAsyncComponent(() => loadModule('./components/HeaderComponent.vue', options)),
-				// 'right-panel': Vue.defineAsyncComponent(() => loadModule('./components/RightPanel.vue', options)),
+				'auth-panel': Vue.defineAsyncComponent(() => loadModule(`./components/AuthPanel.vue?v=${ AUTH_COMPONENT_VERSION }`, options)),
 			},
 			methods: {
 
