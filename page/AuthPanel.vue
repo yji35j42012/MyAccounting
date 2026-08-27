@@ -14,15 +14,6 @@
 				{{ signingOut ? '登出中' : '登出' }}
 			</button>
 		</template>
-		<router-link v-else class="nav_link auth_login_link" to="/login">
-			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-				<path d="M10 17l5-5-5-5"></path>
-				<path d="M15 12H3"></path>
-			</svg>
-			登入
-		</router-link>
 	</div>
 </template>
 
