@@ -1,6 +1,6 @@
 const FUND_ANALYSIS_COMPONENT_VERSION = 'fund-analysis-v1.5.40-2026.08.20';
 const FUND_PURCHASE_COMPONENT_VERSION = 'fund-purchase-v1.0.11-2026.08.27';
-	const FUND_PURCHASE_DB_COMPONENT_VERSION = 'fund-purchase-db-v1.0.2-2026.08.27';
+const FUND_PURCHASE_DB_COMPONENT_VERSION = 'fund-purchase-db-v1.0.3-2026.08.27';
 const REPORT_COMPONENT_VERSION = 'report-v1.0.4-2026.08.26';
 	const AUTH_COMPONENT_VERSION = 'auth-page-v1.0.6-2026.08.27';
 
