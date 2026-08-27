@@ -107,14 +107,14 @@
 	<script src="./js/libs/vue3-sfc-loader.js"></script>
 	<script src="./js/libs/vue-router_4_3_2.js"></script>
 	<script src="./js/libs/vuex_3_0_1.js"></script>
-	<script src="./store/store.js?v=fund-data-v1.0.4-2026.08.26"></script>
+	<script src="./store/store.js?v=fund-data-v1.0.6-2026.08.27"></script>
 	<script src="./js/mixinJs.js"></script>
 	<script src="./js/fund-update-timing.js"></script>
 	<script src="./js/quote-proxy-config.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" data-cashflow-supabase-client="true"></script>
-	<script src="./js/supabase-auth-config.js?v=supabase-auth-v1.0.4-2026.08.27"
+	<script src="./js/supabase-auth-config.js?v=supabase-auth-v1.0.5-2026.08.27"
 		data-cashflow-auth-config="true"></script>
-	<script src="./js/route.js?v=fund-pages-v1.5.68-2026.08.27"></script>
+	<script src="./js/route.js?v=fund-pages-v1.5.76-2026.08.27"></script>
 	<script src="https://unpkg.com/xml2js/dist/xml2js.min.js"></script>
 	<script>
 		const options = {
@@ -148,17 +148,17 @@
 				}
 			},
 			mounted() {
-				console.log("fund_analysis.vue 版本：" + FUND_ANALYSIS_COMPONENT_VERSION);
+				console.log(FUND_ANALYSIS_COMPONENT_VERSION);
 				console.log(FUND_PURCHASE_COMPONENT_VERSION);
+				console.log(FUND_PURCHASE_DB_COMPONENT_VERSION);
 				console.log(REPORT_COMPONENT_VERSION);
-				console.log("login.vue 版本：" + AUTH_COMPONENT_VERSION);
-
-
+				console.log(AUTH_COMPONENT_VERSION);
 				this.setNowPage();
 				this.authChangeHandler = (event) => {
 					this.authSession = event.detail?.session || null;
 				};
 				window.addEventListener('cashflow-auth-change', this.authChangeHandler);
+
 				const auth = window.CASHFLOW_SUPABASE_AUTH;
 				if (!auth) return;
 				Promise.resolve()
@@ -173,7 +173,6 @@
 					.catch(() => {
 						this.authSession = null;
 					});
-
 			},
 			beforeUnmount() {
 				window.removeEventListener('cashflow-auth-change', this.authChangeHandler);

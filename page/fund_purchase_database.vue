@@ -21,7 +21,8 @@
 </template>
 
 <script>
-const FUND_PURCHASE_DB_KEYS = [
+	const FUND_PURCHASE_DATABASE_PAGE_VERSION = 'fund-purchase-db-v1.0.1-2026.08.27';
+	const FUND_PURCHASE_DB_KEYS = [
 	{ key: 'taiwanTechnology', shortName: '安聯台灣科技', name: '安聯台灣科技基金', riskLevel: 'RR5', nav: 760.91 },
 	{ key: 'taiwanDaba', shortName: '安聯台灣大壩', name: '安聯台灣大壩基金 A', riskLevel: 'RR4', nav: 313.43 },
 	{ key: 'taiwanIntelligence', shortName: '安聯台灣智慧', name: '安聯台灣智慧基金', riskLevel: 'RR4', nav: 409.63 },
@@ -29,7 +30,7 @@ const FUND_PURCHASE_DB_KEYS = [
 ];
 
 module.exports = {
-	data() { return { funds: FUND_PURCHASE_DB_KEYS.map(fund => ({ ...fund })), activeFundKey: 'taiwanTechnology', records: [], session: null, isLoading: true, isSaving: false, pageError: '', saveMessage: '', lastLoadedAt: 0, showOnlyIncomplete: false, modal: { mode: '', editingId: '', form: { date: '', principal: '', subscriptionNav: '', units: '' }, error: '' } }; },
+		data() { return { funds: FUND_PURCHASE_DB_KEYS.map(fund => ({ ...fund })), activeFundKey: 'taiwanTechnology', records: [], session: null, isLoading: true, isSaving: false, isBootstrapping: false, isDisposed: false, pageError: '', saveMessage: '', lastLoadedAt: 0, showOnlyIncomplete: false, modal: { mode: '', editingId: '', form: { date: '', principal: '', subscriptionNav: '', units: '' }, error: '' } }; },
 	computed: {
 		activeFund() { return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0]; },
 		userEmail() { return this.session?.user?.email || ''; },
@@ -39,12 +40,12 @@ module.exports = {
 		allFundsProfitLoss() { return this.funds.reduce((total, fund) => total + this.records.filter(record => record.fundKey === fund.key).reduce((sum, record) => sum + (this.calculateRecord(record, fund.nav).profitLoss || 0), 0), 0); },
 		activeFundProfitLoss() { return this.activeRecords.reduce((sum, record) => sum + (record.profitLoss || 0), 0); },
 	},
-	async mounted() { this.authChangeHandler = (event) => { this.session = event.detail?.session || null; if (this.session) this.bootstrap(); else { this.records = []; this.pageError = ''; } }; window.addEventListener('cashflow-auth-change', this.authChangeHandler); await this.bootstrap(); store.dispatch('SET_LOADING_ACTION', false); },
-	beforeUnmount() { window.removeEventListener('cashflow-auth-change', this.authChangeHandler); },
-	methods: {
-		async bootstrap() { this.isLoading = true; this.pageError = ''; try { const auth = window.CASHFLOW_SUPABASE_AUTH; if (!auth || typeof auth.getSession !== 'function' || typeof auth.getClient !== 'function') throw new Error('登入服務尚未載入，請重新整理後再試一次。'); await auth.subscribe(); this.session = await auth.getSession(); if (!this.session) return; await this.loadDatabaseRecords(); } catch (error) { this.records = []; this.pageError = this.getFriendlyError(error, '無法初始化資料庫申購紀錄。'); } finally { this.isLoading = false; } },
+		async mounted() { console.info(`[現金流管理] fund_purchase_database.vue 版本：${FUND_PURCHASE_DATABASE_PAGE_VERSION}`); this.authChangeHandler = (event) => { const nextSession = event.detail?.session || null; const eventName = event.detail?.event || ''; this.session = nextSession; if (!nextSession) { this.records = []; this.pageError = ''; return; } if (eventName === 'SIGNED_IN') this.bootstrap(); }; window.addEventListener('cashflow-auth-change', this.authChangeHandler); await this.bootstrap(); store.dispatch('SET_LOADING_ACTION', false); },
+		beforeUnmount() { this.isDisposed = true; window.removeEventListener('cashflow-auth-change', this.authChangeHandler); },
+		methods: {
+			async bootstrap() { if (this.isBootstrapping || this.isDisposed) return; this.isBootstrapping = true; this.isLoading = true; this.pageError = ''; try { const auth = window.CASHFLOW_SUPABASE_AUTH; if (!auth || typeof auth.getSession !== 'function' || typeof auth.getClient !== 'function') throw new Error('登入服務尚未載入，請重新整理後再試一次。'); await auth.subscribe(); this.session = await auth.getSession(); if (!this.session || this.isDisposed) return; await this.loadDatabaseRecords(); } catch (error) { this.records = []; this.pageError = this.getFriendlyError(error, '無法初始化資料庫申購紀錄。'); } finally { this.isBootstrapping = false; this.isLoading = false; } },
 		async getDbClient() { const auth = window.CASHFLOW_SUPABASE_AUTH; if (!auth || typeof auth.getClient !== 'function') throw new Error('登入服務尚未載入，請重新整理後再試一次。'); const client = await auth.getClient(); if (!client || typeof client.from !== 'function') throw new Error('資料庫用戶端尚未準備完成。'); return client; },
-		async loadDatabaseRecords() { if (!this.session) return; this.isLoading = true; this.pageError = ''; try { const client = await this.getDbClient(); const { data, error } = await client.from('fund_purchase_records').select('id, fund_key, purchase_date, principal, subscription_nav, units, created_at, updated_at').order('purchase_date', { ascending: false }).order('created_at', { ascending: false }); if (error) throw error; this.records = Array.isArray(data) ? data.map(row => this.mapDatabaseRecord(row)).filter(Boolean) : []; this.lastLoadedAt = Date.now(); } catch (error) { this.pageError = this.getFriendlyError(error, '讀取資料庫申購紀錄失敗。'); } finally { this.isLoading = false; } },
+			async loadDatabaseRecords() { if (!this.session || this.isDisposed) return; const sessionUserId = this.session.user?.id || ''; this.isLoading = true; this.pageError = ''; try { const client = await this.getDbClient(); const { data, error } = await client.from('fund_purchase_records').select('id, fund_key, purchase_date, principal, subscription_nav, units, created_at, updated_at').order('purchase_date', { ascending: false }).order('created_at', { ascending: false }); if (error) throw error; if (this.isDisposed || !this.session || this.session.user?.id !== sessionUserId) return; this.records = Array.isArray(data) ? data.map(row => this.mapDatabaseRecord(row)).filter(Boolean) : []; this.lastLoadedAt = Date.now(); } catch (error) { this.pageError = this.getFriendlyError(error, '讀取資料庫申購紀錄失敗。'); } finally { this.isLoading = false; } },
 		selectFund(fundKey) { if (this.funds.some(fund => fund.key === fundKey)) { this.activeFundKey = fundKey; this.showOnlyIncomplete = false; this.saveMessage = ''; } },
 		getTodayInputDate() { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); },
 		openModal(mode, record = null) { const current = record || {}; this.saveMessage = ''; this.modal = { mode, editingId: current.id || '', form: { date: current.date ? this.normalizeDate(current.date) : this.getTodayInputDate(), principal: current.principal ?? '', subscriptionNav: current.subscriptionNav ?? '', units: current.units ?? '' }, error: '' }; },

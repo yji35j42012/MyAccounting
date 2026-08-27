@@ -46,8 +46,8 @@
 </template>
 
 <script>
-const AUTH_PAGE_VERSION = 'auth-page-v1.0.5-2026.08.27';
-const AUTH_CONFIG_VERSION = 'supabase-auth-v1.0.4-2026.08.27';
+	const AUTH_PAGE_VERSION = 'auth-page-v1.0.6-2026.08.27';
+	const AUTH_CONFIG_VERSION = 'supabase-auth-v1.0.5-2026.08.27';
 const AUTH_CONFIG_URL = `./js/supabase-auth-config.js?v=${AUTH_CONFIG_VERSION}`;
 
 module.exports = {

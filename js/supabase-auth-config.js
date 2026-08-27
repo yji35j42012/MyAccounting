@@ -1,7 +1,7 @@
 (function registerCashflowSupabaseAuth() {
 	'use strict';
 
-	const SUPABASE_AUTH_VERSION = 'supabase-auth-v1.0.4-2026.08.27';
+		const SUPABASE_AUTH_VERSION = 'supabase-auth-v1.0.5-2026.08.27';
 	const SUPABASE_CDN_URLS = Object.freeze([
 		'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
 		'https://unpkg.com/@supabase/supabase-js@2',
@@ -111,7 +111,8 @@
 		const supabaseClient = await requireClient();
 		const { data, error } = await supabaseClient.auth.getSession();
 		if (error) throw error;
-		emitAuthChange('INITIAL_SESSION', data.session);
+		// onAuthStateChange 是唯一的跨元件驗證狀態事件來源。若 getSession()
+		// 也派發事件，資料庫頁在事件處理中再次讀取 session 時會形成重複初始化迴圈。
 		return data.session;
 	}
 
