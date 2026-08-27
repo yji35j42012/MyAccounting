@@ -62,7 +62,6 @@
 					</svg>
 					基金分析
 				</router-link>
-				</router-link>
 				<router-link class="nav_link" to="/fund-purchase">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -73,6 +72,15 @@
 						<path d="M8 16h5"></path>
 					</svg>
 					申購紀錄
+				</router-link>
+				<router-link class="nav_link" to="/fund-purchase-db">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+						aria-hidden="true">
+						<path d="M4 4h16v16H4z"></path>
+						<path d="M8 8h8M8 12h8M8 16h4"></path>
+					</svg>
+					申購紀錄（資料庫）
 				</router-link>
 				<router-link v-if="!authSession" class="nav_link auth_login_link" to="/login">
 					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -143,7 +151,7 @@
 				console.log("fund_analysis.vue 版本：" + FUND_ANALYSIS_COMPONENT_VERSION);
 				console.log(FUND_PURCHASE_COMPONENT_VERSION);
 				console.log(REPORT_COMPONENT_VERSION);
-				console.log("login.vue 版本："+AUTH_COMPONENT_VERSION);
+				console.log("login.vue 版本：" + AUTH_COMPONENT_VERSION);
 
 
 				this.setNowPage();
