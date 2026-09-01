@@ -139,7 +139,6 @@
 		});
 		unsubscribe = data.subscription.unsubscribe;
 	}
-
 	window.CASHFLOW_SUPABASE_AUTH = Object.freeze({
 		version: SUPABASE_AUTH_VERSION,
 		config,
