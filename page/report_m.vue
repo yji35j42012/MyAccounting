@@ -50,7 +50,7 @@
 				<div class="report_category_expenses_grid">
 					<div v-for="item in monthlyCategoryExpenses" :key="item.category"
 						:class="['report_category_expenses_item', item.tone]"><span>{{ item.category
-							}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
+						}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
 				</div>
 			</section>
 		</section>
@@ -82,7 +82,7 @@
 				<div :class="['report_item', showAnnualAccounting.total < 0 ? '_bad' : '_good']">
 					<div class="report_item_title">全年淨現金流</div>
 					<div class="report_item_amount _total" data-btxt="全年收入－支出">${{
-				formatAmount(showAnnualAccounting.total) }}</div>
+						formatAmount(showAnnualAccounting.total) }}</div>
 				</div>
 			</div>
 
@@ -96,7 +96,7 @@
 				<div class="report_category_expenses_grid">
 					<div v-for="item in annualCategoryExpenses" :key="item.category"
 						:class="['report_category_expenses_item', item.tone]"><span>{{ item.category
-							}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
+						}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
 				</div>
 			</section>
 
@@ -116,7 +116,7 @@
 							<td class="report_annual_income">${{ formatAmount(item.month_in) }}</td>
 							<td class="report_annual_expense">${{ formatAmount(item.month_out) }}</td>
 							<td :class="item.total < 0 ? 'report_annual_expense' : 'report_annual_income'">${{
-				formatAmount(item.total) }}</td>
+								formatAmount(item.total) }}</td>
 						</tr>
 					</tbody>
 				</table>

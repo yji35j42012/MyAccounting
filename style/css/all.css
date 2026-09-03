@@ -1618,7 +1618,9 @@ select {
   border: 1px solid #e5edf5;
   border-radius: 7px;
 }
-.fund_batch_nav_row strong, .fund_batch_nav_row span, .fund_batch_nav_row small {
+.fund_batch_nav_row strong,
+.fund_batch_nav_row span,
+.fund_batch_nav_row small {
   display: block;
 }
 .fund_batch_nav_row strong {
@@ -1712,10 +1714,14 @@ select {
   gap: 18px;
   margin-top: 20px;
 }
+.fund_summary .normal_shadow + .normal_shadow {
+  margin-top: 0;
+}
 .fund_summary_card {
   min-height: 132px;
 }
-.fund_summary_card span, .fund_summary_card small {
+.fund_summary_card span,
+.fund_summary_card small {
   display: block;
 }
 .fund_summary_card span {
@@ -1772,7 +1778,8 @@ select {
 .fund_history_metrics > div + div {
   border-left: 1px solid #e6edf4;
 }
-.fund_history_metrics span, .fund_history_metrics small {
+.fund_history_metrics span,
+.fund_history_metrics small {
   display: block;
   color: #697c94;
   font-size: 11px;
@@ -1933,7 +1940,8 @@ select {
   border: 1px solid #e4edf5;
   border-radius: 10px;
 }
-.fund_holdings_signal span, .fund_holdings_signal small {
+.fund_holdings_signal span,
+.fund_holdings_signal small {
   display: block;
 }
 .fund_holdings_signal span {
@@ -2146,7 +2154,8 @@ select {
 .fund_price {
   min-width: 154px;
 }
-.fund_price strong, .fund_price small {
+.fund_price strong,
+.fund_price small {
   display: block;
 }
 .fund_price strong {
@@ -2186,7 +2195,8 @@ select {
 .fund_change {
   min-width: 124px;
 }
-.fund_change strong, .fund_change small {
+.fund_change strong,
+.fund_change small {
   display: block;
 }
 .fund_change small {
@@ -2268,6 +2278,9 @@ select {
   padding-bottom: 40px;
   color: #0f172b;
 }
+.fund_purchase_page .normal_shadow + .normal_shadow {
+  margin-top: 0;
+}
 .fund_purchase_page_selector {
   margin-bottom: 20px;
 }
@@ -2336,7 +2349,7 @@ select {
 }
 .fund_purchase_page_totals {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   margin-bottom: 18px;
 }
@@ -2344,7 +2357,9 @@ select {
   min-width: 0;
   border-top: 3px solid #155c47;
 }
-.fund_purchase_page_total span, .fund_purchase_page_total strong, .fund_purchase_page_total small {
+.fund_purchase_page_total span,
+.fund_purchase_page_total strong,
+.fund_purchase_page_total small {
   display: block;
 }
 .fund_purchase_page_total span {
@@ -2484,7 +2499,8 @@ select {
 .fund_purchase_page_redemption_intro > div {
   min-width: 0;
 }
-.fund_purchase_page_redemption_intro strong, .fund_purchase_page_redemption_intro span {
+.fund_purchase_page_redemption_intro strong,
+.fund_purchase_page_redemption_intro span {
   display: block;
 }
 .fund_purchase_page_redemption_intro strong {
@@ -2543,7 +2559,9 @@ select {
   border: 1px solid #e1ece5;
   border-radius: 10px;
 }
-.fund_purchase_page_inventory_grid span, .fund_purchase_page_inventory_grid strong, .fund_purchase_page_inventory_grid small {
+.fund_purchase_page_inventory_grid span,
+.fund_purchase_page_inventory_grid strong,
+.fund_purchase_page_inventory_grid small {
   display: block;
 }
 .fund_purchase_page_inventory_grid span {
@@ -2616,10 +2634,13 @@ select {
   border: 1px solid #e5edf5;
   border-radius: 8px;
 }
-.fund_purchase_page_nav span, .fund_purchase_page_nav strong, .fund_purchase_page_nav small {
+.fund_purchase_page_nav span,
+.fund_purchase_page_nav strong,
+.fund_purchase_page_nav small {
   display: block;
 }
-.fund_purchase_page_nav span, .fund_purchase_page_nav small {
+.fund_purchase_page_nav span,
+.fund_purchase_page_nav small {
   color: #71839a;
   font-size: 11px;
 }
@@ -2630,6 +2651,7 @@ select {
 }
 .fund_purchase_page_table_box {
   overflow-x: auto;
+  padding-top: 20px;
 }
 .fund_purchase_page_table {
   width: 100%;
@@ -3043,7 +3065,9 @@ select {
     flex: none;
     text-align: right;
   }
-  .fund_mobile_change strong, .fund_mobile_change small, .fund_mobile_price strong, .fund_mobile_price small {
+  .fund_mobile_change strong,
+  .fund_mobile_change small, .fund_mobile_price strong,
+  .fund_mobile_price small {
     display: block;
   }
   .fund_mobile_change strong, .fund_mobile_price strong {

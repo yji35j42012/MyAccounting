@@ -1,19 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 	<title>Alex</title>
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
-	<link rel="stylesheet" href="./style/css/all.css">
-
+	<link rel="stylesheet" href="./style/css/all.css" />
 </head>
 
 <body>
 	<div id="app" class="wrap">
-		<div class="header">
+		<div class="header">			
 			<div class="header_title">
 				<div class="header_title_icon">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -119,23 +118,26 @@
 	<script>
 		const options = {
 			moduleCache: {
-				vue: Vue
+				vue: Vue,
 			},
 			async getFile(url) {
 				const res = await fetch(url);
 				if (!res.ok)
-					throw Object.assign(new Error(res.statusText + ' ' + url), { res });
+					throw Object.assign(new Error(res.statusText + " " + url), { res });
 				return {
-					getContentData: asBinary => asBinary ? res.arrayBuffer() : res.text(),
-				}
+					getContentData: (asBinary) =>
+						asBinary ? res.arrayBuffer() : res.text(),
+				};
 			},
 			addStyle(textContent) {
-				const style = Object.assign(document.createElement('style'), { textContent });
-				const ref = document.head.getElementsByTagName('style')[0] || null;
+				const style = Object.assign(document.createElement("style"), {
+					textContent,
+				});
+				const ref = document.head.getElementsByTagName("style")[0] || null;
 				document.head.insertBefore(style, ref);
 			},
-		}
-		const { loadModule } = window['vue3-sfc-loader'];
+		};
+		const { loadModule } = window["vue3-sfc-loader"];
 
 		const app = Vue.createApp({
 			// mixins: [url],
@@ -143,9 +145,9 @@
 				return {
 					nowPage: "",
 					loadingShow: true,
-					title: 'alex',
+					title: "alex",
 					authSession: null,
-				}
+				};
 			},
 			mounted() {
 				// console.log(FUND_ANALYSIS_COMPONENT_VERSION);
@@ -157,7 +159,10 @@
 				this.authChangeHandler = (event) => {
 					this.authSession = event.detail?.session || null;
 				};
-				window.addEventListener('cashflow-auth-change', this.authChangeHandler);
+				window.addEventListener(
+					"cashflow-auth-change",
+					this.authChangeHandler,
+				);
 
 				const auth = window.CASHFLOW_SUPABASE_AUTH;
 				if (!auth) return;
@@ -166,24 +171,27 @@
 					.catch(() => {
 						this.authSession = null;
 					});
-				auth.getSession()
+				auth
+					.getSession()
 					.then((session) => {
 						this.authSession = session || null;
 					})
 					.catch(() => {
 						this.authSession = null;
 					});
-
 			},
 			beforeUnmount() {
-				window.removeEventListener('cashflow-auth-change', this.authChangeHandler);
+				window.removeEventListener(
+					"cashflow-auth-change",
+					this.authChangeHandler,
+				);
 			},
 			watch: {
 				$route(to, from) {
 					store.dispatch("SET_LOADING_ACTION", true);
 					this.setNowPage();
 					var now = this.$route.path;
-					if (now == "/" || now == 'home') {
+					if (now == "/" || now == "home") {
 						this.nowPage = "home";
 					} else {
 						this.nowPage = now.split("/")[1];
@@ -193,27 +201,31 @@
 			computed: {
 				showLoading() {
 					return this.$store.state.showLoading;
-				}
+				},
 			},
 			components: {
-				'loading': Vue.defineAsyncComponent(() => loadModule('./components/Loading.vue', options)),
-				'auth-panel': Vue.defineAsyncComponent(() => loadModule(`./components/AuthPanel.vue?v=${ AUTH_COMPONENT_VERSION }`, options)),
+				loading: Vue.defineAsyncComponent(() =>
+					loadModule("./components/Loading.vue", options),
+				),
+				"auth-panel": Vue.defineAsyncComponent(() =>
+					loadModule(
+						`./components/AuthPanel.vue?v=${AUTH_COMPONENT_VERSION}`,
+						options,
+					),
+				),
 			},
 			methods: {
 				setNowPage() {
 					const now = this.$route.path;
-					this.nowPage = now === "/" || now === 'home' ? "home" : now.split("/")[1];
+					this.nowPage =
+						now === "/" || now === "home" ? "home" : now.split("/")[1];
 				},
-			}
+			},
 		});
 		app.use(router);
 		app.use(store);
-		app.mount('#app');
-
-
-
+		app.mount("#app");
 	</script>
-
 </body>
 
 </html>
