@@ -37,6 +37,10 @@ const routes = [
 		path: '/fund-purchase-db',
 		component: () => loadModule(`./page/fund_purchase_database.vue?v=${FUND_PURCHASE_DB_COMPONENT_VERSION}`, options),
 	},
+	{
+		path: '/todo',
+		component: () => loadModule(`./page/todo.vue`, options),
+	},
 ];
 const router = VueRouter.createRouter({
 	history: VueRouter.createWebHistory('#'),
