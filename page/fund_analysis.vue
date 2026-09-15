@@ -244,7 +244,7 @@
 					</div>
 					<div class="fund_mobile_holding_detail">
 						<div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price)
-								}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
+						}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
