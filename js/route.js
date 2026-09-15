@@ -7,7 +7,7 @@ const REPORT_COMPONENT_VERSION = 'report-v1.0.4-2026.08.26';
 const routes = [
 	{
 		path: '/',
-		component: () => loadModule('./page/accounting.vue', options),
+		component: () => loadModule('./page/fund_analysis.vue', options),
 	},
 	{
 		path: '/acc',

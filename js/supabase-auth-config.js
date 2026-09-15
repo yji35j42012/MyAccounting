@@ -148,5 +148,5 @@
 		completeEmailCallback,
 		subscribe,
 	});
-	console.info(`[現金流管理] Supabase Auth 版本：${SUPABASE_AUTH_VERSION}`);
+	// console.info(`[現金流管理] Supabase Auth 版本：${SUPABASE_AUTH_VERSION}`);
 })();

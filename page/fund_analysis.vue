@@ -265,7 +265,7 @@
 </template>
 
 <script>
-const FUND_ANALYSIS_VERSION = 'fund-analysis-v1.5.40-2026.08.20';
+const FUND_ANALYSIS_VERSION = 'fund-analysis-v-2026.09.15-1';
 const YAHOO_MARKET_TIME_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
 const YAHOO_MARKET_TIME_MAX_FUTURE_MS = 5 * 60 * 1000;
 const HOLDING_SYMBOLS = {
@@ -426,13 +426,35 @@ module.exports = {
 		};
 	},
 	computed: {
-		activeFund() { return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0]; },
-		activeQuote() { return this.quotesByFund[this.activeFundKey]; },
+		// 取得目前選取的基金
+		activeFund() {
+			return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0];
+		},
+		// 取得目前基金的報價狀態
+		activeQuote() {
+			return this.quotesByFund[this.activeFundKey];
+		},
+		// 最新淨值狀態
 		activeNav() { return this.navsByFund[this.activeFundKey]; },
+		// 歷史淨值狀態
 		activeHistory() { return this.historiesByFund[this.activeFundKey]; },
+		// 公開持股狀態
 		activeHoldings() { return this.holdingsByFund[this.activeFundKey]; },
-		activeFullRefresh() { return this.fullRefreshByFund[this.activeFundKey] || { isRefreshing: false, isError: false, message: '' }; },
-		batchNavRows() { return this.funds.map(fund => ({ key: fund.key, name: fund.shortName, nav: fund.nav, navChangePct: fund.navChangePct, navDate: fund.navDate || '尚未取得', isStale: !this.isNavDataDateToday(fund.navDate), updatedTime: this.formatUpdateHourMinute(this.navsByFund[fund.key]?.navUpdatedAt) })); },
+		// 取得目前基金的完整重整狀態
+		activeFullRefresh() {
+			return this.fullRefreshByFund[this.activeFundKey] || { isRefreshing: false, isError: false, message: '' };
+		},
+		// 四檔基金摘要列
+		batchNavRows() {
+			return this.funds.map(fund => ({
+				key: fund.key,
+				name: fund.shortName,
+				nav: fund.nav,
+				navChangePct: fund.navChangePct,
+				navDate: fund.navDate || '尚未取得', isStale: !this.isNavDataDateToday(fund.navDate),
+				updatedTime: this.formatUpdateHourMinute(this.navsByFund[fund.key]?.navUpdatedAt)
+			}));
+		},
 		recentNavs() { return this.activeFund.historyNav.slice(-5).reverse(); },
 		holdingsWeightedChangePct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); const hasLoadedYahooQuotes = ['local', 'remote'].includes(this.activeQuote?.cacheMode) && this.activeQuote?.quotedCount > 0; if (hasLoadedYahooQuotes && Number.isFinite(liveCalculation.weightedChangePct)) return liveCalculation.weightedChangePct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.weightedChangePct)) return cachedSignal.weightedChangePct; return liveCalculation.weightedChangePct; },
 		holdingsFundContributionPct() { const liveCalculation = this.calculateHoldingsWeightedChange(this.activeFund.holdings); const hasLoadedYahooQuotes = ['local', 'remote'].includes(this.activeQuote?.cacheMode) && this.activeQuote?.quotedCount > 0; if (hasLoadedYahooQuotes && Number.isFinite(liveCalculation.fundContributionPct)) return liveCalculation.fundContributionPct; const cachedSignal = this.holdingsSignalsByFund?.[this.activeFundKey]; if (Number.isFinite(cachedSignal?.fundContributionPct)) return cachedSignal.fundContributionPct; return liveCalculation.fundContributionPct; },
@@ -583,6 +605,8 @@ module.exports = {
 		maybeAutoRefreshYahooQuotes() { if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
+			console.log('fundKey',fundKey);
+			
 			const workerBaseUrl = this.getWorkerBaseUrl();
 			if (workerBaseUrl) {
 				const endpoint = new URL(`${workerBaseUrl}/quotes`);
@@ -704,7 +728,10 @@ module.exports = {
 		normalizeFundDate(value) { return this.getTiming()?.normalizeFundDate(value) || ''; },
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
-	mounted() { console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); this.hydrateHoldingsCache(this.activeFundKey); this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
+	mounted() { 
+		console.info(`[現金流管理] fund_analysis.vue 版本：${FUND_ANALYSIS_VERSION}`); 
+		this.hydrateHoldingsCache(this.activeFundKey); 
+		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false); },
 	beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); if (this.navSuccessToastTimer) window.clearTimeout(this.navSuccessToastTimer); }
 };
 </script>
