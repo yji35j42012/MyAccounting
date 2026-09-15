@@ -211,8 +211,9 @@
 							</td>
 							<td class="fund_change">
 								<strong :class="['fund_today_change', getChangeClass(item.changePct)]">
-									<span>{{ isYahooQuoteVerified(item, activeQuote.savedAt) ?
-										formatPercent(item.changePct) : '待確認' }}
+									<span>
+										{{ isYahooQuoteVerified(item, activeQuote.savedAt) ?
+											formatPercent(item.changePct) : '待確認' }}
 									</span><em v-if="isFlatQuote(item, activeQuote.savedAt)"
 										class="fund_flat_badge">平盤</em></strong><small
 									v-if="isYahooQuoteVerified(item, activeQuote.savedAt)"
@@ -288,6 +289,8 @@ const HOLDING_SYMBOLS = {
 	'台達電': '2308.TW',
 	'智邦': '2345.TW', '華邦電子': '2344.TW', '華邦電': '2344.TW', '南亞科': '2408.TW', '景碩科技': '3189.TW', '景碩': '3189.TW', '聯發科': '2454.TW',
 	'健策': '3653.TW',
+	'金像電': '2368.TW',
+	'金像電股份有限公司': '2368.TW',
 
 };
 
@@ -465,8 +468,18 @@ module.exports = {
 		quoteCacheIncomplete() { return this.activeQuote?.cacheMode === 'local' && this.quoteCacheCoverage.quotedCount < this.quoteCacheCoverage.expectedCount; },
 		quoteCacheIncompleteMessage() { const coverage = this.quoteCacheCoverage; return `本機報價快取不完整（${coverage.quotedCount}/${coverage.expectedCount} 檔）；請按「更新股價」補齊目前持股報價。`; },
 		quoteMissingHoldings() { return this.activeFund.holdings.filter(holding => !holding?.symbol || !Number.isFinite(holding?.price) || !Number.isFinite(holding?.previousClose) || Number(holding.previousClose) <= 0).map(holding => ({ name: holding.name, reason: holding?.symbol ? '尚無法取得 Yahoo 報價' : '尚未確認 Yahoo 代號' })); },
-		quoteUnverifiedHoldings() { return this.activeFund.holdings.filter(holding => !holding?.symbol || !this.isYahooQuoteVerified(holding, this.activeQuote?.savedAt)).map(holding => ({ name: holding.name, reason: holding?.symbol ? (holding.quoteValidation || '尚無法取得已驗證 Yahoo 報價') : '尚未確認 Yahoo 代號' })); },
-		quoteStatus() { if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價'; if (this.activeQuote.quoteError) return this.activeQuote.quoteError; if (this.activeQuote.cacheMode === 'cleared') return '已清除本機持股與報價快取；請更新持股或股價'; if (this.activeQuote.cacheMode === 'local') return `已由本機報價快取載入：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; if (this.activeQuote.cacheMode === 'remote') return `Yahoo 報價已更新並儲存：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`; return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價'; },
+		quoteUnverifiedHoldings() {
+			return this.activeFund.holdings.filter(holding => !holding?.symbol ||
+				!this.isYahooQuoteVerified(holding, this.activeQuote?.savedAt)).map(holding => ({ name: holding.name, reason: holding?.symbol ? (holding.quoteValidation || '尚無法取得已驗證 Yahoo 報價') : '尚未確認 Yahoo 代號' }));
+		},
+		quoteStatus() {
+			if (this.activeQuote.isRefreshing) return '正在向 Yahoo 股市更新報價';
+			if (this.activeQuote.quoteError) return this.activeQuote.quoteError;
+			if (this.activeQuote.cacheMode === 'cleared') return '已清除本機持股與報價快取；請更新持股或股價';
+			if (this.activeQuote.cacheMode === 'local') return `已由本機報價快取載入：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`;
+			if (this.activeQuote.cacheMode === 'remote') return `Yahoo 報價已更新並儲存：${this.activeQuote.quoteUpdatedAt}（${this.activeQuote.quotedCount} 檔）`;
+			return this.isQuoteAutoWindow() ? '平日 09:00–14:00 每 5 分鐘自動更新' : '非自動更新時段；可手動更新 Yahoo 股價';
+		},
 		navStatus() { if (this.activeNav.isRefreshing) return '正在取得最新官方淨值'; if (this.activeNav.navError) return this.activeNav.navUpdatedAt ? `${this.activeNav.navError} 前次成功更新：${this.activeNav.navUpdatedAt}` : this.activeNav.navError; if (this.activeNav.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeNav.cacheMode === 'local') return `已由本機快取載入：${this.activeNav.navUpdatedAt}`; return this.activeNav.navUpdatedAt ? `官方淨值已更新：${this.activeNav.navUpdatedAt}` : '資料快取失效時才取得最新官方淨值'; },
 		historyStatus() { if (this.activeHistory.isRefreshing) return '正在更新最近五筆公開淨值'; if (this.activeHistory.historyError) return this.activeHistory.historyUpdatedAt ? `${this.activeHistory.historyError} 前次成功更新：${this.activeHistory.historyUpdatedAt}` : this.activeHistory.historyError; if (this.activeHistory.cacheMode === 'cleared') return this.cacheClearNotice; if (this.activeHistory.cacheMode === 'local') return `已由本機快取載入：${this.activeHistory.historyUpdatedAt}`; return this.activeHistory.historyUpdatedAt ? `最近五筆已更新：${this.activeHistory.historyUpdatedAt}` : '資料快取失效時才更新最近五筆'; },
 		holdingsStatus() { if (this.activeHoldings.isRefreshing) return '正在檢查官方公開持股'; if (this.activeHoldings.holdingsError) return this.activeHoldings.holdingsUpdatedAt ? `${this.activeHoldings.holdingsError} 前次成功更新：${this.activeHoldings.holdingsUpdatedAt}` : this.activeHoldings.holdingsError; if (this.activeHoldings.cacheMode === 'cleared') return '已清除本機持股快取；請更新持股取得最新資料'; if (this.activeHoldings.cacheMode === 'local') return `已由本機持股快取載入：${this.activeHoldings.holdingsUpdatedAt}`; return this.activeHoldings.holdingsUpdatedAt ? `官方公開持股已更新：${this.activeHoldings.holdingsUpdatedAt}` : '進入頁面時檢查；成功後每日檢查一次'; },
