@@ -494,8 +494,6 @@ module.exports = {
 		isExpectedFundDate(value) { return Boolean(this.getTiming()?.isExpectedFundNavDate(value, Date.now())); },
 		getFundStorageKey(type, fundKey) {
 			const version = type === 'quotes' ? 'v2' : type === 'holdings-signal' ? 'v3' : 'v1';
-			console.log('aaaaaa', `cashflow-manager:fund-${type}:${version}:${fundKey}`);
-
 			return `cashflow-manager:fund-${type}:${version}:${fundKey}`;
 		},
 		readFundStorage(type, fundKey) { try { const value = localStorage.getItem(this.getFundStorageKey(type, fundKey)); const snapshot = value ? JSON.parse(value) : null; return snapshot?.fundKey === fundKey ? snapshot : null; } catch { return null; } },
