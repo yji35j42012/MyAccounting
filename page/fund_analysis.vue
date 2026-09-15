@@ -617,17 +617,14 @@ module.exports = {
 		maybeAutoRefreshYahooQuotes() { if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
-			console.log('fundKey', fundKey);
 			const workerBaseUrl = this.getWorkerBaseUrl();
 			if (workerBaseUrl) {
 				const endpoint = new URL(`${workerBaseUrl}/quotes`);
 				endpoint.searchParams.set('fund', fundKey);
-				console.log('endpoint', endpoint);
 				return { url: endpoint.toString(), isExternalProxy: true };
 			}
 			if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 報價端點');
 			const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
-			console.log('input', input);
 			return { url: `/api/trpc/market.yahooQuotes?input=${input}`, isExternalProxy: false };
 		},
 		getNavRequest(fundKey, force = false) {
@@ -742,7 +739,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.15-2`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.15-3`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
