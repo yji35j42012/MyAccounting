@@ -1,5 +1,3 @@
-<style scoped></style>
-
 <template>
 	<div class="fund">
 		<section class="fund_selector normal_shadow" aria-label="基金選擇">
@@ -245,7 +243,7 @@
 					</div>
 					<div class="fund_mobile_holding_detail">
 						<div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price)
-						}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
+								}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
@@ -658,7 +656,21 @@ module.exports = {
 		},
 		getHoldingsRequest(fundKey, force = false) { const workerBaseUrl = this.getWorkerBaseUrl(); if (workerBaseUrl) { const endpoint = new URL(`${workerBaseUrl}/holdings`); endpoint.searchParams.set('fund', fundKey); if (force) endpoint.searchParams.set('force', '1'); return { url: endpoint.toString(), isExternalProxy: true }; } if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 持股端點'); const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } })); return { url: `/api/trpc/market.publicHoldings?input=${input}`, isExternalProxy: false }; },
 		async refreshHoldings(force = false, fundKey = this.activeFundKey) { if (typeof fundKey !== 'string' || !this.holdingsByFund[fundKey]) fundKey = this.activeFundKey; const holdingsState = this.holdingsByFund[fundKey]; if (holdingsState.isRefreshing) return false; holdingsState.isRefreshing = true; holdingsState.holdingsError = ''; try { const holdingsRequest = this.getHoldingsRequest(fundKey, force); const abortController = new AbortController(); const requestTimeout = window.setTimeout(() => abortController.abort(), holdingsRequest.isExternalProxy ? 25 * 1000 : 12 * 1000); let response; try { response = await fetch(holdingsRequest.url, { cache: 'no-store', credentials: holdingsRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); } if (!response.ok) throw new Error(`官方公開持股服務回應 ${response.status}`); const payload = await response.json(); const snapshot = holdingsRequest.isExternalProxy ? payload : payload?.result?.data?.json; if (snapshot?.fundKey !== fundKey || !Array.isArray(snapshot?.holdings) || !snapshot.holdings.length || !snapshot.holdingsDate) throw new Error('官方公開持股資料不完整'); const targetFund = this.funds.find(fund => fund.key === fundKey); const previousSignature = targetFund ? targetFund.holdings.map(item => `${item.name}:${item.weight}`).join('|') : ''; if (!this.applyHoldingsSnapshot(fundKey, snapshot)) throw new Error('官方公開持股資料格式不正確'); const holdingsChanged = previousSignature !== (targetFund?.holdings || []).map(item => `${item.name}:${item.weight}`).join('|'); this.writeFundStorage('holdings', fundKey, snapshot); if (holdingsChanged) await this.refreshYahooQuotes(fundKey); return true; } catch { holdingsState.holdingsError = '官方公開持股更新失敗，已保留前次資料'; return false; } finally { holdingsState.isRefreshing = false; } },
-		selectFund(fundKey) { if (fundKey === this.activeFundKey) return; this.activeFundKey = fundKey; this.$nextTick(() => { this.hydrateHoldingsCache(fundKey); this.hydrateHoldingsSignalCache(fundKey); this.hydrateYahooQuoteCache(fundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshFundSnapshots(); }); },
+		selectFund(fundKey) {
+			if (fundKey === this.activeFundKey) return;
+			this.activeFundKey = fundKey;
+			this.$nextTick(() => {
+				console.log('從 localStorage 恢復官方持股。', this.hydrateHoldingsCache(fundKey));
+				this.hydrateHoldingsCache(fundKey);
+				console.log('恢復持股加權漲跌與估計貢獻。', this.hydrateHoldingsSignalCache(fundKey));
+				this.hydrateHoldingsSignalCache(fundKey);
+				console.log('從 localStorage 恢復股票價格。', this.hydrateHoldingsCache(fundKey));
+				this.hydrateYahooQuoteCache(fundKey);
+				this.maybeAutoRefreshYahooQuotes();
+				this.refreshFundSnapshots();
+			}
+			);
+		},
 		async refreshYahooQuotes(fundKey = this.activeFundKey) {
 			if (typeof fundKey !== 'string' || !this.quotesByFund[fundKey]) fundKey = this.activeFundKey;
 			const quoteState = this.quotesByFund[fundKey];
@@ -742,7 +754,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.15-4`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.16-1`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
