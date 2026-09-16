@@ -243,7 +243,7 @@
 					</div>
 					<div class="fund_mobile_holding_detail">
 						<div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price)
-								}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
+						}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
@@ -531,7 +531,15 @@ module.exports = {
 			const version = type === 'quotes' ? 'v2' : type === 'holdings-signal' ? 'v3' : 'v1';
 			return `cashflow-manager:fund-${type}:${version}:${fundKey}`;
 		},
-		readFundStorage(type, fundKey) { try { const value = localStorage.getItem(this.getFundStorageKey(type, fundKey)); const snapshot = value ? JSON.parse(value) : null; return snapshot?.fundKey === fundKey ? snapshot : null; } catch { return null; } },
+		readFundStorage(type, fundKey) {
+			try {				
+				const value = localStorage.getItem(this.getFundStorageKey(type, fundKey));
+				console.log('value',value);
+				const snapshot = value ? JSON.parse(value) : null;
+				return snapshot?.fundKey === fundKey ? snapshot : null;
+			}
+			catch { return null; }
+		},
 		writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch { } },
 		getHoldingsQuoteDateStatus(quoteUpdatedAt) { const quoteDate = this.normalizeFundDate(quoteUpdatedAt); const quoteTimeMatch = String(quoteUpdatedAt || '').match(/(\d{1,2}:\d{2})/); const quoteDateTime = quoteDate ? `${quoteDate}${quoteTimeMatch ? ` ${quoteTimeMatch[1]}` : ''}` : ''; return quoteDateTime ? `報價日期 ${quoteDateTime}，僅供方向觀察` : '尚無法確認報價日期'; },
 		isYahooQuoteVerified(quote, referenceTime = Date.now()) { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); const marketTimeMs = Number(quote?.marketTime) * 1000; const referenceTimeMs = Number(referenceTime); return Boolean(quote?.quoteVerified !== false && Number.isFinite(price) && price > 0 && Number.isFinite(previousClose) && previousClose > 0 && Number.isFinite(marketTimeMs) && marketTimeMs > 0 && (!Number.isFinite(referenceTimeMs) || referenceTimeMs < 1_000_000_000_000 || (marketTimeMs >= referenceTimeMs - YAHOO_MARKET_TIME_MAX_AGE_MS && marketTimeMs <= referenceTimeMs + YAHOO_MARKET_TIME_MAX_FUTURE_MS))); },
@@ -754,7 +762,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.16-1`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.16-2`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
