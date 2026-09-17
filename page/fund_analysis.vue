@@ -45,7 +45,7 @@
 					}}</span>
 
 					<strong class="fund_nav_value">{{ activeFund.nav.toFixed(2) }} <small>新臺幣</small></strong>
-					
+
 					<span class="fund_nav_date">淨值日期：{{ activeFund.navDate }}</span>
 					<span class="fund_nav_change"><strong :class="getChangeClass(activeFund.navChangePct)">{{
 						formatPercent(activeFund.navChangePct) }}</strong><small>單日漲跌幅</small></span>
@@ -187,11 +187,14 @@
 				</div>
 			</div>
 			<aside v-if="quoteUnverifiedHoldings.length" class="fund_quote_missing" role="status" aria-live="polite">
-				<strong>待補齊報價（{{ quoteUnverifiedHoldings.length }} 檔）</strong><span
-					v-for="item in quoteUnverifiedHoldings" :key="`missing-${item.name}`">{{ item.name }}<small>{{
-						item.reason }}</small></span>
+				<strong>待補齊報價（{{ quoteUnverifiedHoldings.length }} 檔）</strong>
+				<span v-for="item in quoteUnverifiedHoldings" :key="`missing-${item.name}`">
+					{{ item.name }}
+					<small>{{ item.reason }}</small>
+				</span>
 				<p>請按「更新股價」重新取得最新 Yahoo 報價。</p>
 			</aside>
+			{{ quoteUnverifiedHoldings }}
 			<div class="fund_table_box">
 				<table class="fund_table">
 					<thead>
@@ -249,7 +252,7 @@
 					</div>
 					<div class="fund_mobile_holding_detail">
 						<div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price)
-								}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
+						}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
@@ -437,7 +440,7 @@ module.exports = {
 	computed: {
 		// 取得目前選取的基金
 		activeFund() {
-			console.log('activeFund',this.funds.find(fund => fund.key === this.activeFundKey));
+			console.log('activeFund', this.funds.find(fund => fund.key === this.activeFundKey));
 			return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0];
 		},
 		// 取得目前基金的報價狀態
@@ -769,7 +772,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.16-3`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-1`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
