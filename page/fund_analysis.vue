@@ -194,7 +194,6 @@
 				</span>
 				<p>請按「更新股價」重新取得最新 Yahoo 報價。</p>
 			</aside>
-			{{ quoteUnverifiedHoldings }}
 			<div class="fund_table_box">
 				<table class="fund_table">
 					<thead>
@@ -480,6 +479,8 @@ module.exports = {
 		quoteCacheIncompleteMessage() { const coverage = this.quoteCacheCoverage; return `本機報價快取不完整（${coverage.quotedCount}/${coverage.expectedCount} 檔）；請按「更新股價」補齊目前持股報價。`; },
 		quoteMissingHoldings() { return this.activeFund.holdings.filter(holding => !holding?.symbol || !Number.isFinite(holding?.price) || !Number.isFinite(holding?.previousClose) || Number(holding.previousClose) <= 0).map(holding => ({ name: holding.name, reason: holding?.symbol ? '尚無法取得 Yahoo 報價' : '尚未確認 Yahoo 代號' })); },
 		quoteUnverifiedHoldings() {
+			console.log('this.activeFund.holdings',this.activeFund.holdings);
+			
 			return this.activeFund.holdings.filter(holding => !holding?.symbol ||
 				!this.isYahooQuoteVerified(holding, this.activeQuote?.savedAt)).map(holding => ({ name: holding.name, reason: holding?.symbol ? (holding.quoteValidation || '尚無法取得已驗證 Yahoo 報價') : '尚未確認 Yahoo 代號' }));
 		},
@@ -772,7 +773,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-1`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-2`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
