@@ -232,7 +232,7 @@
 					</tbody>
 				</table>
 			</div>
-			<div class="fund_mobile_holdings" aria-label="官方公開前十大持股">
+			<!-- <div class="fund_mobile_holdings" aria-label="官方公開前十大持股">
 				<article class="fund_mobile_holding" v-for="item in activeFund.holdings" :key="'mobile-' + item.name">
 					<div class="fund_mobile_holding_top">
 						<div class="fund_mobile_company_group"><span class="fund_rank">{{ item.rank }}</span><a
@@ -255,7 +255,7 @@
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
-			</div>
+			</div> -->
 			<p v-if="activeHoldings.sourceUrl" class="fund_holdings_source">持股來源：<a :href="activeHoldings.sourceUrl"
 					target="_blank" rel="noopener noreferrer">{{ activeHoldings.sourceName || '官方公開持股資料' }}</a>；資料更新時間
 				{{ activeHoldings.holdingsUpdatedAt || '尚未取得' }}。</p>
@@ -789,7 +789,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-2`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-3`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
