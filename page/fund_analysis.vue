@@ -251,7 +251,7 @@
 					</div>
 					<div class="fund_mobile_holding_detail">
 						<div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price)
-						}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
+								}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
@@ -509,12 +509,15 @@ module.exports = {
 			console.log('referenceTimeMs', referenceTimeMs);
 			return Boolean(quote?.quoteVerified !== false
 				&& Number.isFinite(price)
-				&& price > 0 && Number.isFinite(previousClose)
+				&& price > 0
+				&& Number.isFinite(previousClose)
 				&& previousClose > 0
 				&& Number.isFinite(marketTimeMs)
-				&& marketTimeMs > 0 && (!Number.isFinite(referenceTimeMs) || referenceTimeMs < 1_000_000_000_000 || (marketTimeMs >= referenceTimeMs - YAHOO_MARKET_TIME_MAX_AGE_MS
+				&& marketTimeMs > 0
+				&& (!Number.isFinite(referenceTimeMs) || referenceTimeMs < 1_000_000_000_000 || (marketTimeMs >= referenceTimeMs - YAHOO_MARKET_TIME_MAX_AGE_MS
 					&& marketTimeMs <= referenceTimeMs + YAHOO_MARKET_TIME_MAX_FUTURE_MS)));
 		},
+
 		formatDate(date) { return date.slice(5).replace('-', ' / '); },
 		formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
 		formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
@@ -567,7 +570,6 @@ module.exports = {
 		},
 		writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch { } },
 		getHoldingsQuoteDateStatus(quoteUpdatedAt) { const quoteDate = this.normalizeFundDate(quoteUpdatedAt); const quoteTimeMatch = String(quoteUpdatedAt || '').match(/(\d{1,2}:\d{2})/); const quoteDateTime = quoteDate ? `${quoteDate}${quoteTimeMatch ? ` ${quoteTimeMatch[1]}` : ''}` : ''; return quoteDateTime ? `報價日期 ${quoteDateTime}，僅供方向觀察` : '尚無法確認報價日期'; },
-		isYahooQuoteVerified(quote, referenceTime = Date.now()) { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); const marketTimeMs = Number(quote?.marketTime) * 1000; const referenceTimeMs = Number(referenceTime); return Boolean(quote?.quoteVerified !== false && Number.isFinite(price) && price > 0 && Number.isFinite(previousClose) && previousClose > 0 && Number.isFinite(marketTimeMs) && marketTimeMs > 0 && (!Number.isFinite(referenceTimeMs) || referenceTimeMs < 1_000_000_000_000 || (marketTimeMs >= referenceTimeMs - YAHOO_MARKET_TIME_MAX_AGE_MS && marketTimeMs <= referenceTimeMs + YAHOO_MARKET_TIME_MAX_FUTURE_MS))); },
 		getYahooQuoteUrl(holding) { const symbol = String(holding?.symbol || HOLDING_SYMBOLS[holding?.name] || '').trim().toUpperCase(); return /^\d{4}\.(?:TW|TWO)$/.test(symbol) ? `https://tw.stock.yahoo.com/quote/${encodeURIComponent(symbol)}` : ''; },
 		getQuoteCacheCoverage(fundKey = this.activeFundKey) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; if (!targetFund) return { expectedCount: 0, quotedCount: 0 }; const expectedHoldings = targetFund.holdings.filter(holding => Boolean(holding?.symbol)); const quotedCount = expectedHoldings.filter(holding => this.isYahooQuoteVerified(holding, quoteState?.savedAt)).length; return { expectedCount: expectedHoldings.length, quotedCount }; },
 		createYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const referenceTime = Number(fetchedAt) || Date.now(); if (!targetFund || !quoteState) return null; const quotes = targetFund.holdings.filter(holding => this.isYahooQuoteVerified(holding, referenceTime)).map(holding => ({ symbol: holding.symbol, price: Number(holding.price), previousClose: Number(holding.previousClose), marketTime: Number(holding.marketTime), priceChange: Number.isFinite(holding.priceChange) ? Number(holding.priceChange) : Number(holding.price) - Number(holding.previousClose), changePct: Number.isFinite(holding.changePct) ? Number(holding.changePct) : ((Number(holding.price) - Number(holding.previousClose)) / Number(holding.previousClose)) * 100 })); if (!quotes.length) return null; return { fundKey, holdingsDate: targetFund.holdingsDate, quoteUpdatedAt: quoteState.quoteUpdatedAt, quotes, fetchedAt: referenceTime }; },
@@ -787,7 +789,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-1`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-2`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
