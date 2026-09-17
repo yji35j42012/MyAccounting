@@ -500,13 +500,9 @@ module.exports = {
 	methods: {
 		isYahooQuoteVerified(quote, referenceTime = Date.now()) {
 			const price = Number(quote?.price);
-			console.log('price', quote);
 			const previousClose = Number(quote?.previousClose);
-			console.log('previousClose', previousClose);
 			const marketTimeMs = Number(quote?.marketTime) * 1000;
-			console.log('marketTimeMs', marketTimeMs);
 			const referenceTimeMs = Number(referenceTime);
-			console.log('referenceTimeMs', referenceTimeMs);
 			return Boolean(quote?.quoteVerified !== false
 				&& Number.isFinite(price)
 				&& price > 0
