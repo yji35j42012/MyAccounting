@@ -251,7 +251,7 @@
 					</div>
 					<div class="fund_mobile_holding_detail">
 						<div class="fund_mobile_price fund_mobile_price_inline"><strong>TWD {{ formatPrice(item.price)
-								}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
+						}}</strong><small class="fund_previous_close">前收盤 TWD {{ formatPrice(item.previousClose)
 								}}</small><small>比重 {{ item.weight.toFixed(2) }}%</small></div>
 					</div>
 				</article>
@@ -498,7 +498,23 @@ module.exports = {
 		holdingsTimingStatus() { if (!this.activeHoldings.fetchedAt) return '成功取得後顯示下次每日檢查時間'; return `下次每日檢查 ${this.formatTaipeiDateTime(this.activeHoldings.fetchedAt + 24 * 60 * 60 * 1000)}`; }
 	},
 	methods: {
-		isYahooQuoteVerified(quote, referenceTime = Date.now()) { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); const marketTimeMs = Number(quote?.marketTime) * 1000; const referenceTimeMs = Number(referenceTime); return Boolean(quote?.quoteVerified !== false && Number.isFinite(price) && price > 0 && Number.isFinite(previousClose) && previousClose > 0 && Number.isFinite(marketTimeMs) && marketTimeMs > 0 && (!Number.isFinite(referenceTimeMs) || referenceTimeMs < 1_000_000_000_000 || (marketTimeMs >= referenceTimeMs - YAHOO_MARKET_TIME_MAX_AGE_MS && marketTimeMs <= referenceTimeMs + YAHOO_MARKET_TIME_MAX_FUTURE_MS))); },
+		isYahooQuoteVerified(quote, referenceTime = Date.now()) {
+			const price = Number(quote?.price);
+			console.log('price', quote);
+			const previousClose = Number(quote?.previousClose);
+			console.log('previousClose', previousClose);
+			const marketTimeMs = Number(quote?.marketTime) * 1000;
+			console.log('marketTimeMs', marketTimeMs);
+			const referenceTimeMs = Number(referenceTime);
+			console.log('referenceTimeMs', referenceTimeMs);
+			return Boolean(quote?.quoteVerified !== false
+				&& Number.isFinite(price)
+				&& price > 0 && Number.isFinite(previousClose)
+				&& previousClose > 0
+				&& Number.isFinite(marketTimeMs)
+				&& marketTimeMs > 0 && (!Number.isFinite(referenceTimeMs) || referenceTimeMs < 1_000_000_000_000 || (marketTimeMs >= referenceTimeMs - YAHOO_MARKET_TIME_MAX_AGE_MS
+					&& marketTimeMs <= referenceTimeMs + YAHOO_MARKET_TIME_MAX_FUTURE_MS)));
+		},
 		formatDate(date) { return date.slice(5).replace('-', ' / '); },
 		formatPercent(value) { return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'; },
 		formatPrice(value) { return Number.isFinite(value) ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'; },
@@ -771,7 +787,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-0`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.09.17-1`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
