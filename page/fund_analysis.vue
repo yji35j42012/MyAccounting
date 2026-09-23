@@ -570,7 +570,12 @@ module.exports = {
 		getQuoteCacheCoverage(fundKey = this.activeFundKey) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; if (!targetFund) return { expectedCount: 0, quotedCount: 0 }; const expectedHoldings = targetFund.holdings.filter(holding => Boolean(holding?.symbol)); const quotedCount = expectedHoldings.filter(holding => this.isYahooQuoteVerified(holding, quoteState?.savedAt)).length; return { expectedCount: expectedHoldings.length, quotedCount }; },
 		createYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const referenceTime = Number(fetchedAt) || Date.now(); if (!targetFund || !quoteState) return null; const quotes = targetFund.holdings.filter(holding => this.isYahooQuoteVerified(holding, referenceTime)).map(holding => ({ symbol: holding.symbol, price: Number(holding.price), previousClose: Number(holding.previousClose), marketTime: Number(holding.marketTime), priceChange: Number.isFinite(holding.priceChange) ? Number(holding.priceChange) : Number(holding.price) - Number(holding.previousClose), changePct: Number.isFinite(holding.changePct) ? Number(holding.changePct) : ((Number(holding.price) - Number(holding.previousClose)) / Number(holding.previousClose)) * 100 })); if (!quotes.length) return null; return { fundKey, holdingsDate: targetFund.holdingsDate, quoteUpdatedAt: quoteState.quoteUpdatedAt, quotes, fetchedAt: referenceTime }; },
 		applyYahooQuoteSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const quoteRows = Array.isArray(snapshot?.quotes) ? snapshot.quotes : []; const referenceTime = Number(snapshot?.savedAt || snapshot?.fetchedAt || Date.now()); if (!targetFund || !quoteState || snapshot?.fundKey !== fundKey || snapshot.holdingsDate !== targetFund.holdingsDate || !quoteRows.length) return false; const allowedSymbols = new Set(targetFund.holdings.map(holding => holding.symbol).filter(Boolean)); const quotes = quoteRows.map(quote => { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); const marketTime = Number(quote?.marketTime); return { symbol: String(quote?.symbol || ''), price, previousClose, marketTime, priceChange: price - previousClose, changePct: previousClose > 0 ? ((price - previousClose) / previousClose) * 100 : null }; }).filter(quote => allowedSymbols.has(quote.symbol) && this.isYahooQuoteVerified(quote, referenceTime) && Number.isFinite(quote.priceChange) && Number.isFinite(quote.changePct)); if (!quotes.length || new Set(quotes.map(quote => quote.symbol)).size !== quotes.length) return false; const quoteBySymbol = new Map(quotes.map(quote => [quote.symbol, quote])); targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, marketTime: quote.marketTime, quoteFetchedAt: referenceTime, quoteVerified: true, quoteValidation: '', priceChange: quote.priceChange, changePct: quote.changePct } : { ...holding, quoteVerified: false, quoteValidation: holding.symbol ? '本次 Yahoo 報價未通過完整性驗證' : '尚未確認 Yahoo 代號' }; }); quoteState.quoteUpdatedAt = String(snapshot.quoteUpdatedAt || this.formatQuoteTime(referenceTime)); quoteState.savedAt = referenceTime; quoteState.quotedCount = quotes.length; quoteState.cacheMode = cacheMode; return true; },
-		hydrateYahooQuoteCache(fundKey) { const snapshot = this.readFundStorage('quotes', fundKey); const hydrated = snapshot ? this.applyYahooQuoteSnapshot(fundKey, snapshot, 'local') : false; if (hydrated) this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true); return hydrated; },
+		hydrateYahooQuoteCache(fundKey) {
+			const snapshot = this.readFundStorage('quotes', fundKey);
+			const hydrated = snapshot ? this.applyYahooQuoteSnapshot(fundKey, snapshot, 'local') : false;
+			if (hydrated) this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true); 
+			return hydrated;
+		},
 		persistYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const snapshot = this.createYahooQuoteSnapshot(fundKey, fetchedAt); if (!snapshot || !this.applyYahooQuoteSnapshot(fundKey, snapshot, 'remote')) return false; this.writeFundStorage('quotes', fundKey, snapshot); return true; },
 		refreshHoldingsSignalFromCurrentQuotes(fundKey, cacheMode = 'remote', persist = false) { const snapshot = this.createHoldingsSignalSnapshot(fundKey); if (!snapshot || !this.applyHoldingsSignalSnapshot(fundKey, snapshot, cacheMode)) return false; if (persist) this.writeFundStorage('holdings-signal', fundKey, snapshot); return true; },
 		syncYahooQuoteAndHoldingsSignal(fundKey, fetchedAt = Date.now(), quotedCount = 0) { const quoteState = this.quotesByFund[fundKey]; if (!quoteState) return false; quoteState.quotedCount = Number.isFinite(Number(quotedCount)) ? Number(quotedCount) : 0; const quoteStored = this.persistYahooQuoteSnapshot(fundKey, fetchedAt); const signalStored = this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'remote', true); return quoteStored && signalStored; },
@@ -659,19 +664,6 @@ module.exports = {
 			const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force: true } }));
 			return { url: `/api/trpc/market.yahooQuotes?input=${input}`, isExternalProxy: false };
 		},
-		getNavRequest(fundKey, force = false) {
-			const workerBaseUrl = this.getWorkerBaseUrl();
-			if (workerBaseUrl) {
-				const endpoint = new URL(`${workerBaseUrl}/nav`);
-				endpoint.searchParams.set('fund', fundKey);
-				endpoint.searchParams.set('cacheVersion', '4');
-				if (force) endpoint.searchParams.set('force', '1');
-				return { url: endpoint.toString(), isExternalProxy: true };
-			}
-			if (window.location.hostname.endsWith('.github.io')) throw new Error('GitHub Pages 尚未設定 Cloudflare Worker 淨值端點');
-			const input = encodeURIComponent(JSON.stringify({ json: { fund: fundKey, force } }));
-			return { url: `/api/trpc/market.officialNav?input=${input}`, isExternalProxy: false };
-		},
 		getHistoryRequest(fundKey, force = false) {
 			const workerBaseUrl = this.getWorkerBaseUrl();
 			if (workerBaseUrl) {
@@ -710,6 +702,7 @@ module.exports = {
 			quoteState.quoteError = '';
 			try {
 				const quoteRequest = this.getQuoteRequest(fundKey);
+				console.log('quoteRequest',quoteRequest);
 				const abortController = new AbortController();
 				const requestTimeoutMs = quoteRequest.isExternalProxy ? 25 * 1000 : 12 * 1000;
 				const requestTimeout = window.setTimeout(() => abortController.abort(), requestTimeoutMs);
