@@ -672,7 +672,7 @@ module.exports = {
 		hydrateFundNavCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); return Boolean(navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) && this.applyNavSnapshot(fundKey, navSnapshot, 'local')); },
 		async refreshAllFundNavSnapshots() { const outcomes = await Promise.all(this.funds.map(async fund => { const navLoaded = this.hydrateFundNavCache(fund.key); return navLoaded || this.refreshOfficialNav(true, fund.key); })); return outcomes.every(Boolean); },
 		async refreshFundSnapshots() { const fundKey = this.activeFundKey; const cache = this.hydrateFundCache(fundKey); const requests = []; if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey)); if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); requests.push(this.refreshHoldingsIfNeeded(fundKey)); if (requests.length) await Promise.all(requests); },
-		maybeAutoRefreshYahooQuotes() { if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
+		maybeAutoRefreshYahooQuotes() { console.log('maybeAutoRefreshYahooQuotes222222222', this.isQuoteAutoWindow());if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
 			const workerBaseUrl = this.getWorkerBaseUrl();
@@ -827,7 +827,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.10.02-02`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.10.02-03`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
