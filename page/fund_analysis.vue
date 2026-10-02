@@ -357,7 +357,8 @@ module.exports = {
 					key: 'taiwanTechnology', shortName: '安聯台灣科技', name: '安聯台灣科技基金',
 					englishName: 'Allianz Global Investors Taiwan Technology Fund',
 					riskLevel: 'RR5', tags: ['單一國家股票型', '新臺幣計價', 'RR5'],
-					nav: 760.91, navDate: '2026 / 08 / 11',
+					nav: 760.91,
+					navDate: '2026 / 08 / 11',
 					holdingsDate: '2026 / 06 / 30',
 					sourceUrl: 'https://tw.allianzgi.com/zh-tw/products-solutions/taiwan-onshore/allianz-global-investors-taiwan-technology-fund',
 					historySourceUrl: 'https://fund.hncb.com.tw/w/wr/wr02_ACDD04-005003.djhtm',
@@ -527,7 +528,10 @@ module.exports = {
 		formatTaipeiDateTime(timestamp) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(timestamp)).replace(/\//g, ' / ').replace(',', ''); },
 		formatCountdown(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); const minutes = Math.floor(seconds / 60); const remainSeconds = seconds % 60; return minutes > 0 ? `${minutes} 分 ${String(remainSeconds).padStart(2, '0')} 秒` : `${remainSeconds} 秒`; },
 		getRefreshTimingText(state) { if (!Number.isFinite(state.fetchedAt) || state.fetchedAt <= 0) return '取得後顯示快取與自動更新倒數'; const cacheRemaining = this.formatCountdown(Math.max(0, state.cacheExpiresAt - this.countdownNow)); const autoRemaining = this.formatCountdown(Math.max(0, state.fetchedAt + 30 * 60 * 1000 - this.countdownNow)); return `快取剩餘 ${cacheRemaining} · 下次自動更新 ${autoRemaining}`; },
-		getFundTimingText(state) { const expectedDate = this.getExpectedFundDate(); if (!state.dataDate) return `目標資料日期 ${expectedDate}；快取失效時更新`; if (this.isFundPublishWindow()) return state.dataDate === expectedDate ? `資料日期 ${state.dataDate} · 已符合當日淨值` : `資料日期 ${state.dataDate} · 平日 16:00 後持續檢查`; return `資料日期 ${state.dataDate} · 平日 16:00 後再檢查`; },
+		getFundTimingText(state) {
+			const expectedDate = this.getExpectedFundDate(); if (!state.dataDate) return `目標資料日期 ${expectedDate}；快取失效時更新`;
+			if (this.isFundPublishWindow()) return state.dataDate === expectedDate ? `資料日期 ${state.dataDate} · 已符合當日淨值` : `資料日期 ${state.dataDate} · 平日 16:00 後持續檢查`; return `資料日期 ${state.dataDate} · 平日 16:00 後再檢查`;
+		},
 		getTiming() {
 			if (window.FundUpdateTiming) return window.FundUpdateTiming;
 			const getTaipeiParts = (timestamp = Date.now()) => { const values = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(timestamp)).filter(part => part.type !== 'literal').map(part => [part.type, part.value])); return { year: Number(values.year), month: Number(values.month), day: Number(values.day), hour: Number(values.hour), minute: Number(values.minute) }; };
@@ -573,7 +577,7 @@ module.exports = {
 		hydrateYahooQuoteCache(fundKey) {
 			const snapshot = this.readFundStorage('quotes', fundKey);
 			const hydrated = snapshot ? this.applyYahooQuoteSnapshot(fundKey, snapshot, 'local') : false;
-			if (hydrated) this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true); 
+			if (hydrated) this.refreshHoldingsSignalFromCurrentQuotes(fundKey, 'local', true);
 			return hydrated;
 		},
 		persistYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const snapshot = this.createYahooQuoteSnapshot(fundKey, fetchedAt); if (!snapshot || !this.applyYahooQuoteSnapshot(fundKey, snapshot, 'remote')) return false; this.writeFundStorage('quotes', fundKey, snapshot); return true; },
@@ -611,6 +615,8 @@ module.exports = {
 			const priorByName = new Map(targetFund.holdings.map(item => [item.name, item]));
 			const holdingsChanged = previousDate !== nextDate || rows.some((item, index) => { const prior = targetFund.holdings[index]; return !prior || prior.name !== item.name || Number(prior.weight) !== item.weight; });
 			const holdingsDate = String(snapshot.holdingsDate).replace(/\//g, ' / ');
+			
+			console.log('FFSSS',	targetFund);
 			targetFund.holdings = rows.map(item => {
 				const prior = priorByName.get(item.name);
 				const symbol = HOLDING_SYMBOLS[item.name] || prior?.symbol || '';
@@ -655,6 +661,7 @@ module.exports = {
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
 			const workerBaseUrl = this.getWorkerBaseUrl();
+			console.log('workerBaseUrl', workerBaseUrl);
 			if (workerBaseUrl) {
 				const endpoint = new URL(`${workerBaseUrl}/quotes`);
 				endpoint.searchParams.set('fund', fundKey);
@@ -715,7 +722,7 @@ module.exports = {
 			quoteState.quoteError = '';
 			try {
 				const quoteRequest = this.getQuoteRequest(fundKey);
-				console.log('quoteRequest',quoteRequest);
+				console.log('quoteRequest', quoteRequest);
 				const abortController = new AbortController();
 				const requestTimeoutMs = quoteRequest.isExternalProxy ? 25 * 1000 : 12 * 1000;
 				const requestTimeout = window.setTimeout(() => abortController.abort(), requestTimeoutMs);
