@@ -49,11 +49,17 @@
 				<article class="fund_purchase_page_total normal_shadow"><span>四檔基金合計總損益</span><strong
 						:class="getChangeClass(allFundsProfitLoss)">{{ formatSignedTwd(allFundsProfitLoss)
 						}}</strong><small>已實現與尚餘部位未實現損益</small></article>
-				<article class="fund_purchase_page_total normal_shadow"><span>{{ activeFund.name }}總損益</span><strong
-						:class="getChangeClass(activeLedger.totalProfitLoss)">{{
-							formatSignedTwd(activeLedger.totalProfitLoss) }}</strong><small>採加權平均成本試算</small></article>
+
+				<article class="fund_purchase_page_total normal_shadow">
+					<span>{{ activeFund.name }}庫存損益</span>
+					<strong :class="getChangeClass(activeLedger.unrealizedProfitLoss)">
+						{{ formatSignedTwd(activeLedger.unrealizedProfitLoss) }}
+					</strong>
+					<small>先進先出，僅計算尚餘部位</small>
+				</article>
+
 				<article class="fund_purchase_page_total normal_shadow"><span>{{ activeFund.name
-				}}總投入本金</span><strong>{{ formatTwd(activeFundTotalPrincipal)
+						}}總投入本金</span><strong>{{ formatTwd(activeFundTotalPrincipal)
 						}}</strong><small>包含待補資料的投入本金</small></article>
 				<article class="fund_purchase_page_total normal_shadow"><span>{{ activeFund.name }}總市值</span><strong>{{
 					formatTwd(activeLedger.marketValue) }}</strong><small>已扣除已結算贖回部位</small></article>
@@ -81,7 +87,7 @@
 									@click="activeTab = tab.key">{{ tab.label }}</button></div>
 						</div>
 						<div class="fund_purchase_page_nav"><span>最新公開淨值</span><strong>{{ formatNav(activeFund.nav)
-						}}</strong><small>淨值日期 {{ formatDate(activeFund.navDate) }} · {{
+								}}</strong><small>淨值日期 {{ formatDate(activeFund.navDate) }} · {{
 									formatTime(activeFund.navUpdatedAt) }}</small></div>
 					</header>
 					<p v-if="pageError" class="fund_purchase_page_modal_error" role="alert">{{ pageError }}</p>
@@ -243,7 +249,7 @@
 							<article v-for="record in activeRedemptionRecords" :key="`redemption-mobile-${record.id}`"
 								class="fund_purchase_page_mobile_record">
 								<div class="fund_purchase_page_mobile_record_top"><strong>{{ formatDate(record.date)
-								}}</strong><span
+										}}</strong><span
 										:class="['fund_purchase_page_status_badge', `is-${record.status}`]">{{
 											formatRedemptionStatus(record.status) }}</span></div>
 								<dl>
@@ -285,16 +291,16 @@
 					<section v-else class="fund_purchase_page_inventory" aria-label="資料庫庫存總覽">
 						<div class="fund_purchase_page_inventory_grid">
 							<article><span>已申購單位</span><strong>{{ formatUnits(activeLedger.purchasedUnits)
-							}}</strong><small>僅計入資料完整的申購紀錄</small></article>
+									}}</strong><small>僅計入資料完整的申購紀錄</small></article>
 							<article><span>已結算贖回</span><strong>{{ formatUnits(activeLedger.settledUnits)
-							}}</strong><small>已自尚餘部位扣除</small></article>
+									}}</strong><small>已自尚餘部位扣除</small></article>
 							<article><span>處理中保留</span><strong>{{ formatUnits(activeLedger.pendingUnits)
-							}}</strong><small>尚未計入已實現損益</small></article>
+									}}</strong><small>尚未計入已實現損益</small></article>
 							<article><span>尚餘持有單位</span><strong>{{ formatUnits(activeLedger.remainingUnits)
-							}}</strong><small>可用單位 {{ formatUnits(activeLedger.availableRedemptionUnits)
+									}}</strong><small>可用單位 {{ formatUnits(activeLedger.availableRedemptionUnits)
 									}}</small></article>
 							<article><span>尚餘部位市值</span><strong>{{ formatTwd(activeLedger.marketValue)
-							}}</strong><small>依最新公開淨值試算</small></article>
+									}}</strong><small>依最新公開淨值試算</small></article>
 							<article><span>尚餘部位未實現損益</span><strong
 									:class="getChangeClass(activeLedger.unrealizedProfitLoss)">{{
 										formatSignedTwd(activeLedger.unrealizedProfitLoss)
@@ -521,9 +527,15 @@ module.exports = {
 		activeFundTotalPrincipal() {
 			return this.records.filter(record => record.fundKey === this.activeFundKey).reduce((total, record) => { const principal = Number(record?.principal); return total + (Number.isFinite(principal) && principal > 0 ? principal : 0); }, 0);
 		},
-		allFundsProfitLoss() {
-			return this.funds.reduce((total, fund) => total + this.calculateFundLedger(fund.key).totalProfitLoss, 0);
-		},
+allFundsProfitLoss() {
+	const values = this.funds.map(
+		fund => this.calculateFundLedger(fund.key).totalProfitLoss
+	);
+
+	return values.every(value => Number.isFinite(value))
+		? values.reduce((total, value) => total + value, 0)
+		: null;
+},
 		activeNavStatus() {
 			if (this.isRefreshingNavs) return '正在同步四檔基金最新公開淨值…';
 			if (this.activeFund.navError) return this.activeFund.navError;
@@ -531,7 +543,7 @@ module.exports = {
 		},
 	},
 	async mounted() {
-console.log('testda');
+		console.log('testda');
 
 		// console.info(`[現金流管理] fund_purchase_database.vue 版本：${ FUND_PURCHASE_DATABASE_PAGE_VERSION }`);
 		this.authChangeHandler = event => {
