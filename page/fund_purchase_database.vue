@@ -36,22 +36,28 @@
 				<div class="fund_purchase_page_refresh">
 					<button class="fund_purchase_page_refresh_button" type="button"
 						:disabled="isLoading || isRefreshingNavs || isSaving" @click="refreshPageData">
-						<svg class="fund_refresh_icon" :class="{ 'is-spinning': isLoading || isRefreshingNavs }" viewBox="0 0 24 24" aria-hidden="true">
+						<svg class="fund_refresh_icon" :class="{ 'is-spinning': isLoading || isRefreshingNavs }"
+							viewBox="0 0 24 24" aria-hidden="true">
 							<path d="M20 11a8 8 0 1 0 2 5.5M20 4v7h-7"></path>
 						</svg>{{ isLoading || isRefreshingNavs ? '正在更新資料庫與淨值' : '更新資料庫與淨值' }}
 					</button>
-					<p v-if="lastLoadedAt" class="fund_purchase_page_refresh_status">資料庫最後載入：{{ formatTaipeiDateTime(lastLoadedAt) }}</p>
-					<p class="fund_purchase_page_refresh_status" :class="{ 'is-error': activeFund.navError }">{{ activeNavStatus }}</p>
+					<p v-if="lastLoadedAt" class="fund_purchase_page_refresh_status">資料庫最後載入：{{
+						formatTaipeiDateTime(lastLoadedAt) }}</p>
+					<p class="fund_purchase_page_refresh_status" :class="{ 'is-error': activeFund.navError }">{{
+						activeNavStatus }}</p>
 				</div>
 			</header>
 
 			<section class="fund_purchase_page_totals" aria-label="資料庫基金申購與贖回總覽">
 				<article class="fund_purchase_page_total normal_shadow">
-					<span>四檔基金合計庫存損益</span><strong :class="getChangeClass(allFundsUnrealizedProfitLoss)">{{ formatSignedTwd(allFundsUnrealizedProfitLoss) }}</strong>
+					<span>四檔基金合計庫存損益</span><strong :class="getChangeClass(allFundsUnrealizedProfitLoss)">{{
+						formatSignedTwd(allFundsUnrealizedProfitLoss) }}</strong>
 					<small>僅合計尚餘部位，已實現損益另列</small>
 				</article>
 				<article class="fund_purchase_page_total normal_shadow">
-					<span>{{ activeFund.name }}庫存損益</span><strong :class="getChangeClass(activeLedger.unrealizedProfitLoss)">{{ formatSignedTwd(activeLedger.unrealizedProfitLoss) }}</strong>
+					<span>{{ activeFund.name }}庫存損益</span><strong
+						:class="getChangeClass(activeLedger.unrealizedProfitLoss)">{{
+							formatSignedTwd(activeLedger.unrealizedProfitLoss) }}</strong>
 					<small>先進先出，僅計算尚餘部位</small>
 				</article>
 				<article class="fund_purchase_page_total normal_shadow">
@@ -63,11 +69,13 @@
 					<small>已扣除已結算贖回部位</small>
 				</article>
 				<article class="fund_purchase_page_total fund_purchase_page_realized_total normal_shadow">
-					<span>累積已實現損益</span><strong :class="getChangeClass(activeLedger.realizedProfitLoss)">{{ formatSignedTwd(activeLedger.realizedProfitLoss) }}</strong>
+					<span>累積已實現損益</span><strong :class="getChangeClass(activeLedger.realizedProfitLoss)">{{
+						formatSignedTwd(activeLedger.realizedProfitLoss) }}</strong>
 					<small>僅計入已結算贖回</small>
 				</article>
 				<article class="fund_purchase_page_total fund_purchase_page_pending_total normal_shadow">
-					<span>目前基金待補資料</span><strong>{{ activeIncompleteRecordCount }} 筆</strong><small>申購淨值或庫存單位數尚未填寫</small>
+					<span>目前基金待補資料</span><strong>{{ activeIncompleteRecordCount }}
+						筆</strong><small>申購淨值或庫存單位數尚未填寫</small>
 				</article>
 			</section>
 
@@ -75,148 +83,334 @@
 				<article class="fund_purchase_page_card normal_shadow">
 					<header class="fund_purchase_page_card_head">
 						<div>
-							<p class="fund_kicker">資料庫紀錄</p><h3>{{ activeFund.name }}</h3>
+							<p class="fund_kicker">資料庫紀錄</p>
+							<h3>{{ activeFund.name }}</h3>
 							<div class="fund_purchase_page_tabs" role="tablist" aria-label="資料庫申購、贖回與庫存總覽">
 								<button v-for="tab in recordTabs" :key="tab.key" type="button" role="tab"
-									:aria-selected="activeTab === tab.key" :class="['fund_purchase_page_tab_button', activeTab === tab.key ? 'is-active' : '']"
+									:aria-selected="activeTab === tab.key"
+									:class="['fund_purchase_page_tab_button', activeTab === tab.key ? 'is-active' : '']"
 									@click="activeTab = tab.key">{{ tab.label }}</button>
 							</div>
 						</div>
-						<div class="fund_purchase_page_nav"><span>最新公開淨值</span><strong>{{ formatNav(activeFund.nav) }}</strong><small>淨值日期 {{ formatDate(activeFund.navDate) }} · {{ formatTime(activeFund.navUpdatedAt) }}</small></div>
+						<div class="fund_purchase_page_nav"><span>最新公開淨值</span><strong>{{ formatNav(activeFund.nav)
+						}}</strong><small>淨值日期 {{ formatDate(activeFund.navDate) }} · {{
+									formatTime(activeFund.navUpdatedAt) }}</small></div>
 					</header>
 					<p v-if="pageError" class="fund_purchase_page_modal_error" role="alert">{{ pageError }}</p>
-					<p v-if="activeLedger.invalidRedemptionIds.length" class="fund_purchase_page_modal_error" role="alert">有 {{ activeLedger.invalidRedemptionIds.length }} 筆已結算贖回超過交易當日可用單位或資料不完整，尚未納入計算。請檢查申購日期、單位數與贖回紀錄。</p>
+					<p v-if="activeLedger.invalidRedemptionIds.length" class="fund_purchase_page_modal_error"
+						role="alert">有 {{ activeLedger.invalidRedemptionIds.length }}
+						筆已結算贖回超過交易當日可用單位或資料不完整，尚未納入計算。請檢查申購日期、單位數與贖回紀錄。</p>
 
 					<section v-if="activeTab === 'purchase'" aria-label="資料庫申購紀錄">
 						<div class="fund_purchase_page_card_controls">
-							<button class="fund_purchase_page_add_button" type="button" :disabled="!session || isLoading || isSaving" @click="openPurchaseModal('add')">＋ 新增申購紀錄</button>
-							<button :class="['fund_purchase_page_filter_button', showOnlyIncomplete ? 'is-active' : '']" type="button" :aria-pressed="showOnlyIncomplete" @click="showOnlyIncomplete = !showOnlyIncomplete">{{ showOnlyIncomplete ? '顯示全部紀錄' : '僅顯示待補資料' }}</button>
+							<button class="fund_purchase_page_add_button" type="button"
+								:disabled="!session || isLoading || isSaving" @click="openPurchaseModal('add')">＋
+								新增申購紀錄</button>
+							<button :class="['fund_purchase_page_filter_button', showOnlyIncomplete ? 'is-active' : '']"
+								type="button" :aria-pressed="showOnlyIncomplete"
+								@click="showOnlyIncomplete = !showOnlyIncomplete">{{ showOnlyIncomplete ? '顯示全部紀錄' :
+									'僅顯示待補資料' }}</button>
 						</div>
 						<p class="fund_purchase_page_note">列表顯示贖回後的剩餘成本與單位；編輯視窗保留原始申購資料，請勿再手動扣除贖回。</p>
 						<div class="fund_purchase_page_table_box">
 							<table class="fund_purchase_page_table">
-								<thead><tr><th>日期</th><th>剩餘成本</th><th>申購淨值</th><th>剩餘單位數</th><th>市值</th><th>報酬率</th><th>損益</th><th>操作</th></tr></thead>
+								<thead>
+									<tr>
+										<th>日期</th>
+										<th>剩餘成本</th>
+										<th>申購淨值</th>
+										<th>剩餘單位數</th>
+										<th>市值</th>
+										<th>報酬率</th>
+										<th>損益</th>
+										<th>操作</th>
+									</tr>
+								</thead>
 								<tbody>
-									<tr v-if="visibleRecords.length === 0"><td colspan="8" class="fund_purchase_page_empty">{{ isLoading ? '正在讀取資料庫資料…' : '資料庫目前沒有符合篩選條件的申購紀錄。' }}</td></tr>
+									<tr v-if="visibleRecords.length === 0">
+										<td colspan="8" class="fund_purchase_page_empty">{{ isLoading ? '正在讀取資料庫資料…' :
+											'資料庫目前沒有符合篩選條件的申購紀錄。' }}</td>
+									</tr>
 									<tr v-for="record in visibleRecords" :key="record.id">
-										<td>{{ formatDate(record.date) }}<span v-if="record.isIncomplete" class="fund_purchase_page_pending_badge">待補資料</span></td>
-										<td>{{ formatTwd(record.remainingPrincipal) }}</td><td>{{ formatNav(record.subscriptionNav) }}</td><td>{{ formatUnits(record.remainingUnits) }}</td><td>{{ formatTwd(record.marketValue) }}</td>
-										<td><strong :class="getChangeClass(record.returnPct)">{{ formatPercent(record.returnPct) }}</strong></td>
-										<td><strong :class="getChangeClass(record.profitLoss)">{{ formatSignedTwd(record.profitLoss) }}</strong></td>
-										<td><button class="fund_purchase_page_edit_button" type="button" :disabled="isLoading || isSaving" :aria-label="`編輯 ${formatDate(record.date)} 的資料庫申購紀錄`" @click="openPurchaseModal('edit', record)">編輯</button></td>
+										<td>{{ formatDate(record.date) }}<span v-if="record.isIncomplete"
+												class="fund_purchase_page_pending_badge">待補資料</span></td>
+										<td>{{ formatTwd(record.remainingPrincipal) }}</td>
+										<td>{{ formatNav(record.subscriptionNav) }}</td>
+										<td>{{ formatUnits(record.remainingUnits) }}</td>
+										<td>{{ formatTwd(record.marketValue) }}</td>
+										<td><strong :class="getChangeClass(record.returnPct)">{{
+											formatPercent(record.returnPct) }}</strong></td>
+										<td><strong :class="getChangeClass(record.profitLoss)">{{
+											formatSignedTwd(record.profitLoss) }}</strong></td>
+										<td><button class="fund_purchase_page_edit_button" type="button"
+												:disabled="isLoading || isSaving"
+												:aria-label="`編輯 ${formatDate(record.date)} 的資料庫申購紀錄`"
+												@click="openPurchaseModal('edit', record)">編輯</button></td>
 									</tr>
 								</tbody>
 							</table>
 						</div>
 						<div class="fund_purchase_page_mobile_records" aria-label="行動版資料庫申購紀錄">
-							<p v-if="visibleRecords.length === 0" class="fund_purchase_page_mobile_empty">{{ isLoading ? '正在讀取資料庫資料…' : '資料庫目前沒有符合篩選條件的申購紀錄。' }}</p>
-							<article v-for="record in visibleRecords" :key="`mobile-${record.id}`" class="fund_purchase_page_mobile_record">
-								<div class="fund_purchase_page_mobile_record_top"><div class="fund_purchase_page_mobile_record_date"><strong>{{ formatDate(record.date) }}</strong><span v-if="record.isIncomplete" class="fund_purchase_page_pending_badge">待補資料</span></div><span :class="getChangeClass(record.returnPct)">{{ formatPercent(record.returnPct) }}</span></div>
+							<p v-if="visibleRecords.length === 0" class="fund_purchase_page_mobile_empty">{{ isLoading ?
+								'正在讀取資料庫資料…' : '資料庫目前沒有符合篩選條件的申購紀錄。' }}</p>
+							<article v-for="record in visibleRecords" :key="`mobile-${record.id}`"
+								class="fund_purchase_page_mobile_record">
+								<div class="fund_purchase_page_mobile_record_top">
+									<div class="fund_purchase_page_mobile_record_date"><strong>{{
+										formatDate(record.date) }}</strong><span v-if="record.isIncomplete"
+											class="fund_purchase_page_pending_badge">待補資料</span></div><span
+										:class="getChangeClass(record.returnPct)">{{ formatPercent(record.returnPct)
+										}}</span>
+								</div>
 								<dl>
-									<div><dt>剩餘成本</dt><dd>{{ formatTwd(record.remainingPrincipal) }}</dd></div>
-									<div><dt>申購淨值</dt><dd>{{ formatNav(record.subscriptionNav) }}</dd></div>
-									<div><dt>剩餘單位數</dt><dd>{{ formatUnits(record.remainingUnits) }}</dd></div>
-									<div><dt>市值</dt><dd>{{ formatTwd(record.marketValue) }}</dd></div>
-									<div><dt>損益</dt><dd :class="getChangeClass(record.profitLoss)">{{ formatSignedTwd(record.profitLoss) }}</dd></div>
+									<div>
+										<dt>剩餘成本</dt>
+										<dd>{{ formatTwd(record.remainingPrincipal) }}</dd>
+									</div>
+									<div>
+										<dt>申購淨值</dt>
+										<dd>{{ formatNav(record.subscriptionNav) }}</dd>
+									</div>
+									<div>
+										<dt>剩餘單位數</dt>
+										<dd>{{ formatUnits(record.remainingUnits) }}</dd>
+									</div>
+									<div>
+										<dt>市值</dt>
+										<dd>{{ formatTwd(record.marketValue) }}</dd>
+									</div>
+									<div>
+										<dt>損益</dt>
+										<dd :class="getChangeClass(record.profitLoss)">{{
+											formatSignedTwd(record.profitLoss) }}</dd>
+									</div>
 								</dl>
-								<button class="fund_purchase_page_edit_button fund_purchase_page_mobile_edit_button" type="button" :disabled="isLoading || isSaving" @click="openPurchaseModal('edit', record)">編輯這筆紀錄</button>
+								<button class="fund_purchase_page_edit_button fund_purchase_page_mobile_edit_button"
+									type="button" :disabled="isLoading || isSaving"
+									@click="openPurchaseModal('edit', record)">編輯這筆紀錄</button>
 							</article>
 						</div>
 					</section>
 
 					<section v-else-if="activeTab === 'redemption'" aria-label="資料庫贖回紀錄">
 						<div class="fund_purchase_page_redemption_intro">
-							<div><strong>可再贖回 {{ formatUnits(activeLedger.availableRedemptionUnits) }}</strong><span>已扣除 {{ formatUnits(activeLedger.pendingUnits) }} 處理中保留單位</span></div>
-							<button class="fund_purchase_page_add_button fund_purchase_page_redemption_add_button" type="button" :disabled="!session || isLoading || isSaving" @click="openRedemptionModal('add')">＋ 新增贖回紀錄</button>
+							<div><strong>可再贖回 {{ formatUnits(activeLedger.availableRedemptionUnits) }}</strong><span>已扣除
+									{{ formatUnits(activeLedger.pendingUnits) }} 處理中保留單位</span></div>
+							<button class="fund_purchase_page_add_button fund_purchase_page_redemption_add_button"
+								type="button" :disabled="!session || isLoading || isSaving"
+								@click="openRedemptionModal('add')">＋ 新增贖回紀錄</button>
 						</div>
 						<div class="fund_purchase_page_table_box">
 							<table class="fund_purchase_page_table fund_purchase_page_redemption_table">
-								<thead><tr><th>日期</th><th>狀態</th><th>贖回單位</th><th>贖回淨值</th><th>入帳淨額</th><th>成本基礎</th><th>已實現損益</th><th>操作</th></tr></thead>
+								<thead>
+									<tr>
+										<th>日期</th>
+										<th>狀態</th>
+										<th>贖回單位</th>
+										<th>贖回淨值</th>
+										<th>入帳淨額</th>
+										<th>成本基礎</th>
+										<th>已實現損益</th>
+										<th>操作</th>
+									</tr>
+								</thead>
 								<tbody>
-									<tr v-if="activeRedemptionRecords.length === 0"><td colspan="8" class="fund_purchase_page_empty">尚無資料庫贖回紀錄。</td></tr>
+									<tr v-if="activeRedemptionRecords.length === 0">
+										<td colspan="8" class="fund_purchase_page_empty">尚無資料庫贖回紀錄。</td>
+									</tr>
 									<tr v-for="record in activeRedemptionRecords" :key="record.id">
-										<td>{{ formatDate(record.date) }}</td><td><span :class="['fund_purchase_page_status_badge', `is-${record.status}`]">{{ formatRedemptionStatus(record.status) }}</span></td>
-										<td>{{ formatUnits(record.units) }}</td><td>{{ record.status === 'settled' ? formatNav(record.redemptionNav) : '—' }}</td>
-										<td>{{ record.status === 'settled' ? formatTwd(getRedemptionMetric(record).netProceeds) : '—' }}</td>
-										<td>{{ record.status === 'settled' ? formatTwd(getRedemptionMetric(record).costBasis) : '—' }}<small v-if="record.status === 'settled'" style="display:block">{{ formatRedemptionAllocation(record) }}</small></td>
-										<td><strong :class="getChangeClass(getRedemptionMetric(record).realizedProfitLoss)">{{ record.status === 'settled' ? formatSignedTwd(getRedemptionMetric(record).realizedProfitLoss) : '—' }}</strong></td>
-										<td><button class="fund_purchase_page_edit_button" type="button" :disabled="isLoading || isSaving" @click="openRedemptionModal('edit', record)">編輯</button></td>
+										<td>{{ formatDate(record.date) }}</td>
+										<td><span :class="['fund_purchase_page_status_badge', `is-${record.status}`]">{{
+											formatRedemptionStatus(record.status) }}</span></td>
+										<td>{{ formatUnits(record.units) }}</td>
+										<td>{{ record.status === 'settled' ? formatNav(record.redemptionNav) : '—' }}
+										</td>
+										<td>{{ record.status === 'settled' ?
+											formatTwd(getRedemptionMetric(record).netProceeds) : '—' }}</td>
+										<td>{{ record.status === 'settled' ?
+											formatTwd(getRedemptionMetric(record).costBasis) : '—' }}<small
+												v-if="record.status === 'settled'" style="display:block">{{
+													formatRedemptionAllocation(record) }}</small></td>
+										<td><strong
+												:class="getChangeClass(getRedemptionMetric(record).realizedProfitLoss)">{{
+													record.status === 'settled' ?
+														formatSignedTwd(getRedemptionMetric(record).realizedProfitLoss) : '—'
+												}}</strong></td>
+										<td><button class="fund_purchase_page_edit_button" type="button"
+												:disabled="isLoading || isSaving"
+												@click="openRedemptionModal('edit', record)">編輯</button></td>
 									</tr>
 								</tbody>
 							</table>
 						</div>
 						<div class="fund_purchase_page_mobile_records" aria-label="行動版資料庫贖回紀錄">
-							<p v-if="activeRedemptionRecords.length === 0" class="fund_purchase_page_mobile_empty">尚無資料庫贖回紀錄。</p>
-							<article v-for="record in activeRedemptionRecords" :key="`redemption-mobile-${record.id}`" class="fund_purchase_page_mobile_record">
-								<div class="fund_purchase_page_mobile_record_top"><strong>{{ formatDate(record.date) }}</strong><span :class="['fund_purchase_page_status_badge', `is-${record.status}`]">{{ formatRedemptionStatus(record.status) }}</span></div>
+							<p v-if="activeRedemptionRecords.length === 0" class="fund_purchase_page_mobile_empty">
+								尚無資料庫贖回紀錄。</p>
+							<article v-for="record in activeRedemptionRecords" :key="`redemption-mobile-${record.id}`"
+								class="fund_purchase_page_mobile_record">
+								<div class="fund_purchase_page_mobile_record_top"><strong>{{ formatDate(record.date)
+								}}</strong><span
+										:class="['fund_purchase_page_status_badge', `is-${record.status}`]">{{
+											formatRedemptionStatus(record.status) }}</span></div>
 								<dl>
-									<div><dt>贖回單位</dt><dd>{{ formatUnits(record.units) }}</dd></div>
-									<div><dt>贖回淨值</dt><dd>{{ record.status === 'settled' ? formatNav(record.redemptionNav) : '—' }}</dd></div>
-									<div><dt>入帳淨額</dt><dd>{{ record.status === 'settled' ? formatTwd(getRedemptionMetric(record).netProceeds) : '—' }}</dd></div>
-									<div><dt>成本基礎</dt><dd>{{ record.status === 'settled' ? formatTwd(getRedemptionMetric(record).costBasis) : '—' }}</dd></div>
-									<div v-if="record.status === 'settled'"><dt>扣除申購</dt><dd>{{ formatRedemptionAllocation(record) }}</dd></div>
-									<div><dt>已實現損益</dt><dd :class="getChangeClass(getRedemptionMetric(record).realizedProfitLoss)">{{ record.status === 'settled' ? formatSignedTwd(getRedemptionMetric(record).realizedProfitLoss) : '—' }}</dd></div>
+									<div>
+										<dt>贖回單位</dt>
+										<dd>{{ formatUnits(record.units) }}</dd>
+									</div>
+									<div>
+										<dt>贖回淨值</dt>
+										<dd>{{ record.status === 'settled' ? formatNav(record.redemptionNav) : '—' }}
+										</dd>
+									</div>
+									<div>
+										<dt>入帳淨額</dt>
+										<dd>{{ record.status === 'settled' ?
+											formatTwd(getRedemptionMetric(record).netProceeds) : '—' }}</dd>
+									</div>
+									<div>
+										<dt>成本基礎</dt>
+										<dd>{{ record.status === 'settled' ?
+											formatTwd(getRedemptionMetric(record).costBasis) : '—' }}</dd>
+									</div>
+									<div v-if="record.status === 'settled'">
+										<dt>扣除申購</dt>
+										<dd>{{ formatRedemptionAllocation(record) }}</dd>
+									</div>
+									<div>
+										<dt>已實現損益</dt>
+										<dd :class="getChangeClass(getRedemptionMetric(record).realizedProfitLoss)">{{
+											record.status === 'settled' ?
+												formatSignedTwd(getRedemptionMetric(record).realizedProfitLoss) : '—' }}
+										</dd>
+									</div>
 								</dl>
-								<button class="fund_purchase_page_edit_button fund_purchase_page_mobile_edit_button" type="button" :disabled="isLoading || isSaving" @click="openRedemptionModal('edit', record)">編輯這筆紀錄</button>
+								<button class="fund_purchase_page_edit_button fund_purchase_page_mobile_edit_button"
+									type="button" :disabled="isLoading || isSaving"
+									@click="openRedemptionModal('edit', record)">編輯這筆紀錄</button>
 							</article>
 						</div>
 					</section>
 
 					<section v-else class="fund_purchase_page_inventory" aria-label="資料庫庫存總覽">
 						<div class="fund_purchase_page_inventory_grid">
-							<article><span>已申購單位</span><strong>{{ formatUnits(activeLedger.purchasedUnits) }}</strong><small>僅計入資料完整的申購紀錄</small></article>
-							<article><span>已結算贖回</span><strong>{{ formatUnits(activeLedger.settledUnits) }}</strong><small>已自尚餘部位扣除</small></article>
-							<article><span>處理中保留</span><strong>{{ formatUnits(activeLedger.pendingUnits) }}</strong><small>尚未計入已實現損益</small></article>
-							<article><span>尚餘持有單位</span><strong>{{ formatUnits(activeLedger.remainingUnits) }}</strong><small>可用單位 {{ formatUnits(activeLedger.availableRedemptionUnits) }}</small></article>
-							<article><span>尚餘部位成本</span><strong>{{ formatTwd(activeLedger.remainingCost) }}</strong><small>已扣除已結算贖回成本</small></article>
-							<article><span>尚餘部位市值</span><strong>{{ formatTwd(activeLedger.marketValue) }}</strong><small>依最新公開淨值試算</small></article>
-							<article><span>尚餘部位未實現損益</span><strong :class="getChangeClass(activeLedger.unrealizedProfitLoss)">{{ formatSignedTwd(activeLedger.unrealizedProfitLoss) }}</strong><small>尚餘市值減尚餘成本</small></article>
-							<article><span>基金合計損益</span><strong :class="getChangeClass(activeLedger.totalProfitLoss)">{{ formatSignedTwd(activeLedger.totalProfitLoss) }}</strong><small>已實現與未實現損益合計</small></article>
+							<article><span>已申購單位</span><strong>{{ formatUnits(activeLedger.purchasedUnits)
+							}}</strong><small>僅計入資料完整的申購紀錄</small></article>
+							<article><span>已結算贖回</span><strong>{{ formatUnits(activeLedger.settledUnits)
+							}}</strong><small>已自尚餘部位扣除</small></article>
+							<article><span>處理中保留</span><strong>{{ formatUnits(activeLedger.pendingUnits)
+							}}</strong><small>尚未計入已實現損益</small></article>
+							<article><span>尚餘持有單位</span><strong>{{ formatUnits(activeLedger.remainingUnits)
+							}}</strong><small>可用單位 {{ formatUnits(activeLedger.availableRedemptionUnits)
+									}}</small></article>
+							<article><span>尚餘部位成本</span><strong>{{ formatTwd(activeLedger.remainingCost)
+							}}</strong><small>已扣除已結算贖回成本</small></article>
+							<article><span>尚餘部位市值</span><strong>{{ formatTwd(activeLedger.marketValue)
+							}}</strong><small>依最新公開淨值試算</small></article>
+							<article><span>尚餘部位未實現損益</span><strong
+									:class="getChangeClass(activeLedger.unrealizedProfitLoss)">{{
+										formatSignedTwd(activeLedger.unrealizedProfitLoss)
+									}}</strong><small>尚餘市值減尚餘成本</small></article>
+							<article><span>基金合計損益</span><strong :class="getChangeClass(activeLedger.totalProfitLoss)">{{
+								formatSignedTwd(activeLedger.totalProfitLoss) }}</strong><small>已實現與未實現損益合計</small>
+							</article>
 						</div>
-						<p class="fund_purchase_page_inventory_note">先進先出：已結算贖回依申購日期由早到晚扣除單位。部分贖回按該筆申購淨值扣除成本，整筆贖完則扣清剩餘成本。處理中交易僅保留單位；取消交易不影響庫存。</p>
+						<p class="fund_purchase_page_inventory_note">
+							先進先出：已結算贖回依申購日期由早到晚扣除單位。部分贖回按該筆申購淨值扣除成本，整筆贖完則扣清剩餘成本。處理中交易僅保留單位；取消交易不影響庫存。</p>
 					</section>
 				</article>
 			</section>
 		</template>
 
-		<div v-if="purchaseModal.mode" class="alert fund_purchase_page_modal showAdd" role="dialog" aria-modal="true" aria-labelledby="fund-purchase-db-modal-title" @click.self="closePurchaseModal">
+		<div v-if="purchaseModal.mode" class="alert fund_purchase_page_modal showAdd" role="dialog" aria-modal="true"
+			aria-labelledby="fund-purchase-db-modal-title" @click.self="closePurchaseModal">
 			<div class="alert_box">
-				<button class="alert_close" type="button" aria-label="關閉資料庫申購紀錄視窗" :disabled="isSaving" @click="closePurchaseModal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
-				<div class="alert_title"><span id="fund-purchase-db-modal-title">{{ purchaseModal.mode === 'edit' ? '編輯資料庫申購紀錄' : '新增資料庫申購紀錄' }}</span><p>{{ activeFund.name }}</p></div>
+				<button class="alert_close" type="button" aria-label="關閉資料庫申購紀錄視窗" :disabled="isSaving"
+					@click="closePurchaseModal"><svg viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M18 6 6 18M6 6l12 12"></path>
+					</svg></button>
+				<div class="alert_title"><span id="fund-purchase-db-modal-title">{{ purchaseModal.mode === 'edit' ?
+					'編輯資料庫申購紀錄'
+					: '新增資料庫申購紀錄' }}</span>
+					<p>{{ activeFund.name }}</p>
+				</div>
 				<form class="alert_content" @submit.prevent="saveDatabaseRecord">
-					<div class="alert_content_item" data-txt="日期"><input v-model="purchaseModal.form.date" class="alert_inp" type="date" required :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="原始投入本金"><input v-model="purchaseModal.form.principal" class="alert_inp" type="number" min="0.01" step="0.01" placeholder="請輸入原始投入本金" required :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="申購淨值（選填）"><input v-model="purchaseModal.form.subscriptionNav" class="alert_inp" type="number" min="0.01" step="0.01" placeholder="尚未取得可留白" :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="原始申購單位數（選填）"><input v-model="purchaseModal.form.units" class="alert_inp" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="最多小數點後兩位" :disabled="isSaving"></div>
-					<p v-if="purchaseModal.error" class="fund_purchase_page_modal_error" role="alert">{{ purchaseModal.error }}</p>
-					<p class="fund_purchase_page_modal_hint">請填原始申購本金與單位，系統會自動扣除已結算贖回，勿在此重複扣除。選填欄位留白會顯示為待補資料。單位數最多小數點後兩位。</p>
-					<div class="alert_funcbox"><button class="normal_btn _secondary" type="button" :disabled="isSaving" @click="closePurchaseModal">取消</button><button class="normal_btn _primary" type="submit" :disabled="isSaving">{{ isSaving ? '儲存中…' : purchaseModal.mode === 'edit' ? '儲存更新' : '新增紀錄' }}</button></div>
+					<div class="alert_content_item" data-txt="日期"><input v-model="purchaseModal.form.date"
+							class="alert_inp" type="date" required :disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="原始投入本金"><input v-model="purchaseModal.form.principal"
+							class="alert_inp" type="number" min="0.01" step="0.01" placeholder="請輸入原始投入本金" required
+							:disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="申購淨值（選填）"><input
+							v-model="purchaseModal.form.subscriptionNav" class="alert_inp" type="number" min="0.01"
+							step="0.01" placeholder="尚未取得可留白" :disabled="isSaving">
+					</div>
+					<div class="alert_content_item" data-txt="原始申購單位數（選填）"><input v-model="purchaseModal.form.units"
+							class="alert_inp" type="number" min="0.01" step="0.01" inputmode="decimal"
+							placeholder="最多小數點後兩位" :disabled="isSaving"></div>
+					<p v-if="purchaseModal.error" class="fund_purchase_page_modal_error" role="alert">{{
+						purchaseModal.error }}
+					</p>
+					<p class="fund_purchase_page_modal_hint">
+						請填原始申購本金與單位，系統會自動扣除已結算贖回，勿在此重複扣除。選填欄位留白會顯示為待補資料。單位數最多小數點後兩位。</p>
+					<div class="alert_funcbox"><button class="normal_btn _secondary" type="button" :disabled="isSaving"
+							@click="closePurchaseModal">取消</button><button class="normal_btn _primary" type="submit"
+							:disabled="isSaving">{{ isSaving ? '儲存中…' : purchaseModal.mode === 'edit' ? '儲存更新' : '新增紀錄'
+							}}</button></div>
 				</form>
 			</div>
 		</div>
 
-		<div v-if="redemptionModal.mode" class="alert fund_purchase_page_modal showAdd" role="dialog" aria-modal="true" aria-labelledby="fund-redemption-db-modal-title" @click.self="closeRedemptionModal">
+		<div v-if="redemptionModal.mode" class="alert fund_purchase_page_modal showAdd" role="dialog" aria-modal="true"
+			aria-labelledby="fund-redemption-db-modal-title" @click.self="closeRedemptionModal">
 			<div class="alert_box">
-				<button class="alert_close" type="button" aria-label="關閉資料庫贖回紀錄視窗" :disabled="isSaving" @click="closeRedemptionModal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
-				<div class="alert_title"><span id="fund-redemption-db-modal-title">{{ redemptionModal.mode === 'edit' ? '編輯資料庫贖回紀錄' : '新增資料庫贖回紀錄' }}</span><p>{{ activeFund.name }} · 先進先出</p></div>
+				<button class="alert_close" type="button" aria-label="關閉資料庫贖回紀錄視窗" :disabled="isSaving"
+					@click="closeRedemptionModal"><svg viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M18 6 6 18M6 6l12 12"></path>
+					</svg></button>
+				<div class="alert_title"><span id="fund-redemption-db-modal-title">{{ redemptionModal.mode === 'edit' ?
+					'編輯資料庫贖回紀錄' : '新增資料庫贖回紀錄' }}</span>
+					<p>{{ activeFund.name }} · 先進先出</p>
+				</div>
 				<form class="alert_content" @submit.prevent="saveDatabaseRedemption">
-					<div class="alert_content_item" data-txt="贖回日期"><input v-model="redemptionModal.form.date" class="alert_inp" type="date" required :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="狀態"><select v-model="redemptionModal.form.status" class="alert_inp" :disabled="isSaving"><option value="pending">處理中</option><option value="settled">已結算</option><option value="cancelled">取消</option></select></div>
-					<div class="alert_content_item" data-txt="贖回單位數"><input v-model="redemptionModal.form.units" class="alert_inp" type="number" min="0.01" step="0.01" inputmode="decimal" required :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="贖回淨值（已結算必填）"><input v-model="redemptionModal.form.redemptionNav" class="alert_inp" type="number" min="0.01" step="0.01" :required="redemptionModal.form.status === 'settled'" :disabled="isSaving || redemptionModal.form.status !== 'settled'"></div>
-					<div class="alert_content_item" data-txt="手續費"><input v-model="redemptionModal.form.fee" class="alert_inp" type="number" min="0" step="0.01" :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="稅費／其他扣款"><input v-model="redemptionModal.form.tax" class="alert_inp" type="number" min="0" step="0.01" :disabled="isSaving"></div>
-					<div class="alert_content_item" data-txt="備註"><input v-model="redemptionModal.form.note" class="alert_inp" type="text" maxlength="100" placeholder="選填，例如入帳銀行或交易單號" :disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="贖回日期"><input v-model="redemptionModal.form.date"
+							class="alert_inp" type="date" required :disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="狀態"><select v-model="redemptionModal.form.status"
+							class="alert_inp" :disabled="isSaving">
+							<option value="pending">處理中</option>
+							<option value="settled">已結算</option>
+							<option value="cancelled">取消</option>
+						</select></div>
+					<div class="alert_content_item" data-txt="贖回單位數"><input v-model="redemptionModal.form.units"
+							class="alert_inp" type="number" min="0.01" step="0.01" inputmode="decimal" required
+							:disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="贖回淨值（已結算必填）"><input
+							v-model="redemptionModal.form.redemptionNav" class="alert_inp" type="number" min="0.01"
+							step="0.01" :required="redemptionModal.form.status === 'settled'"
+							:disabled="isSaving || redemptionModal.form.status !== 'settled'"></div>
+					<div class="alert_content_item" data-txt="手續費"><input v-model="redemptionModal.form.fee"
+							class="alert_inp" type="number" min="0" step="0.01" :disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="稅費／其他扣款"><input v-model="redemptionModal.form.tax"
+							class="alert_inp" type="number" min="0" step="0.01" :disabled="isSaving"></div>
+					<div class="alert_content_item" data-txt="備註"><input v-model="redemptionModal.form.note"
+							class="alert_inp" type="text" maxlength="100" placeholder="選填，例如入帳銀行或交易單號"
+							:disabled="isSaving"></div>
 					<p class="fund_purchase_page_modal_available">目前可再贖回：{{ formatUnits(redemptionAvailableUnits) }}</p>
-					<p v-if="redemptionModal.error" class="fund_purchase_page_modal_error" role="alert">{{ redemptionModal.error }}</p>
-					<p class="fund_purchase_page_modal_hint">已結算贖回從最早申購扣除，不足時接續下一筆。處理中僅保留單位，取消不影響庫存。儲存時會檢查交易日期是否有足夠單位。</p>
-					<div class="alert_funcbox"><button class="normal_btn _secondary" type="button" :disabled="isSaving" @click="closeRedemptionModal">取消</button><button class="normal_btn _primary" type="submit" :disabled="isSaving">{{ isSaving ? '儲存中…' : redemptionModal.mode === 'edit' ? '儲存更新' : '儲存贖回紀錄' }}</button></div>
+					<p v-if="redemptionModal.error" class="fund_purchase_page_modal_error" role="alert">{{
+						redemptionModal.error
+					}}</p>
+					<p class="fund_purchase_page_modal_hint">已結算贖回從最早申購扣除，不足時接續下一筆。處理中僅保留單位，取消不影響庫存。儲存時會檢查交易日期是否有足夠單位。
+					</p>
+					<div class="alert_funcbox"><button class="normal_btn _secondary" type="button" :disabled="isSaving"
+							@click="closeRedemptionModal">取消</button><button class="normal_btn _primary" type="submit"
+							:disabled="isSaving">{{ isSaving ? '儲存中…' : redemptionModal.mode === 'edit' ? '儲存更新' :
+								'儲存贖回紀錄'
+							}}</button></div>
 				</form>
 			</div>
 		</div>
 
 		<p v-if="saveMessage" class="fund_purchase_page_save_toast" role="status">{{ saveMessage }}</p>
-		<p v-if="session" class="fund_purchase_page_note">庫存損益＝剩餘單位 × 最新公開淨值－剩餘成本。已實現損益＝贖回入帳淨額－該次贖回成本；合計損益包含兩者。入帳淨額依單位 × 贖回淨值－費用計算，與券商整元入帳可能有小數尾差。</p>
+		<p v-if="session" class="fund_purchase_page_note">庫存損益＝剩餘單位 × 最新公開淨值－剩餘成本。已實現損益＝贖回入帳淨額－該次贖回成本；合計損益包含兩者。入帳淨額依單位 ×
+			贖回淨值－費用計算，與券商整元入帳可能有小數尾差。</p>
 	</section>
 </template>
 
@@ -287,8 +481,6 @@ module.exports = {
 		},
 	},
 	async mounted() {
-		console.log('DFDFDFDf');
-		
 		this.authChangeHandler = event => {
 			const previousUserId = this.session?.user?.id;
 			this.session = event.detail?.session || null;
@@ -400,7 +592,7 @@ module.exports = {
 				const snapshot = request.isExternalProxy ? payload : payload?.result?.data?.json;
 				if (this.isDisposed) return false;
 				if (!this.applyNavSnapshot(fundKey, snapshot, 'remote')) throw new Error('官方淨值資料不完整');
-				try { localStorage.setItem(this.getNavStorageKey(fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch {}
+				try { localStorage.setItem(this.getNavStorageKey(fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch { }
 				return true;
 			} catch {
 				fund.navError = fund.navUpdatedAt ? '官方淨值更新失敗，已保留前次資料；請確認日期' : '官方淨值更新失敗，暫用預設淨值；請確認日期';
