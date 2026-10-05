@@ -478,9 +478,30 @@ module.exports = {
 		userEmail() {
 			return this.session?.user?.email || '';
 		},
+		// activeRecords() {
+		// 	console.log("this.records", this.records);
+		// 	return this.records.filter(record => record.fundKey === this.activeFundKey).map(record => this.calculateRecord(record, this.activeFund.nav));
+		// },
 		activeRecords() {
-			console.log("this.records", this.records);
-			return this.records.filter(record => record.fundKey === this.activeFundKey).map(record => this.calculateRecord(record, this.activeFund.nav));
+			const metrics = this.activeLedger.purchaseMetrics;
+
+			return this.records
+				.filter(record => record.fundKey === this.activeFundKey)
+				.map(record => {
+					const calculated = this.calculateRecord(
+						record,
+						this.activeFund.nav
+					);
+
+					const remaining = metrics[String(record.id)];
+
+					return {
+						...calculated,
+						remainingPrincipal: record.principal,
+						remainingUnits: record.units,
+						...(remaining || {}),
+					};
+				});
 		},
 		visibleRecords() {
 			return this.showOnlyIncomplete ? this.activeRecords.filter(record => record.isIncomplete) : this.activeRecords;
@@ -510,6 +531,7 @@ module.exports = {
 		},
 	},
 	async mounted() {
+console.log('testda');
 
 		// console.info(`[現金流管理] fund_purchase_database.vue 版本：${ FUND_PURCHASE_DATABASE_PAGE_VERSION }`);
 		this.authChangeHandler = event => {
@@ -541,7 +563,7 @@ module.exports = {
 			this.pageError = '';
 			try {
 				const auth = window.CASHFLOW_SUPABASE_AUTH;
-				console.log('try',auth);
+				console.log('try', auth);
 				if (!auth || typeof auth.getSession !== 'function' || typeof auth.getClient !== 'function')
 					throw new Error('登入服務尚未載入，請重新整理後再試一次。');
 				await auth.subscribe();
@@ -575,7 +597,223 @@ module.exports = {
 		async saveDatabaseRedemption() { this.redemptionModal.error = ''; this.isSaving = true; try { if (!this.session) throw new Error('登入工作階段已失效，請重新登入。'); const payload = this.buildRedemptionPayload(); const client = await this.getDbClient(); const response = this.redemptionModal.mode === 'edit' ? await client.from('fund_redemption_records').update(payload).eq('id', this.redemptionModal.editingId).select('id, fund_key, redemption_date, status, units, redemption_nav, fee, tax, note, created_at, updated_at').single() : await client.from('fund_redemption_records').insert(payload).select('id, fund_key, redemption_date, status, units, redemption_nav, fee, tax, note, created_at, updated_at').single(); if (response.error) throw response.error; const saved = this.mapDatabaseRedemption(response.data); if (!saved) throw new Error('資料庫回傳的贖回紀錄格式不完整。'); const index = this.redemptions.findIndex(record => record.id === saved.id); if (index >= 0) this.redemptions.splice(index, 1, saved); else this.redemptions.unshift(saved); this.lastLoadedAt = Date.now(); this.saveMessage = this.redemptionModal.mode === 'edit' ? '資料庫贖回紀錄已更新。' : '資料庫贖回紀錄已新增。'; this.resetRedemptionModal(); } catch (error) { this.redemptionModal.error = this.getFriendlyError(error, '儲存資料庫贖回紀錄失敗。'); } finally { this.isSaving = false; } },
 		mapDatabaseRecord(row) { const date = this.normalizeDate(row?.purchase_date); const principal = Number(row?.principal); if (!row?.id || !FUND_PURCHASE_DB_KEYS.some(fund => fund.key === row?.fund_key) || !date || !Number.isFinite(principal) || principal <= 0) return null; return { id: String(row.id), fundKey: row.fund_key, date, principal, subscriptionNav: row.subscription_nav === null || row.subscription_nav === undefined ? '' : Number(row.subscription_nav), units: row.units === null || row.units === undefined ? '' : Number(row.units), createdAt: row.created_at || '', updatedAt: row.updated_at || '' }; }, mapDatabaseRedemption(row) { const date = this.normalizeDate(row?.redemption_date); const units = Number(row?.units); const fee = Number(row?.fee || 0); const tax = Number(row?.tax || 0); const status = ['pending', 'settled', 'cancelled'].includes(row?.status) ? row.status : ''; const redemptionNav = row?.redemption_nav === null || row?.redemption_nav === undefined ? null : Number(row.redemption_nav); if (!row?.id || !FUND_PURCHASE_DB_KEYS.some(fund => fund.key === row?.fund_key) || !date || !status || !Number.isFinite(units) || units <= 0 || !Number.isFinite(fee) || fee < 0 || !Number.isFinite(tax) || tax < 0 || (status === 'settled' && (!Number.isFinite(redemptionNav) || redemptionNav <= 0))) return null; return { id: String(row.id), fundKey: row.fund_key, date, status, units, redemptionNav: status === 'settled' ? redemptionNav : null, fee, tax, note: String(row.note || '').slice(0, 100), createdAt: row.created_at || '', updatedAt: row.updated_at || '' }; },
 		isIncompletePurchaseRecord(record) { const missing = value => value === '' || value === null || value === undefined || !Number.isFinite(Number(value)) || Number(value) <= 0; return !record || missing(record.subscriptionNav) || missing(record.units); }, calculateRecord(record, nav) { const isIncomplete = this.isIncompletePurchaseRecord(record); const units = Number(record.units); const navValue = Number(nav); const marketValue = !isIncomplete && Number.isFinite(units) && Number.isFinite(navValue) && navValue > 0 ? units * navValue : null; const profitLoss = Number.isFinite(marketValue) ? marketValue - Number(record.principal) : null; const returnPct = Number.isFinite(profitLoss) && Number(record.principal) > 0 ? (profitLoss / Number(record.principal)) * 100 : null; return { ...record, isIncomplete, marketValue, profitLoss, returnPct }; },
-		calculateFundLedger(fundKey, redemptionRecords = null) { const purchases = this.records.filter(record => record.fundKey === fundKey && !this.isIncompletePurchaseRecord(record)).map(record => ({ type: 'purchase', date: this.normalizeDate(record.date), id: String(record.id), units: Number(record.units), principal: Number(record.principal) })); const relevantRedemptions = redemptionRecords || this.redemptions.filter(record => record.fundKey === fundKey); const settled = relevantRedemptions.filter(record => record.status === 'settled').map(record => ({ type: 'redemption', date: this.normalizeDate(record.date), id: String(record.id), units: Number(record.units), redemptionNav: Number(record.redemptionNav), fee: Number(record.fee || 0), tax: Number(record.tax || 0) })); const events = [...purchases, ...settled].sort((left, right) => left.date.localeCompare(right.date) || (left.type === 'purchase' ? -1 : 1)); let purchasedUnits = 0; let purchasedCost = 0; let remainingUnits = 0; let remainingCost = 0; let settledUnits = 0; let realizedProfitLoss = 0; const redemptionMetrics = {}; const invalidRedemptionIds = []; events.forEach(event => { if (event.type === 'purchase') { purchasedUnits += event.units; purchasedCost += event.principal; remainingUnits += event.units; remainingCost += event.principal; return; } const valid = event.date && Number.isFinite(event.units) && event.units > 0 && Number.isFinite(event.redemptionNav) && event.redemptionNav > 0 && event.units <= remainingUnits + 0.000001; if (!valid) { invalidRedemptionIds.push(event.id); redemptionMetrics[event.id] = { netProceeds: null, costBasis: null, realizedProfitLoss: null, isValid: false }; return; } const averageCost = remainingUnits > 0 ? remainingCost / remainingUnits : 0; const costBasis = event.units * averageCost; const netProceeds = event.units * event.redemptionNav - event.fee - event.tax; const profitLoss = netProceeds - costBasis; remainingUnits -= event.units; remainingCost -= costBasis; settledUnits += event.units; realizedProfitLoss += profitLoss; redemptionMetrics[event.id] = { netProceeds, costBasis, realizedProfitLoss: profitLoss, isValid: true }; }); const pendingUnits = relevantRedemptions.filter(record => record.status === 'pending').reduce((total, record) => total + (Number.isFinite(Number(record.units)) && Number(record.units) > 0 ? Number(record.units) : 0), 0); const navValue = Number(this.funds.find(fund => fund.key === fundKey)?.nav); const marketValue = remainingUnits > 0 && Number.isFinite(navValue) && navValue > 0 ? remainingUnits * navValue : 0; const unrealizedProfitLoss = marketValue - remainingCost; return { purchasedUnits, purchasedCost, settledUnits, pendingUnits, remainingUnits, remainingCost, availableRedemptionUnits: Math.max(0, remainingUnits - pendingUnits), marketValue, realizedProfitLoss, unrealizedProfitLoss, totalProfitLoss: realizedProfitLoss + unrealizedProfitLoss, redemptionMetrics, invalidRedemptionIds }; }, getRedeemableUnitsForModal() { const editingId = this.redemptionModal.mode === 'edit' ? this.redemptionModal.editingId : ''; const records = this.redemptions.filter(record => record.fundKey === this.activeFundKey && String(record.id) !== String(editingId)); return this.calculateFundLedger(this.activeFundKey, records).availableRedemptionUnits; }, getRedemptionMetric(record) { return this.activeLedger.redemptionMetrics[String(record.id)] || { netProceeds: null, costBasis: null, realizedProfitLoss: null }; },
+		// calculateFundLedger(fundKey, redemptionRecords = null) { const purchases = this.records.filter(record => record.fundKey === fundKey && !this.isIncompletePurchaseRecord(record)).map(record => ({ type: 'purchase', date: this.normalizeDate(record.date), id: String(record.id), units: Number(record.units), principal: Number(record.principal) })); const relevantRedemptions = redemptionRecords || this.redemptions.filter(record => record.fundKey === fundKey); const settled = relevantRedemptions.filter(record => record.status === 'settled').map(record => ({ type: 'redemption', date: this.normalizeDate(record.date), id: String(record.id), units: Number(record.units), redemptionNav: Number(record.redemptionNav), fee: Number(record.fee || 0), tax: Number(record.tax || 0) })); const events = [...purchases, ...settled].sort((left, right) => left.date.localeCompare(right.date) || (left.type === 'purchase' ? -1 : 1)); let purchasedUnits = 0; let purchasedCost = 0; let remainingUnits = 0; let remainingCost = 0; let settledUnits = 0; let realizedProfitLoss = 0; const redemptionMetrics = {}; const invalidRedemptionIds = []; events.forEach(event => { if (event.type === 'purchase') { purchasedUnits += event.units; purchasedCost += event.principal; remainingUnits += event.units; remainingCost += event.principal; return; } const valid = event.date && Number.isFinite(event.units) && event.units > 0 && Number.isFinite(event.redemptionNav) && event.redemptionNav > 0 && event.units <= remainingUnits + 0.000001; if (!valid) { invalidRedemptionIds.push(event.id); redemptionMetrics[event.id] = { netProceeds: null, costBasis: null, realizedProfitLoss: null, isValid: false }; return; } const averageCost = remainingUnits > 0 ? remainingCost / remainingUnits : 0; const costBasis = event.units * averageCost; const netProceeds = event.units * event.redemptionNav - event.fee - event.tax; const profitLoss = netProceeds - costBasis; remainingUnits -= event.units; remainingCost -= costBasis; settledUnits += event.units; realizedProfitLoss += profitLoss; redemptionMetrics[event.id] = { netProceeds, costBasis, realizedProfitLoss: profitLoss, isValid: true }; }); const pendingUnits = relevantRedemptions.filter(record => record.status === 'pending').reduce((total, record) => total + (Number.isFinite(Number(record.units)) && Number(record.units) > 0 ? Number(record.units) : 0), 0); const navValue = Number(this.funds.find(fund => fund.key === fundKey)?.nav); const marketValue = remainingUnits > 0 && Number.isFinite(navValue) && navValue > 0 ? remainingUnits * navValue : 0; const unrealizedProfitLoss = marketValue - remainingCost; return { purchasedUnits, purchasedCost, settledUnits, pendingUnits, remainingUnits, remainingCost, availableRedemptionUnits: Math.max(0, remainingUnits - pendingUnits), marketValue, realizedProfitLoss, unrealizedProfitLoss, totalProfitLoss: realizedProfitLoss + unrealizedProfitLoss, redemptionMetrics, invalidRedemptionIds }; }, getRedeemableUnitsForModal() { const editingId = this.redemptionModal.mode === 'edit' ? this.redemptionModal.editingId : ''; const records = this.redemptions.filter(record => record.fundKey === this.activeFundKey && String(record.id) !== String(editingId)); return this.calculateFundLedger(this.activeFundKey, records).availableRedemptionUnits; }, getRedemptionMetric(record) { return this.activeLedger.redemptionMetrics[String(record.id)] || { netProceeds: null, costBasis: null, realizedProfitLoss: null }; },
+		calculateFundLedger(fundKey, redemptionRecords = null) {
+			const EPSILON = 0.000001;
+
+			const purchases = this.records
+				.filter(record =>
+					record.fundKey === fundKey &&
+					!this.isIncompletePurchaseRecord(record)
+				)
+				.map(record => ({
+					id: String(record.id),
+					date: this.normalizeDate(record.date),
+					createdAt: record.createdAt || '',
+					units: Number(record.units),
+					principal: Number(record.principal),
+					subscriptionNav: Number(record.subscriptionNav),
+					remainingUnits: Number(record.units),
+					remainingCost: Number(record.principal),
+				}))
+				.sort((a, b) =>
+					a.date.localeCompare(b.date) ||
+					a.createdAt.localeCompare(b.createdAt) ||
+					a.id.localeCompare(b.id)
+				);
+
+			const relevantRedemptions = (
+				redemptionRecords ?? this.redemptions
+			).filter(record => record.fundKey === fundKey);
+
+			const settled = relevantRedemptions
+				.filter(record => record.status === 'settled')
+				.slice()
+				.sort((a, b) =>
+					this.normalizeDate(a.date).localeCompare(this.normalizeDate(b.date)) ||
+					String(a.createdAt || '').localeCompare(String(b.createdAt || '')) ||
+					String(a.id).localeCompare(String(b.id))
+				);
+
+			const purchasedUnits = purchases.reduce(
+				(total, record) => total + record.units, 0
+			);
+			const purchasedCost = purchases.reduce(
+				(total, record) => total + record.principal, 0
+			);
+
+			let settledUnits = 0;
+			let realizedProfitLoss = 0;
+			const redemptionMetrics = {};
+			const invalidRedemptionIds = [];
+
+			for (const record of settled) {
+				const id = String(record.id);
+				const date = this.normalizeDate(record.date);
+				const units = Number(record.units);
+				const redemptionNav = Number(record.redemptionNav);
+				const fee = Number(record.fee ?? 0);
+				const tax = Number(record.tax ?? 0);
+
+				// 僅能贖回當日或之前已申購的部位。
+				const eligibleLots = purchases.filter(lot => lot.date <= date);
+				const eligibleUnits = eligibleLots.reduce(
+					(total, lot) => total + lot.remainingUnits, 0
+				);
+
+				const valid =
+					date &&
+					Number.isFinite(units) && units > 0 &&
+					Number.isFinite(redemptionNav) && redemptionNav > 0 &&
+					Number.isFinite(fee) && fee >= 0 &&
+					Number.isFinite(tax) && tax >= 0 &&
+					units <= eligibleUnits + EPSILON;
+
+				if (!valid) {
+					invalidRedemptionIds.push(id);
+					redemptionMetrics[id] = {
+						netProceeds: null,
+						costBasis: null,
+						realizedProfitLoss: null,
+						isValid: false,
+						allocations: [],
+					};
+					continue;
+				}
+
+				let unitsToRedeem = units;
+				let costBasis = 0;
+				const allocations = [];
+
+				// eligibleLots 已依申購日期排序：最早買的先扣。
+				for (const lot of eligibleLots) {
+					if (unitsToRedeem <= EPSILON) break;
+					if (lot.remainingUnits <= 0) continue;
+
+					const allocatedUnits = Math.min(
+						unitsToRedeem,
+						lot.remainingUnits
+					);
+
+					const closesLot =
+						lot.remainingUnits - allocatedUnits <= EPSILON;
+
+					// 部分贖回按申購淨值扣成本；
+					// 全部贖完則扣清剩餘成本，消除尾差。
+					const allocatedCost = closesLot
+						? lot.remainingCost
+						: Math.min(
+							lot.remainingCost,
+							allocatedUnits * lot.subscriptionNav
+						);
+
+					lot.remainingUnits = closesLot
+						? 0
+						: lot.remainingUnits - allocatedUnits;
+
+					lot.remainingCost = closesLot
+						? 0
+						: lot.remainingCost - allocatedCost;
+
+					unitsToRedeem -= allocatedUnits;
+					costBasis += allocatedCost;
+
+					allocations.push({
+						purchaseId: lot.id,
+						purchaseDate: lot.date,
+						units: allocatedUnits,
+						costBasis: allocatedCost,
+					});
+				}
+
+				const netProceeds = units * redemptionNav - fee - tax;
+				const profitLoss = netProceeds - costBasis;
+
+				settledUnits += units;
+				realizedProfitLoss += profitLoss;
+
+				redemptionMetrics[id] = {
+					netProceeds,
+					costBasis,
+					realizedProfitLoss: profitLoss,
+					isValid: true,
+					allocations,
+				};
+			}
+
+			const pendingUnits = relevantRedemptions
+				.filter(record => record.status === 'pending')
+				.reduce((total, record) => {
+					const units = Number(record.units);
+					return total + (
+						Number.isFinite(units) && units > 0 ? units : 0
+					);
+				}, 0);
+
+			const remainingUnits = purchases.reduce(
+				(total, lot) => total + lot.remainingUnits, 0
+			);
+			const remainingCost = purchases.reduce(
+				(total, lot) => total + lot.remainingCost, 0
+			);
+
+			const navValue = Number(
+				this.funds.find(fund => fund.key === fundKey)?.nav
+			);
+			const hasNav = Number.isFinite(navValue) && navValue > 0;
+
+			const marketValue = remainingUnits === 0
+				? 0
+				: hasNav ? remainingUnits * navValue : null;
+
+			const unrealizedProfitLoss = marketValue === null
+				? null
+				: marketValue - remainingCost;
+
+			const purchaseMetrics = {};
+
+			for (const lot of purchases) {
+				const lotMarketValue = lot.remainingUnits === 0
+					? 0
+					: hasNav ? lot.remainingUnits * navValue : null;
+
+				const profitLoss = lotMarketValue === null
+					? null
+					: lotMarketValue - lot.remainingCost;
+
+				purchaseMetrics[lot.id] = {
+					remainingUnits: lot.remainingUnits,
+					remainingPrincipal: lot.remainingCost,
+					marketValue: lotMarketValue,
+					profitLoss,
+					returnPct:
+						profitLoss !== null && lot.remainingCost > 0
+							? profitLoss / lot.remainingCost * 100
+							: null,
+				};
+			}
+
+			return {
+				purchasedUnits,
+				purchasedCost,
+				settledUnits,
+				pendingUnits,
+				remainingUnits,
+				remainingCost,
+				availableRedemptionUnits: Math.max(
+					0, remainingUnits - pendingUnits
+				),
+				marketValue,
+				realizedProfitLoss,
+				unrealizedProfitLoss,
+				totalProfitLoss: unrealizedProfitLoss === null
+					? null
+					: realizedProfitLoss + unrealizedProfitLoss,
+				redemptionMetrics,
+				purchaseMetrics,
+				invalidRedemptionIds,
+			};
+		},
 		isUsableNumber(value) {
 			return value !== '' && value !== null && value !== undefined && Number.isFinite(Number(value));
 		},
