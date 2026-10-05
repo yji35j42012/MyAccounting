@@ -671,8 +671,20 @@ module.exports = {
 		hydrateFundCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); const historySnapshot = this.readFundStorage('history', fundKey); const navLoaded = navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) ? this.applyNavSnapshot(fundKey, navSnapshot, 'local') : false; const historyDate = historySnapshot?.rows?.[historySnapshot.rows.length - 1]?.date; const historyLoaded = historySnapshot && this.isExpectedFundDate(historyDate) ? this.applyHistorySnapshot(fundKey, historySnapshot, 'local') : false; return { navLoaded, historyLoaded }; },
 		hydrateFundNavCache(fundKey) { const navSnapshot = this.readFundStorage('nav', fundKey); return Boolean(navSnapshot && this.isExpectedFundDate(navSnapshot.navDate) && this.applyNavSnapshot(fundKey, navSnapshot, 'local')); },
 		async refreshAllFundNavSnapshots() { const outcomes = await Promise.all(this.funds.map(async fund => { const navLoaded = this.hydrateFundNavCache(fund.key); return navLoaded || this.refreshOfficialNav(true, fund.key); })); return outcomes.every(Boolean); },
-		async refreshFundSnapshots() { const fundKey = this.activeFundKey; const cache = this.hydrateFundCache(fundKey); const requests = []; if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey)); if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); requests.push(this.refreshHoldingsIfNeeded(fundKey)); if (requests.length) await Promise.all(requests); },
-		maybeAutoRefreshYahooQuotes() { console.log('maybeAutoRefreshYahooQuotes222222222', this.isQuoteAutoWindow());if (!this.isQuoteAutoWindow()) return; const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey); },
+		async refreshFundSnapshots() {
+			const fundKey = this.activeFundKey;
+			const cache = this.hydrateFundCache(fundKey);
+			const requests = [];
+			if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey));
+			if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); 
+			requests.push(this.refreshHoldingsIfNeeded(fundKey));
+			console.log('requests', requests);
+			if (requests.length) await Promise.all(requests);
+		},
+		maybeAutoRefreshYahooQuotes() {
+			console.log('maybeAutoRefreshYahooQuotes222222222', this.isQuoteAutoWindow()); if (!this.isQuoteAutoWindow()) return;
+			const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey);
+		},
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
 			const workerBaseUrl = this.getWorkerBaseUrl();
@@ -720,7 +732,7 @@ module.exports = {
 				const requestTimeout = window.setTimeout(() => abortController.abort(), holdingsRequest.isExternalProxy ? 25 * 1000 : 12 * 1000);
 				let response; try { response = await fetch(holdingsRequest.url, { cache: 'no-store', credentials: holdingsRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); } if (!response.ok) throw new Error(`官方公開持股服務回應 ${response.status}`); const payload = await response.json(); const snapshot = holdingsRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 				if (snapshot?.fundKey !== fundKey || !Array.isArray(snapshot?.holdings) || !snapshot.holdings.length || !snapshot.holdingsDate) throw new Error('官方公開持股資料不完整');
-				console.log('snapshot',this.funds);
+				console.log('snapshot', this.funds);
 				const targetFund = this.funds.find(fund => fund.key === fundKey);
 				console.log('targetFund', targetFund);
 				const previousSignature = targetFund ? targetFund.holdings.map(item => `${item.name}:${item.weight}`).join('|') : ''; if (!this.applyHoldingsSnapshot(fundKey, snapshot)) throw new Error('官方公開持股資料格式不正確'); const holdingsChanged = previousSignature !== (targetFund?.holdings || []).map(item => `${item.name}:${item.weight}`).join('|'); this.writeFundStorage('holdings', fundKey, snapshot); if (holdingsChanged) await this.refreshYahooQuotes(fundKey); return true;
@@ -828,7 +840,7 @@ module.exports = {
 		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
 	},
 	mounted() {
-		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.10.05-03`);
+		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.10.05-04`);
 		this.hydrateHoldingsCache(this.activeFundKey);
 		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
 	},
