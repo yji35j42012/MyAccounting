@@ -417,13 +417,21 @@ module.exports = {
 					],
 					historyNav: [
 						{ date: '2026-07-03', value: 352.14, changePct: 1.84 },
-						{ date: '2026-07-06', value: 333.97, changePct: -5.16 }, { date: '2026-07-09', value: 323.50, changePct: 1.61 },
-						{ date: '2026-07-13', value: 317.43, changePct: -1.88 }, { date: '2026-07-16', value: 306.20, changePct: -3.17 },
-						{ date: '2026-07-20', value: 271.88, changePct: -2.73 }, { date: '2026-07-23', value: 304.54, changePct: 0.20 },
-						{ date: '2026-07-27', value: 287.61, changePct: 0.04 }, { date: '2026-07-30', value: 246.18, changePct: -0.21 },
-						{ date: '2026-08-03', value: 285.18, changePct: 6.20 }, { date: '2026-08-05', value: 306.42, changePct: 4.18 },
-						{ date: '2026-08-06', value: 311.29, changePct: 1.59 }, { date: '2026-08-07', value: 303.65, changePct: -2.45 },
-						{ date: '2026-08-10', value: 309.15, changePct: 1.81 }, { date: '2026-08-11', value: 313.43, changePct: 1.38 }],
+						{ date: '2026-07-06', value: 333.97, changePct: -5.16 },
+						{ date: '2026-07-09', value: 323.50, changePct: 1.61 },
+						{ date: '2026-07-13', value: 317.43, changePct: -1.88 },
+						{ date: '2026-07-16', value: 306.20, changePct: -3.17 },
+						{ date: '2026-07-20', value: 271.88, changePct: -2.73 },
+						{ date: '2026-07-23', value: 304.54, changePct: 0.20 },
+						{ date: '2026-07-27', value: 287.61, changePct: 0.04 },
+						{ date: '2026-07-30', value: 246.18, changePct: -0.21 },
+						{ date: '2026-08-03', value: 285.18, changePct: 6.20 },
+						{ date: '2026-08-05', value: 306.42, changePct: 4.18 },
+						{ date: '2026-08-06', value: 311.29, changePct: 1.59 },
+						{ date: '2026-08-07', value: 303.65, changePct: -2.45 },
+						{ date: '2026-08-10', value: 309.15, changePct: 1.81 },
+						{ date: '2026-08-11', value: 313.43, changePct: 1.38 }
+					],
 					holdings: [{ rank: 1, name: '旺矽', symbol: '6223.TWO', weight: 12.17, price: null, changePct: null, market: 'Yahoo · TPEX' },
 					{ rank: 2, name: '台燿', symbol: '6274.TWO', weight: 7.19, price: null, changePct: null, market: 'Yahoo · TPEX' },
 					{ rank: 3, name: '穎崴', symbol: '6515.TW', weight: 7.11, price: null, changePct: null, market: 'Yahoo · TWSE' }, { rank: 4, name: '台光電子', symbol: '2383.TW', weight: 6.65, price: null, changePct: null, market: 'Yahoo · TWSE' }, { rank: 5, name: '台積電', symbol: '2330.TW', weight: 5.20, price: null, changePct: null, market: 'Yahoo · TWSE' }, { rank: 6, name: '欣興', symbol: '3037.TW', weight: 5.06, price: null, changePct: null, market: 'Yahoo · TWSE' }, { rank: 7, name: '信驊科技', symbol: '5274.TWO', weight: 4.75, price: null, changePct: null, market: 'Yahoo · TPEX' }, { rank: 8, name: '景碩科技', symbol: '3189.TW', weight: 3.78, price: null, changePct: null, market: 'Yahoo · TWSE' }, { rank: 9, name: '南電', symbol: '8046.TW', weight: 3.40, price: null, changePct: null, market: 'Yahoo · TWSE' }, { rank: 10, name: '台達電子', symbol: '2308.TW', weight: 3.19, price: null, changePct: null, market: 'Yahoo · TWSE' }], insights: [{ kicker: '配置觀察', title: '半導體與電子零組件占前十大核心', text: '以前十大公開標的的官方產業分類計算，半導體業合計 33.01%，電子零組件業合計 22.30%。配置同時涵蓋晶片測試、PCB 與電子材料等台灣科技供應鏈環節。' }, { kicker: '投資目標', title: '聚焦台灣上市與上櫃股票', text: '官方資料顯示，基金以台灣股票市場為主要投資範圍，並依品質、成長與價值的基本面研究架構篩選投資標的。' }]
@@ -568,10 +576,22 @@ module.exports = {
 			}
 			catch { return null; }
 		},
-		writeFundStorage(type, fundKey, snapshot) { try { localStorage.setItem(this.getFundStorageKey(type, fundKey), JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() })); } catch { } },
+		writeFundStorage(type, fundKey, snapshot) {
+			try {
+				localStorage.setItem(this.getFundStorageKey(type, fundKey),
+					JSON.stringify({ ...snapshot, fundKey, savedAt: Date.now() }));
+			} catch { }
+		},
 		getHoldingsQuoteDateStatus(quoteUpdatedAt) { const quoteDate = this.normalizeFundDate(quoteUpdatedAt); const quoteTimeMatch = String(quoteUpdatedAt || '').match(/(\d{1,2}:\d{2})/); const quoteDateTime = quoteDate ? `${quoteDate}${quoteTimeMatch ? ` ${quoteTimeMatch[1]}` : ''}` : ''; return quoteDateTime ? `報價日期 ${quoteDateTime}，僅供方向觀察` : '尚無法確認報價日期'; },
 		getYahooQuoteUrl(holding) { const symbol = String(holding?.symbol || HOLDING_SYMBOLS[holding?.name] || '').trim().toUpperCase(); return /^\d{4}\.(?:TW|TWO)$/.test(symbol) ? `https://tw.stock.yahoo.com/quote/${encodeURIComponent(symbol)}` : ''; },
-		getQuoteCacheCoverage(fundKey = this.activeFundKey) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; if (!targetFund) return { expectedCount: 0, quotedCount: 0 }; const expectedHoldings = targetFund.holdings.filter(holding => Boolean(holding?.symbol)); const quotedCount = expectedHoldings.filter(holding => this.isYahooQuoteVerified(holding, quoteState?.savedAt)).length; return { expectedCount: expectedHoldings.length, quotedCount }; },
+		getQuoteCacheCoverage(fundKey = this.activeFundKey) {
+			const targetFund = this.funds.find(fund => fund.key === fundKey);
+			const quoteState = this.quotesByFund[fundKey];
+			if (!targetFund) return { expectedCount: 0, quotedCount: 0 };
+			const expectedHoldings = targetFund.holdings.filter(holding => Boolean(holding?.symbol));
+			const quotedCount = expectedHoldings.filter(holding => this.isYahooQuoteVerified(holding, quoteState?.savedAt)).length;
+			return { expectedCount: expectedHoldings.length, quotedCount };
+		},
 		createYahooQuoteSnapshot(fundKey, fetchedAt = Date.now()) { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const referenceTime = Number(fetchedAt) || Date.now(); if (!targetFund || !quoteState) return null; const quotes = targetFund.holdings.filter(holding => this.isYahooQuoteVerified(holding, referenceTime)).map(holding => ({ symbol: holding.symbol, price: Number(holding.price), previousClose: Number(holding.previousClose), marketTime: Number(holding.marketTime), priceChange: Number.isFinite(holding.priceChange) ? Number(holding.priceChange) : Number(holding.price) - Number(holding.previousClose), changePct: Number.isFinite(holding.changePct) ? Number(holding.changePct) : ((Number(holding.price) - Number(holding.previousClose)) / Number(holding.previousClose)) * 100 })); if (!quotes.length) return null; return { fundKey, holdingsDate: targetFund.holdingsDate, quoteUpdatedAt: quoteState.quoteUpdatedAt, quotes, fetchedAt: referenceTime }; },
 		applyYahooQuoteSnapshot(fundKey, snapshot, cacheMode = 'remote') { const targetFund = this.funds.find(fund => fund.key === fundKey); const quoteState = this.quotesByFund[fundKey]; const quoteRows = Array.isArray(snapshot?.quotes) ? snapshot.quotes : []; const referenceTime = Number(snapshot?.savedAt || snapshot?.fetchedAt || Date.now()); if (!targetFund || !quoteState || snapshot?.fundKey !== fundKey || snapshot.holdingsDate !== targetFund.holdingsDate || !quoteRows.length) return false; const allowedSymbols = new Set(targetFund.holdings.map(holding => holding.symbol).filter(Boolean)); const quotes = quoteRows.map(quote => { const price = Number(quote?.price); const previousClose = Number(quote?.previousClose); const marketTime = Number(quote?.marketTime); return { symbol: String(quote?.symbol || ''), price, previousClose, marketTime, priceChange: price - previousClose, changePct: previousClose > 0 ? ((price - previousClose) / previousClose) * 100 : null }; }).filter(quote => allowedSymbols.has(quote.symbol) && this.isYahooQuoteVerified(quote, referenceTime) && Number.isFinite(quote.priceChange) && Number.isFinite(quote.changePct)); if (!quotes.length || new Set(quotes.map(quote => quote.symbol)).size !== quotes.length) return false; const quoteBySymbol = new Map(quotes.map(quote => [quote.symbol, quote])); targetFund.holdings = targetFund.holdings.map(holding => { const quote = quoteBySymbol.get(holding.symbol); return quote ? { ...holding, price: quote.price, previousClose: quote.previousClose, marketTime: quote.marketTime, quoteFetchedAt: referenceTime, quoteVerified: true, quoteValidation: '', priceChange: quote.priceChange, changePct: quote.changePct } : { ...holding, quoteVerified: false, quoteValidation: holding.symbol ? '本次 Yahoo 報價未通過完整性驗證' : '尚未確認 Yahoo 代號' }; }); quoteState.quoteUpdatedAt = String(snapshot.quoteUpdatedAt || this.formatQuoteTime(referenceTime)); quoteState.savedAt = referenceTime; quoteState.quotedCount = quotes.length; quoteState.cacheMode = cacheMode; return true; },
 		hydrateYahooQuoteCache(fundKey) {
@@ -676,7 +696,7 @@ module.exports = {
 			const cache = this.hydrateFundCache(fundKey);
 			const requests = [];
 			if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey));
-			if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey)); 
+			if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey));
 			requests.push(this.refreshHoldingsIfNeeded(fundKey));
 			console.log('requests', requests);
 			if (requests.length) await Promise.all(requests);
@@ -837,12 +857,18 @@ module.exports = {
 			}
 		},
 		normalizeFundDate(value) { return this.getTiming()?.normalizeFundDate(value) || ''; },
-		syncNavChangePct(fund) { const navDate = this.normalizeFundDate(fund.navDate); const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate); const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100; }
+		syncNavChangePct(fund) {
+			const navDate = this.normalizeFundDate(fund.navDate);
+			const rows = [...fund.historyNav].map(item => ({ ...item, date: this.normalizeFundDate(item.date) })).sort((left, right) => left.date.localeCompare(right.date)); const currentIndex = rows.findIndex(item => item.date === navDate);
+			const prior = currentIndex > 0 ? rows[currentIndex - 1] : rows.filter(item => item.date < navDate).at(-1); 
+			if (prior && Number.isFinite(fund.nav) && Number.isFinite(prior.value) && prior.value > 0) fund.navChangePct = ((fund.nav - prior.value) / prior.value) * 100;
+		}
 	},
 	mounted() {
 		console.info(`[現金流管理] fund_analysis.vue 版本：fund-analysis-v-2026.10.05-04`);
 		this.hydrateHoldingsCache(this.activeFundKey);
-		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000); store.dispatch('SET_LOADING_ACTION', false);
+		this.hydrateHoldingsSignalCache(this.activeFundKey); this.hydrateYahooQuoteCache(this.activeFundKey); this.maybeAutoRefreshYahooQuotes(); this.refreshAllFundNavSnapshots(); this.refreshFundSnapshots(); this.quoteTimer = window.setInterval(this.maybeAutoRefreshYahooQuotes, 60 * 1000); this.navTimer = window.setInterval(this.refreshFundSnapshots, 5 * 60 * 1000); this.countdownTimer = window.setInterval(() => { this.countdownNow = Date.now(); }, 1000);
+		store.dispatch('SET_LOADING_ACTION', false);
 	},
 	beforeUnmount() { if (this.quoteTimer) window.clearInterval(this.quoteTimer); if (this.navTimer) window.clearInterval(this.navTimer); if (this.historyTimer) window.clearInterval(this.historyTimer); if (this.countdownTimer) window.clearInterval(this.countdownTimer); if (this.navSuccessToastTimer) window.clearTimeout(this.navSuccessToastTimer); }
 };
