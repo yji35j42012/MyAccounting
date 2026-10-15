@@ -301,6 +301,9 @@ const HOLDING_SYMBOLS = {
 	'緯穎': '6669.TW',
 	'川湖': '2059.TW',
 	'富世達': '6805.TW',
+	'禾伸堂': '3026.TW',
+
+	
 };
 
 
@@ -611,9 +614,11 @@ module.exports = {
 		persistHoldingsSignalSnapshot(fundKey) { const snapshot = this.createHoldingsSignalSnapshot(fundKey); if (!snapshot || !this.applyHoldingsSignalSnapshot(fundKey, snapshot, 'remote')) return false; this.writeFundStorage('holdings-signal', fundKey, snapshot); return true; },
 		clearFundNavCache() { this.funds.forEach(fund => { ['nav', 'history'].forEach(type => { try { localStorage.removeItem(this.getFundStorageKey(type, fund.key)); } catch { } }); this.navsByFund[fund.key].cacheMode = 'cleared'; this.historiesByFund[fund.key].cacheMode = 'cleared'; }); this.cacheClearNotice = '已清除本機淨值快取；下次進入時會重新取得資料'; },
 		clearActiveFundCacheRecords(fundKey) { ['nav', 'history', 'holdings', 'quotes', 'holdings-signal'].forEach(type => { try { localStorage.removeItem(this.getFundStorageKey(type, fundKey)); } catch { } }); },
-		async clearAndRefreshFundData(fundKey) { const refreshState = this.fullRefreshByFund[fundKey]; const navState = this.navsByFund[fundKey]; const historyState = this.historiesByFund[fundKey]; const holdingsState = this.holdingsByFund[fundKey]; const quoteState = this.quotesByFund[fundKey]; const signalState = this.holdingsSignalsByFund[fundKey]; if (!refreshState || refreshState.isRefreshing) return false; refreshState.isRefreshing = true; refreshState.isError = false; refreshState.message = '正在清除本機快取並重新取得資料'; this.clearActiveFundCacheRecords(fundKey); this.quoteAutoSlotByFund[fundKey] = '';[navState, historyState, holdingsState, quoteState, signalState].forEach(state => { if (state) state.cacheMode = 'cleared'; }); if (navState) navState.navError = ''; if (historyState) historyState.historyError = ''; if (holdingsState) holdingsState.holdingsError = ''; if (quoteState) quoteState.quoteError = ''; const refreshStartedAt = Date.now(); try { const [navUpdated, historyUpdated, holdingsUpdated] = await Promise.all([this.refreshOfficialNav(true, fundKey), this.refreshRecentHistoryNav(true, fundKey), this.refreshHoldings(true, fundKey)]); const quoteUpdatedByHoldings = Boolean(quoteState?.cacheMode === 'remote' && Number(quoteState?.savedAt) >= refreshStartedAt && !quoteState?.quoteError); if (!quoteUpdatedByHoldings) await this.refreshYahooQuotes(fundKey); const quoteUpdated = Boolean(quoteState?.cacheMode === 'remote' && quoteState?.quotedCount > 0 && !quoteState?.quoteError); const historySucceeded = Boolean(historyUpdated !== false && !historyState?.historyError); const allUpdated = Boolean(navUpdated && historySucceeded && holdingsUpdated && quoteUpdated); refreshState.isError = !allUpdated; refreshState.message = allUpdated ? '本機快取已清除，淨值、歷史、持股與 Yahoo 報價皆已重新取得' : '已清除本機快取；部分資料更新失敗，畫面保留前次成功資料'; return allUpdated; } finally { refreshState.isRefreshing = false; } },
+		async clearAndRefreshFundData(fundKey) { const refreshState = this.fullRefreshByFund[fundKey]; const navState = this.navsByFund[fundKey]; const historyState = this.historiesByFund[fundKey]; const holdingsState = this.holdingsByFund[fundKey]; const quoteState = this.quotesByFund[fundKey]; const signalState = this.holdingsSignalsByFund[fundKey]; if (!refreshState || refreshState.isRefreshing) return false; refreshState.isRefreshing = true; refreshState.isError = false; refreshState.message = '正在清除本機快取並重新取得資料'; this.clearActiveFundCacheRecords(fundKey); this.quoteAutoSlotByFund[fundKey] = '';[navState, historyState, holdingsState, quoteState, signalState].forEach(state => { if (state) state.cacheMode = 'cleared'; }); if (navState) navState.navError = ''; if (historyState) historyState.historyError = ''; if (holdingsState) holdingsState.holdingsError = ''; if (quoteState) quoteState.quoteError = ''; const refreshStartedAt = Date.now(); try { const [navUpdated, historyUpdated, holdingsUpdated] = await Promise.all([this.refreshOfficialNav(true, fundKey), this.refreshRecentHistoryNav(true, fundKey), 
+			this.refreshHoldings(true, fundKey)]); const quoteUpdatedByHoldings = Boolean(quoteState?.cacheMode === 'remote' && Number(quoteState?.savedAt) >= refreshStartedAt && !quoteState?.quoteError); if (!quoteUpdatedByHoldings) await this.refreshYahooQuotes(fundKey); const quoteUpdated = Boolean(quoteState?.cacheMode === 'remote' && quoteState?.quotedCount > 0 && !quoteState?.quoteError); const historySucceeded = Boolean(historyUpdated !== false && !historyState?.historyError); const allUpdated = Boolean(navUpdated && historySucceeded && holdingsUpdated && quoteUpdated); refreshState.isError = !allUpdated; refreshState.message = allUpdated ? '本機快取已清除，淨值、歷史、持股與 Yahoo 報價皆已重新取得' : '已清除本機快取；部分資料更新失敗，畫面保留前次成功資料'; return allUpdated; } finally { refreshState.isRefreshing = false; } },
 		async clearAndRefreshActiveFundData() { return this.clearAndRefreshFundData(this.activeFundKey); },
-		async clearAndRefreshAllFundsData() { const batchState = this.batchRefresh; if (batchState.isRefreshing) return false; batchState.isRefreshing = true; try { const outcomes = await Promise.all(this.funds.map(fund => this.clearAndRefreshFundData(fund.key))); return outcomes.every(Boolean); } finally { batchState.isRefreshing = false; } },
+		async clearAndRefreshAllFundsData() { 
+			const batchState = this.batchRefresh; if (batchState.isRefreshing) return false; batchState.isRefreshing = true; try { const outcomes = await Promise.all(this.funds.map(fund => this.clearAndRefreshFundData(fund.key))); return outcomes.every(Boolean); } finally { batchState.isRefreshing = false; } },
 		async clearActiveFundHoldingsCache() {
 			const fundKey = this.activeFundKey;
 			const targetFund = this.funds.find(fund => fund.key === fundKey);
@@ -703,7 +708,9 @@ module.exports = {
 		},
 		maybeAutoRefreshYahooQuotes() {
 			console.log('maybeAutoRefreshYahooQuotes222222222', this.isQuoteAutoWindow()); if (!this.isQuoteAutoWindow()) return;
-			const fundKey = this.activeFundKey; const slot = this.getQuoteAutoSlot(); if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey);
+			const fundKey = this.activeFundKey; 
+			const slot = this.getQuoteAutoSlot(); 
+			if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey);
 		},
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
