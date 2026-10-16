@@ -452,7 +452,6 @@ module.exports = {
 	computed: {
 		// 取得目前選取的基金
 		activeFund() {
-			console.log('activeFund', this.funds.find(fund => fund.key === this.activeFundKey));
 			return this.funds.find(fund => fund.key === this.activeFundKey) || this.funds[0];
 		},
 		// 取得目前基金的報價狀態
@@ -661,8 +660,6 @@ module.exports = {
 			const priorByName = new Map(targetFund.holdings.map(item => [item.name, item]));
 			const holdingsChanged = previousDate !== nextDate || rows.some((item, index) => { const prior = targetFund.holdings[index]; return !prior || prior.name !== item.name || Number(prior.weight) !== item.weight; });
 			const holdingsDate = String(snapshot.holdingsDate).replace(/\//g, ' / ');
-
-			console.log('FFSSS', targetFund);
 			targetFund.holdings = rows.map(item => {
 				const prior = priorByName.get(item.name);
 				const symbol = HOLDING_SYMBOLS[item.name] || prior?.symbol || '';
@@ -709,11 +706,9 @@ module.exports = {
 			if (!cache.navLoaded) requests.push(this.refreshOfficialNav(true, fundKey));
 			if (!cache.historyLoaded) requests.push(this.refreshRecentHistoryNav(true, fundKey));
 			requests.push(this.refreshHoldingsIfNeeded(fundKey));
-			console.log('requests', requests);
 			if (requests.length) await Promise.all(requests);
 		},
 		maybeAutoRefreshYahooQuotes() {
-			console.log('maybeAutoRefreshYahooQuotes222222222', this.isQuoteAutoWindow()); if (!this.isQuoteAutoWindow()) return;
 			const fundKey = this.activeFundKey;
 			const slot = this.getQuoteAutoSlot();
 			if (!slot || this.quoteAutoSlotByFund[fundKey] === slot) return; this.quoteAutoSlotByFund[fundKey] = slot; this.refreshYahooQuotes(fundKey);
@@ -721,7 +716,6 @@ module.exports = {
 		getWorkerBaseUrl() { return typeof window.CASHFLOW_QUOTE_PROXY_URL === 'string' ? window.CASHFLOW_QUOTE_PROXY_URL.trim().replace(/\/+$/, '') : ''; },
 		getQuoteRequest(fundKey) {
 			const workerBaseUrl = this.getWorkerBaseUrl();
-			console.log('workerBaseUrl', workerBaseUrl);
 			if (workerBaseUrl) {
 				const endpoint = new URL(`${workerBaseUrl}/quotes`);
 				endpoint.searchParams.set('fund', fundKey);
@@ -765,9 +759,7 @@ module.exports = {
 				const requestTimeout = window.setTimeout(() => abortController.abort(), holdingsRequest.isExternalProxy ? 25 * 1000 : 12 * 1000);
 				let response; try { response = await fetch(holdingsRequest.url, { cache: 'no-store', credentials: holdingsRequest.isExternalProxy ? 'omit' : 'same-origin', signal: abortController.signal }); } finally { window.clearTimeout(requestTimeout); } if (!response.ok) throw new Error(`官方公開持股服務回應 ${response.status}`); const payload = await response.json(); const snapshot = holdingsRequest.isExternalProxy ? payload : payload?.result?.data?.json;
 				if (snapshot?.fundKey !== fundKey || !Array.isArray(snapshot?.holdings) || !snapshot.holdings.length || !snapshot.holdingsDate) throw new Error('官方公開持股資料不完整');
-				console.log('snapshot', this.funds);
 				const targetFund = this.funds.find(fund => fund.key === fundKey);
-				console.log('targetFund', targetFund);
 				const previousSignature = targetFund ? targetFund.holdings.map(item => `${item.name}:${item.weight}`).join('|') : ''; if (!this.applyHoldingsSnapshot(fundKey, snapshot)) throw new Error('官方公開持股資料格式不正確'); const holdingsChanged = previousSignature !== (targetFund?.holdings || []).map(item => `${item.name}:${item.weight}`).join('|'); this.writeFundStorage('holdings', fundKey, snapshot); if (holdingsChanged) await this.refreshYahooQuotes(fundKey); return true;
 			} catch {
 				holdingsState.holdingsError = '官方公開持股更新失敗，已保留前次資料';
@@ -778,16 +770,12 @@ module.exports = {
 			if (fundKey === this.activeFundKey) return;
 			this.activeFundKey = fundKey;
 			this.$nextTick(() => {
-				console.log('從 localStorage 恢復官方持股。', this.hydrateHoldingsCache(fundKey));
 				this.hydrateHoldingsCache(fundKey);
-				console.log('恢復持股加權漲跌與估計貢獻。', this.hydrateHoldingsSignalCache(fundKey));
 				this.hydrateHoldingsSignalCache(fundKey);
-				console.log('從 localStorage 恢復股票價格。', this.hydrateHoldingsCache(fundKey));
 				this.hydrateYahooQuoteCache(fundKey);
 				this.maybeAutoRefreshYahooQuotes();
 				this.refreshFundSnapshots();
-			}
-			);
+			});
 		},
 		async refreshYahooQuotes(fundKey = this.activeFundKey) {
 			if (typeof fundKey !== 'string' || !this.quotesByFund[fundKey]) fundKey = this.activeFundKey;
@@ -797,7 +785,6 @@ module.exports = {
 			quoteState.quoteError = '';
 			try {
 				const quoteRequest = this.getQuoteRequest(fundKey);
-				console.log('quoteRequest', quoteRequest);
 				const abortController = new AbortController();
 				const requestTimeoutMs = quoteRequest.isExternalProxy ? 25 * 1000 : 12 * 1000;
 				const requestTimeout = window.setTimeout(() => abortController.abort(), requestTimeoutMs);
