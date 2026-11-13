@@ -45,12 +45,15 @@
 					<div>
 						<p>本月分類收支</p>
 						<h3>日常消費、投資支出與投資獲利</h3>
-					</div><span>餐飲、生活雜費、交通、投資支出、投資獲利</span>
+					</div>
+					<span>餐飲、生活雜費、交通、投資支出、投資獲利</span>
 				</div>
 				<div class="report_category_expenses_grid">
 					<div v-for="item in monthlyCategoryExpenses" :key="item.category"
-						:class="['report_category_expenses_item', item.tone]"><span>{{ item.category
-						}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
+						:class="['report_category_expenses_item', item.tone]">
+						<span>{{ item.category }}</span>
+						<strong>${{ formatAmount(item.amount) }}</strong>
+					</div>
 				</div>
 			</section>
 		</section>
@@ -71,18 +74,21 @@
 			<div class="report_group report_annual_summary">
 				<div class="report_item _good">
 					<div class="report_item_title">全年收入</div>
-					<div class="report_item_amount" data-btxt="年度總收入">${{ formatAmount(showAnnualAccounting.year_in) }}
+					<div class="report_item_amount" data-btxt="年度總收入">
+						${{ formatAmount(showAnnualAccounting.year_in) }}
 					</div>
 				</div>
 				<div class="report_item _bad">
 					<div class="report_item_title">全年支出</div>
-					<div class="report_item_amount" data-btxt="年度總支出">${{ formatAmount(showAnnualAccounting.year_out) }}
+					<div class="report_item_amount" data-btxt="年度總支出">
+						${{ formatAmount(showAnnualAccounting.year_out) }}
 					</div>
 				</div>
 				<div :class="['report_item', showAnnualAccounting.total < 0 ? '_bad' : '_good']">
 					<div class="report_item_title">全年淨現金流</div>
-					<div class="report_item_amount _total" data-btxt="全年收入－支出">${{
-						formatAmount(showAnnualAccounting.total) }}</div>
+					<div class="report_item_amount _total" data-btxt="全年收入－支出">
+						${{ formatAmount(showAnnualAccounting.total) }}
+					</div>
 				</div>
 			</div>
 
@@ -91,12 +97,14 @@
 					<div>
 						<p>全年分類收支</p>
 						<h3>日常消費、投資支出與投資獲利</h3>
-					</div><span>餐飲、生活雜費、交通、投資支出、投資獲利</span>
+					</div>
+					<span>餐飲、生活雜費、交通、投資支出、投資獲利</span>
 				</div>
 				<div class="report_category_expenses_grid">
 					<div v-for="item in annualCategoryExpenses" :key="item.category"
-						:class="['report_category_expenses_item', item.tone]"><span>{{ item.category
-						}}</span><strong>${{ formatAmount(item.amount) }}</strong></div>
+						:class="['report_category_expenses_item', item.tone]">
+						<span>{{ item.category }}</span><strong>${{ formatAmount(item.amount) }}</strong>
+					</div>
 				</div>
 			</section>
 
@@ -115,8 +123,9 @@
 							<td>{{ item.month }} 月</td>
 							<td class="report_annual_income">${{ formatAmount(item.month_in) }}</td>
 							<td class="report_annual_expense">${{ formatAmount(item.month_out) }}</td>
-							<td :class="item.total < 0 ? 'report_annual_expense' : 'report_annual_income'">${{
-								formatAmount(item.total) }}</td>
+							<td :class="item.total < 0 ? 'report_annual_expense' : 'report_annual_income'">
+								${{ formatAmount(item.total) }}
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -224,15 +233,15 @@ module.exports = {
 		},
 		resetAccountingData(data) {
 			const objData = { dateItem: [], objList: {}, yearList: {} };
+
 			(data || []).forEach(item => {
 				if (!item || item[0] === '') return;
-				const type = item[2];
+				const type = item[2]; //收入、支出
 				const amount = Number(item[5]) || 0;
-				const parts = String(item[1] || '').split('.');
+				const parts = String(item[1] || '').split('.'); //把日期拆成 年、月、日
 				const year = Number(parts[0]);
 				const month = Number(parts[1]);
 				if (!Number.isInteger(year) || month < 1 || month > 12) return;
-
 				const dateTitle = year + "年" + month + "月";
 				if (!objData.dateItem.includes(dateTitle)) objData.dateItem.push(dateTitle);
 				if (!objData.objList[dateTitle]) objData.objList[dateTitle] = this.createMonthlySummary(month);
@@ -253,9 +262,8 @@ module.exports = {
 					annualData.year_out += amount;
 					annualMonthData.month_out += amount;
 				}
-				const categoryKey = item[3] === '投資'
-					? (isIncome ? '投資獲利' : '投資支出')
-					: item[3];
+
+				const categoryKey = item[3] === '投資' ? (isIncome ? '投資獲利' : '投資支出') : item[3];
 				if (Object.prototype.hasOwnProperty.call(monthData.categoryExpenses, categoryKey)) {
 					monthData.categoryExpenses[categoryKey] += amount;
 					annualMonthData.categoryExpenses[categoryKey] += amount;
@@ -265,6 +273,7 @@ module.exports = {
 				annualData.total += cashflow;
 				annualMonthData.total += cashflow;
 			});
+
 			this.report_data.data = objData;
 		}
 	}

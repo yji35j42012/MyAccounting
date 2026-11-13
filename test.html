@@ -1,151 +1,143 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Vue CDN Options API + Supabase</title>
+	<meta charset="UTF-8" />
+	<title>Vue CDN Options API + Supabase</title>
 </head>
+
 <body>
-  <div id="app">
-    <h1>待辦事項</h1>
+	<div id="app">
+		<h1>待辦事項</h1>
 
-    <form @submit.prevent="addTodo">
-      <input
-        v-model="newTitle"
-        type="text"
-        placeholder="輸入待辦事項"
-        required
-      />
-      <button type="submit">新增</button>
-    </form>
+		<form @submit.prevent="addTodo">
+			<input v-model="newTitle" type="text" placeholder="輸入待辦事項" required />
+			<button type="submit">新增</button>
+		</form>
 
-    <p v-if="loading">載入中……</p>
-    <p v-if="errorMessage" style="color: red;">
-      {{ errorMessage }}
-    </p>
+		<p v-if="loading">載入中……</p>
+		<p v-if="errorMessage" style="color: red;">
+			{{ errorMessage }}
+		</p>
 
-    <ul>
-      <li v-for="todo in todos" :key="todo.id">
-        <label>
-          <input
-            type="checkbox"
-            :checked="todo.completed"
-            @change="updateTodo(todo)"
-          />
-          {{ todo.title }}
-        </label>
+		<ul>
+			<li v-for="todo in todos" :key="todo.id">
+				<label>
+					<input type="checkbox" :checked="todo.completed" @change="updateTodo(todo)" />
+					{{ todo.title }}
+				</label>
 
-        <button @click="deleteTodo(todo.id)">刪除</button>
-      </li>
-    </ul>
-  </div>
+				<button @click="deleteTodo(todo.id)">刪除</button>
+			</li>
+		</ul>
+	</div>
 
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+	<!-- Supabase SDK -->
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-  <!-- Supabase 設定檔 -->
-  <script
-    src="./js/supabase-auth-config.js?v=supabase-auth-v1.0.5-2026.08.27"
-    data-cashflow-auth-config="true">
-  </script>
+	<!-- Supabase 設定檔 -->
+	<script src="./js/supabase-auth-config.js?v=supabase-auth-v1.0.5-2026.08.27" data-cashflow-auth-config="true">
+	</script>
 
-  <!-- Vue 3 CDN -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="./js/todo.js"></script>
-  <!-- Vue Options API -->
-  <script>
-    const app = Vue.createApp({
-      data( ) {
-        return {
-          todos: [],
-          newTitle: '',
-          loading: false,
-          errorMessage: ''
-        }
-      },
+	<!-- Vue 3 CDN -->
+	<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+	<script src="./js/todo.js"></script>
+	<!-- Vue Options API -->
+	<script>
+		const app = Vue.createApp({
+			data() {
+				return {
+					todos: [],
+					newTitle: '',
+					loading: false,
+					errorMessage: ''
+				}
+			},
 
-      mounted() {
-        this.loadTodos()
-      },
+			mounted() {
+				this.loadTodos()
+			},
 
-      methods: {
-        async loadTodos() {
-          this.loading = true
-          this.errorMessage = ''
+			methods: {
+				async loadTodos() {
+					this.loading = true
+					this.errorMessage = ''
 
-          const { data, error } = await window.supabaseClient
-            .from('todos')
-            .select('*')
-            .order('created_at', { ascending: false })
+					const { data, error } = await window.supabaseClient
+						.from('todos')
+						.select('*')
+						.order('created_at', { ascending: false })
 
-          if (error) {
-            console.error('讀取資料失敗：', error)
-            this.errorMessage = error.message
-          } else {
-            this.todos = data || []
-          }
+					if (error) {
+						console.error('讀取資料失敗：', error)
+						this.errorMessage = error.message
+					} else {
+						this.todos = data || []
+					}
 
-          this.loading = false
-        },
+					this.loading = false
+				},
 
-        async addTodo() {
-          const title = this.newTitle.trim()
+				async addTodo() {
+					const title = this.newTitle.trim()
 
-          if (!title) return
+					if (!title) return
 
-          const { data, error } = await window.supabaseClient
-            .from('todos')
-            .insert({
-              title: title,
-              completed: false
-            })
-            .select()
-            .single()
+					const { data, error } = await window.supabaseClient
+						.from('todos')
+						.insert({
+							title: title,
+							completed: false
+						})
+						.select()
+						.single()
 
-          if (error) {
-            console.error('新增資料失敗：', error)
-            this.errorMessage = error.message
-            return
-          }
+					if (error) {
+						console.error('新增資料失敗：', error)
+						this.errorMessage = error.message
+						return
+					}
 
-          this.todos.unshift(data)
-          this.newTitle = ''
-        },
+					this.todos.unshift(data)
+					this.newTitle = ''
+				},
 
-        async updateTodo(todo) {
-          const { error } = await window.supabaseClient
-            .from('todos')
-            .update({
-              completed: !todo.completed
-            })
-            .eq('id', todo.id)
+				async updateTodo(todo) {
+					const { error } = await window.supabaseClient
+						.from('todos')
+						.update({
+							completed: !todo.completed
+						})
+						.eq('id', todo.id)
 
-          if (error) {
-            console.error('更新資料失敗：', error)
-            this.errorMessage = error.message
-            return
-          }
+					if (error) {
+						console.error('更新資料失敗：', error)
+						this.errorMessage = error.message
+						return
+					}
 
-          todo.completed = !todo.completed
-        },
+					todo.completed = !todo.completed
+				},
 
-        async deleteTodo(id) {
-          const { error } = await window.supabaseClient
-            .from('todos')
-            .delete()
-            .eq('id', id)
+				async deleteTodo(id) {
+					const { error } = await window.supabaseClient
+						.from('todos')
+						.delete()
+						.eq('id', id)
 
-          if (error) {
-            console.error('刪除資料失敗：', error)
-            this.errorMessage = error.message
-            return
-          }
+					if (error) {
+						console.error('刪除資料失敗：', error)
+						this.errorMessage = error.message
+						return
+					}
 
-          this.todos = this.todos.filter(todo => todo.id !== id)
-        }
-      }
-    })
+					this.todos = this.todos.filter(todo => todo.id !== id)
+				}
+			}
+		})
 
-    app.mount('#app')
-  </script>
+		app.mount('#app')
+	</script>
 </body>
+
 </html>

@@ -94,7 +94,6 @@
 						<calendar-component v-if="calendar_data.isShow" :calendarDate="this.calendar_data.date"
 							@calendar-return="calendarHandler"></calendar-component>
 					</div>
-
 					<div class="alert_content_item" data-txt="交易類型">
 						<sel-component :selType="this.sel_alert_type" @sel-return="selAlertType"></sel-component>
 					</div>
@@ -154,7 +153,7 @@ module.exports = {
 			},
 			sel_alert_sort: {
 				selText: "餐飲",
-				lists: ["餐飲", "薪資", "租金", "貸款", "投資", "生活雜費", "小孩雜費", "交通", "保險費", "娛樂", "獎金"],
+				lists: ["餐飲", "薪資", "租金", "貸款", "投資", "基金(定)", "生活雜費", "小孩雜費", "交通", "保險費", "娛樂", "獎金"],
 			},
 			sel_alert_acc: {
 				selText: "信用卡(永豐)",
@@ -324,7 +323,7 @@ module.exports = {
 			this.accounting_edit.edit_amount = obj.accounting_amount;
 			this.accounting_edit.edit_mode = obj.accounting_mode;
 			this.accounting_edit.isShow = true;
-			// accounting_id
+			// accounting_id 
 		},
 		clearEdit() {
 			this.accounting_edit.edit_id = "";
